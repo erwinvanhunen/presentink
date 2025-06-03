@@ -6,4 +6,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onSetColor: (callback) => ipcRenderer.on('change-color', (event, color) => callback(event, color)),
   onShiftToggle: (callback) => ipcRenderer.on('shift-toggle', (event) => callback(event)),
   onUndo: (callback) => ipcRenderer.on('undo', (event) => callback(event)),
+  onClearUndo: (callback) => ipcRenderer.on('clear-undo', (event) => callback(event)),
+  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  exitDrawing: () => ipcRenderer.send('exit-drawing')
 });

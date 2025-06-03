@@ -61,6 +61,10 @@ window.electronAPI.onUndo(() => {
     undo();
 });
 
+window.electronAPI.onClearUndo(() => {
+    undoStack = []; // Clear the undo stack
+});
+
 function saveState() {
     if (undoStack.length >= MAX_UNDO) undoStack.shift(); // Limit history
     undoStack.push(canvas.toDataURL());
@@ -69,10 +73,22 @@ function saveState() {
 
 let isPreviewingStraightLine = false;
 let isPreviewingArrow = false;
+let isPreviewingBox = false;
+let isPreviewingCircle = false;
 canvas.onmousedown = (e) => {
+    isPreviewingArrow = false;
+    isPreviewingBox = false;
+    isPreviewingStraightLine = false;
+    isPreviewingCircle = false;
     if (e.shiftKey && e.metaKey) {
         drawingMode = 'arrow';
-    } else {
+    }
+    else if (e.metaKey) {
+        drawingMode = 'box';
+    } else if (e.altKey) {
+        drawingMode = 'circle';
+    }
+    else {
         drawingMode = 'freehand';
     }
     if (drawingMode === 'freehand') {
@@ -87,6 +103,16 @@ canvas.onmousedown = (e) => {
         startX = e.offsetX;
         startY = e.offsetY;
         isPreviewingArrow = true;
+    } else if (drawingMode === 'box') {
+        drawing = true;
+        startX = e.offsetX;
+        startY = e.offsetY;
+        isPreviewingBox = true;
+    } else if (drawingMode === 'circle') {
+        drawing = true;
+        startX = e.offsetX;
+        startY = e.offsetY;
+        isPreviewingCircle = true;
     }
 };
 
@@ -94,6 +120,11 @@ canvas.onmousedown = (e) => {
 canvas.onmousemove = (e) => {
     if (e.shiftKey && e.metaKey) {
         drawingMode = 'arrow';
+    }
+    else if (e.metaKey) {
+        drawingMode = 'box';
+    } else if (e.altKey) {
+        drawingMode = 'circle';
     } else {
         drawingMode = 'freehand';
     }
@@ -130,11 +161,56 @@ canvas.onmousemove = (e) => {
             // Draw a preview of the arrow
             drawArrow(previewCtx, startX, startY, e.offsetX, e.offsetY);
         }
+    } else if (drawingMode === 'box' && drawing) {
+        previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        if (isPreviewingBox) {
+            previewCtx.strokeStyle = strokeColor; // or any box color you want
+            previewCtx.lineWidth = 3;
+            previewCtx.strokeRect(
+                startX,
+                startY,
+                e.offsetX - startX,
+                e.offsetY - startY
+            );
+        }
+    } else if (drawingMode === 'circle' && drawing) {
+        previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        if (isPreviewingCircle) {
+            const x = Math.min(startX, e.offsetX);
+            const y = Math.min(startY, e.offsetY);
+            const w = Math.abs(e.offsetX - startX);
+            const h = Math.abs(e.offsetY - startY);
+            previewCtx.lineWidth = 3;
+            previewCtx.strokeStyle = strokeColor; // Use the selected stroke color
+            previewCtx.beginPath();
+            previewCtx.ellipse(
+                x + w / 2,        // centerX
+                y + h / 2,        // centerY
+                w / 2,            // radiusX
+                h / 2,            // radiusY
+                0,                // rotation
+                0,
+                Math.PI * 2
+            );
+            previewCtx.stroke();
+        }
     }
-    // In arrow mode, optionally draw preview here (not implemented in this minimal version)
+};
+
+canvas.oncontextmenu = (e) => {
+  e.preventDefault();
 };
 
 canvas.onmouseup = (e) => {
+    if(e.button === 2) {
+        // Right-click: do nothing
+        drawingMode = 'none';
+        drawing = false;
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+        window.electronAPI.exitDrawing();
+        return;
+    } 
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
 
     if (drawingMode === 'freehand' && drawing) {
@@ -153,6 +229,38 @@ canvas.onmouseup = (e) => {
     } else if (drawingMode === 'arrow' && drawing) {
         drawing = false;
         drawArrow(ctx, startX, startY, e.offsetX, e.offsetY);
+    } else if (drawingMode === 'box' && drawing) {
+        drawing = false;
+        ctx.strokeStyle = strokeColor; // Use the selected stroke color
+        ctx.lineWidth = 3;
+        ctx.lineCap = 'round';
+        ctx.strokeRect(
+            startX,
+            startY,
+            e.offsetX - startX,
+            e.offsetY - startY
+        );
+    } else if (drawingMode === 'circle' && drawing) {
+        drawing = false;
+        ctx.strokeStyle = strokeColor; // Use the selected stroke color
+        ctx.lineWidth = 3;
+        const x = Math.min(startX, e.offsetX);
+        const y = Math.min(startY, e.offsetY);
+        const w = Math.abs(e.offsetX - startX);
+        const h = Math.abs(e.offsetY - startY);
+
+        ctx.beginPath();
+        ctx.ellipse(
+            x + w / 2,        // centerX
+            y + h / 2,        // centerY
+            w / 2,            // radiusX
+            h / 2,            // radiusY
+            0,                // rotation
+            0,
+            Math.PI * 2
+        );
+        ctx.stroke();
+
     }
     saveState(); // Save the state after drawing
 };
@@ -186,37 +294,73 @@ canvas.onmouseleave = () => { drawing = false; };
 window.addEventListener('contextmenu', e => e.preventDefault());
 
 
-function drawArrow(ctx, fromX, fromY, toX, toY) {
-    ctx.strokeStyle = strokeColor // blue line, or whatever color you want
-    ctx.lineWidth = 4;
-    ctx.lineCap = 'round';
-    ctx.beginPath();
-    ctx.moveTo(fromX, fromY);
-    ctx.lineTo(toX, toY);
-    ctx.stroke();
+// function drawArrow(ctx, fromX, fromY, toX, toY) {
+//     ctx.strokeStyle = strokeColor // blue line, or whatever color you want
+//     ctx.lineWidth = 4;
+//     ctx.lineCap = 'round';
+//     ctx.beginPath();
+//     ctx.moveTo(fromX, fromY);
+//     ctx.lineTo(toX, toY);
+//     ctx.stroke();
 
-    // Calculate arrowhead
-    const headlen = 20; // length of arrowhead
+//     // Calculate arrowhead
+//     const headlen = 20; // length of arrowhead
+//     const dx = toX - fromX;
+//     const dy = toY - fromY;
+//     const angle = Math.atan2(dy, dx);
+
+//     // Points for the arrowhead triangle
+//     const arrowX1 = toX - headlen * Math.cos(angle - Math.PI / 7);
+//     const arrowY1 = toY - headlen * Math.sin(angle - Math.PI / 7);
+
+//     const arrowX2 = toX - headlen * Math.cos(angle + Math.PI / 7);
+//     const arrowY2 = toY - headlen * Math.sin(angle + Math.PI / 7);
+
+//     ctx.lineCap = 'butt'; // Reset line cap for arrowhead
+//     // Draw the filled red arrowhead
+//     ctx.beginPath();
+//     ctx.moveTo(toX, toY);
+//     ctx.lineTo(arrowX1, arrowY1);
+//     ctx.lineTo(arrowX2, arrowY2);
+//     ctx.closePath();
+//     ctx.fillStyle = strokeColor; // Use the same color as the line
+//     ctx.fill();
+
+// }
+
+function drawArrow(ctx, fromX, fromY, toX, toY) {
+    const headlen = 20; // Arrowhead length
     const dx = toX - fromX;
     const dy = toY - fromY;
     const angle = Math.atan2(dy, dx);
 
-    // Points for the arrowhead triangle
+    // Calculate endpoint of the shaft (before the arrowhead starts)
+    const shaftX = toX - (headlen - 2) * Math.cos(angle);
+    const shaftY = toY - (headlen - 2) * Math.sin(angle);
+
+    // Draw shaft
+    ctx.strokeStyle = strokeColor; // Use the selected stroke color
+    ctx.lineWidth = 4;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(fromX, fromY);
+    ctx.lineTo(shaftX, shaftY);
+    ctx.stroke();
+
+    // Draw filled arrowhead (red)
     const arrowX1 = toX - headlen * Math.cos(angle - Math.PI / 7);
     const arrowY1 = toY - headlen * Math.sin(angle - Math.PI / 7);
 
     const arrowX2 = toX - headlen * Math.cos(angle + Math.PI / 7);
     const arrowY2 = toY - headlen * Math.sin(angle + Math.PI / 7);
 
-    // Draw the filled red arrowhead
     ctx.beginPath();
     ctx.moveTo(toX, toY);
     ctx.lineTo(arrowX1, arrowY1);
     ctx.lineTo(arrowX2, arrowY2);
     ctx.closePath();
-    ctx.fillStyle = strokeColor; // Use the same color as the line
+    ctx.fillStyle = strokeColor;
     ctx.fill();
-
 }
 
 function drawScreenBorder() {

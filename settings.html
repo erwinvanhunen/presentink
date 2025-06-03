@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>MacZoomIt Settings</title>
+  <style>
+    body {
+      font-family: system-ui, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f8f8fa;
+      color: #222;
+    }
+    h2 { margin-top: 0; }
+    .section { margin-bottom: 22px; }
+    label { display: flex; align-items: center; margin-bottom: 12px; }
+    input[type="color"], input[type="range"] { margin-left: 12px; }
+    button { margin-top: 24px; padding: 7px 18px; font-size: 1em; }
+  </style>
+</head>
+<body>
+  <h2>MacZoomIt Settings</h2>
+  <div class="section">
+    <label>
+      Pen color: <input id="penColor" type="color" value="#ff3333">
+    </label>
+    <label>
+      Arrow color: <input id="arrowColor" type="color" value="#3399ff">
+    </label>
+    <label>
+      Arrowhead size: <input id="arrowHead" type="range" min="8" max="40" value="20"> <span id="arrowHeadValue">20</span> px
+    </label>
+    <label>
+      <input id="showBorder" type="checkbox" checked> Show border while drawing
+    </label>
+  </div>
+  <button id="saveBtn">Save</button>
+  <script>
+    // Update label for arrowhead size
+    const arrowHead = document.getElementById('arrowHead');
+    const arrowHeadValue = document.getElementById('arrowHeadValue');
+    arrowHead.oninput = () => { arrowHeadValue.textContent = arrowHead.value; };
+
+    // Save settings
+    document.getElementById('saveBtn').onclick = () => {
+      // Use IPC to send settings to main/renderer
+      window.electronAPI.saveSettings({
+        penColor: document.getElementById('penColor').value,
+        arrowColor: document.getElementById('arrowColor').value,
+        arrowHead: parseInt(arrowHead.value, 10),
+        showBorder: document.getElementById('showBorder').checked
+      });
+      window.close();
+    };
+
+    // Optionally, preload existing settings here (with IPC)
+  </script>
+</body>
+</html>
