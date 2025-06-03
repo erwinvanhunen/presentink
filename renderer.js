@@ -37,9 +37,8 @@ let drawing = false;
 let last = null;
 
 window.electronAPI.onSetMode((event, mode) => {
-    drawingMode = mode;  // Or whatever you want to do
-    //ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear everything (including previous drawings)
-    drawScreenBorder(); // Draw the border
+    drawingMode = mode;  
+    drawScreenBorder(); 
     saveState();
 });
 
@@ -181,7 +180,7 @@ canvas.onmousemove = (e) => {
             const w = Math.abs(e.offsetX - startX);
             const h = Math.abs(e.offsetY - startY);
             previewCtx.lineWidth = 3;
-            previewCtx.strokeStyle = strokeColor; // Use the selected stroke color
+            previewCtx.strokeStyle = strokeColor; 
             previewCtx.beginPath();
             previewCtx.ellipse(
                 x + w / 2,        // centerX
@@ -214,7 +213,7 @@ canvas.onmouseup = (e) => {
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
 
     if (drawingMode === 'freehand' && drawing) {
-        ctx.strokeStyle = strokeColor; // Use the selected stroke color';
+        ctx.strokeStyle = strokeColor; 
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         if (isPreviewingStraightLine || e.shiftKey) {
@@ -231,7 +230,7 @@ canvas.onmouseup = (e) => {
         drawArrow(ctx, startX, startY, e.offsetX, e.offsetY);
     } else if (drawingMode === 'box' && drawing) {
         drawing = false;
-        ctx.strokeStyle = strokeColor; // Use the selected stroke color
+        ctx.strokeStyle = strokeColor; 
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.strokeRect(
@@ -242,7 +241,7 @@ canvas.onmouseup = (e) => {
         );
     } else if (drawingMode === 'circle' && drawing) {
         drawing = false;
-        ctx.strokeStyle = strokeColor; // Use the selected stroke color
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 3;
         const x = Math.min(startX, e.offsetX);
         const y = Math.min(startY, e.offsetY);
@@ -294,40 +293,6 @@ canvas.onmouseleave = () => { drawing = false; };
 window.addEventListener('contextmenu', e => e.preventDefault());
 
 
-// function drawArrow(ctx, fromX, fromY, toX, toY) {
-//     ctx.strokeStyle = strokeColor // blue line, or whatever color you want
-//     ctx.lineWidth = 4;
-//     ctx.lineCap = 'round';
-//     ctx.beginPath();
-//     ctx.moveTo(fromX, fromY);
-//     ctx.lineTo(toX, toY);
-//     ctx.stroke();
-
-//     // Calculate arrowhead
-//     const headlen = 20; // length of arrowhead
-//     const dx = toX - fromX;
-//     const dy = toY - fromY;
-//     const angle = Math.atan2(dy, dx);
-
-//     // Points for the arrowhead triangle
-//     const arrowX1 = toX - headlen * Math.cos(angle - Math.PI / 7);
-//     const arrowY1 = toY - headlen * Math.sin(angle - Math.PI / 7);
-
-//     const arrowX2 = toX - headlen * Math.cos(angle + Math.PI / 7);
-//     const arrowY2 = toY - headlen * Math.sin(angle + Math.PI / 7);
-
-//     ctx.lineCap = 'butt'; // Reset line cap for arrowhead
-//     // Draw the filled red arrowhead
-//     ctx.beginPath();
-//     ctx.moveTo(toX, toY);
-//     ctx.lineTo(arrowX1, arrowY1);
-//     ctx.lineTo(arrowX2, arrowY2);
-//     ctx.closePath();
-//     ctx.fillStyle = strokeColor; // Use the same color as the line
-//     ctx.fill();
-
-// }
-
 function drawArrow(ctx, fromX, fromY, toX, toY) {
     const headlen = 20; // Arrowhead length
     const dx = toX - fromX;
@@ -347,7 +312,7 @@ function drawArrow(ctx, fromX, fromY, toX, toY) {
     ctx.lineTo(shaftX, shaftY);
     ctx.stroke();
 
-    // Draw filled arrowhead (red)
+    // Draw filled arrowhead 
     const arrowX1 = toX - headlen * Math.cos(angle - Math.PI / 7);
     const arrowY1 = toY - headlen * Math.sin(angle - Math.PI / 7);
 
@@ -365,8 +330,8 @@ function drawArrow(ctx, fromX, fromY, toX, toY) {
 
 function drawScreenBorder() {
     ctx.save();
-    ctx.lineWidth = 3; // Adjust thickness as needed
-    ctx.strokeStyle = "#cceeeeee"; // Light grey
+    ctx.lineWidth = 3;
+    ctx.strokeStyle = "#cceeeeee"; 
     ctx.setLineDash([]); // Solid line, no dash
     ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
     ctx.restore();
