@@ -1,0 +1,30 @@
+{
+  "name": "presentink",
+  "version": "0.8.0",
+  "main": "main.js",
+  "icon": "icon.icns",
+  "scripts": {
+    "start": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder"
+  },
+  "keywords": [],
+  "author": "Erwin van Hunen, ChatGPT and GitHub Copilot",
+  "license": "ISC",
+  "description": "",
+  "devDependencies": {
+    "electron": "^36.3.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.erwinmcm.presentink",
+    "productName": "PresentInk",
+    "mac": {
+      "category": "public.app-category.utilities",
+      "target": [
+        "dmg",
+        "zip"
+      ]
+    }
+  }
+}
