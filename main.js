@@ -190,9 +190,9 @@ function createHelpWindow() {
         return;
     }
     helpWindow = new BrowserWindow({
-        width: 440,
-        height: 470,
-        resizable: false,
+        width: 640,
+        height: 670,
+        resizable: true,
         minimizable: false,
         maximizable: false,
         title: "PresentInk Help",
