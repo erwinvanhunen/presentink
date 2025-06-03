@@ -7,6 +7,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onShiftToggle: (callback) => ipcRenderer.on('shift-toggle', (event) => callback(event)),
   onUndo: (callback) => ipcRenderer.on('undo', (event) => callback(event)),
   onClearUndo: (callback) => ipcRenderer.on('clear-undo', (event) => callback(event)),
-  saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  // saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
+  // updateSettings: (settings) => ipcRenderer.on('update-settings', settings, (event) => callback(event)),
   exitDrawing: () => ipcRenderer.send('exit-drawing')
 });

@@ -1,4 +1,5 @@
 const { app, BrowserWindow, globalShortcut, Tray, Menu, screen, ipcMain } = require('electron');
+
 const path = require('path');
 const { glob } = require('fs');
 const { register } = require('module');
@@ -65,7 +66,7 @@ function toggleOverlay() {
     } else {
         changeColor(selectedColor); // Reset to default color
         registerShortcuts();
-
+        win.webContents.send('update-settings', settings); 
     }
     overlayWindows.forEach(win => {
         if (anyVisible) {
@@ -98,7 +99,8 @@ function registerShortcuts() {
         changeColor('#00ff00');
     });
     globalShortcut.register('r', () => {
-        changeColor('#ff0000');
+        changeColor(settings.r);
+//        changeColor('#ff0000');
     });
     globalShortcut.register('b', () => {
         changeColor('#0000ff');
@@ -183,25 +185,25 @@ function createSettingsWindow() {
 }
 
 function createHelpWindow() {
-  if (helpWindow && !helpWindow.isDestroyed()) {
-    helpWindow.focus();
-    return;
-  }
-  helpWindow = new BrowserWindow({
-    width: 440,
-    height: 470,
-    resizable: false,
-    minimizable: false,
-    maximizable: false,
-    title: "PresentInk Help",
-    webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
-      contextIsolation: true,
-      nodeIntegration: false
+    if (helpWindow && !helpWindow.isDestroyed()) {
+        helpWindow.focus();
+        return;
     }
-  });
-  helpWindow.loadFile('help.html');
-  helpWindow.setMenu(null);
+    helpWindow = new BrowserWindow({
+        width: 440,
+        height: 470,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
+        title: "PresentInk Help",
+        webPreferences: {
+            preload: path.join(__dirname, 'preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false
+        }
+    });
+    helpWindow.loadFile('help.html');
+    helpWindow.setMenu(null);
 }
 
 
@@ -225,7 +227,7 @@ app.whenReady().then(() => {
     tray = new Tray(trayIconRed); // Use a "Template Image" for best results on Mac
 
     const contextMenu = Menu.buildFromTemplate([
-        { label: 'Settings…', click: () => createSettingsWindow() },
+        // { label: 'Settings…', click: () => createSettingsWindow() },
         { label: 'Help', click: () => createHelpWindow() },
         { type: 'separator' },
         { label: 'Quit PresentInk', click: () => app.quit() }
@@ -258,14 +260,15 @@ app.on('will-quit', () => {
     globalShortcut.unregisterAll();
 });
 
-ipcMain.on('save-settings', (event, settings) => {
-    // You can store settings in a file, database, or memory
-    // For demo: broadcast to overlay windows
-    overlayWindows.forEach(win =>
-        win.webContents.send('update-settings', settings)
-    );
-    // Optionally: persist with electron-store or similar
-});
+// ipcMain.on('save-settings', (event, settings) => {
+//     // You can store settings in a file, database, or memory
+//     // For demo: broadcast to overlay windows
+//     store.set('settings', settings);
+//     overlayWindows.forEach(win =>
+//         win.webContents.send('update-settings', settings)
+//     );
+//     // Optionally: persist with electron-store or similar
+// });
 
 ipcMain.on('exit-drawing', (event) => {
     toggleOverlay();

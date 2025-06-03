@@ -9,7 +9,7 @@
     "dist": "electron-builder"
   },
   "keywords": [],
-  "author": "Erwin van Hunen, ChatGPT and GitHub Copilot",
+  "author": "Erwin van Hunen",
   "license": "ISC",
   "description": "",
   "devDependencies": {
@@ -26,5 +26,8 @@
         "zip"
       ]
     }
+  },
+  "dependencies": {
+    "electron-store": "^10.0.1"
   }
 }
