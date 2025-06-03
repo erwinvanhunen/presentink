@@ -66,7 +66,6 @@ function toggleOverlay() {
     } else {
         changeColor(selectedColor); // Reset to default color
         registerShortcuts();
-        win.webContents.send('update-settings', settings); 
     }
     overlayWindows.forEach(win => {
         if (anyVisible) {
