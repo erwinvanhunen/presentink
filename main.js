@@ -6,6 +6,10 @@ const { register } = require('module');
 const { electron } = require('process');
 let settingsWindow = null;
 let helpWindow = null;
+let breakTimerWindow = null;
+let aboutWindow = null;
+let contextMenu = null;
+
 let tray = null;
 let overlayWindows = [];
 const trayIconIdle = path.join(__dirname, 'penimages/pendrawingidle.png');
@@ -17,6 +21,12 @@ const trayIconWhite = path.join(__dirname, 'penimages/pendrawingwhite.png');
 const trayIconPink = path.join(__dirname, 'penimages/pendrawingpink.png');
 const trayIconOrange = path.join(__dirname, 'penimages/pendrawingorange.png');
 let selectedColor = '#ff0000'; // Default color
+
+
+const { loadSettings, saveSettings } = require('./settings');
+
+// Load settings at startup
+let settings = loadSettings();
 
 function createOverlayWindows() {
     // Remove previous overlays if any
@@ -60,13 +70,19 @@ function toggleOverlay() {
         createOverlayWindows();
     }
     const anyVisible = overlayWindows.some(win => win.isVisible());
+    const drawMenuItem = contextMenu.getMenuItemById('drawing-toggle');
+
     if (anyVisible) {
         unregisterShortcuts();
         tray.setImage(trayIconIdle);
+        drawMenuItem.checked = false;
     } else {
         changeColor(selectedColor); // Reset to default color
         registerShortcuts();
+        drawMenuItem.checked = true;
     }
+    tray.setContextMenu(contextMenu);
+
     overlayWindows.forEach(win => {
         if (anyVisible) {
             win.hide();
@@ -98,8 +114,7 @@ function registerShortcuts() {
         changeColor('#00ff00');
     });
     globalShortcut.register('r', () => {
-        changeColor(settings.r);
-//        changeColor('#ff0000');
+        changeColor("#ff0000");
     });
     globalShortcut.register('b', () => {
         changeColor('#0000ff');
@@ -118,12 +133,12 @@ function registerShortcuts() {
     });
 
     globalShortcut.register('CommandOrControl+Z', () => {
-        overlayWindows.forEach(win2 => {
-            win2.webContents.send('undo');
+        overlayWindows.forEach(win => {
+            win.webContents.send('undo');
         });
     });
     globalShortcut.register('e', () => {
-        overlayWindows.forEach(win2 => {
+        overlayWindows.forEach(win => {
             win.webContents.send('clear-drawing');
         });
     });
@@ -162,6 +177,10 @@ function changeColor(color) {
 }
 
 function createSettingsWindow() {
+
+    overlayWasVisible = overlayWindows.some(win => win.isVisible());
+    overlayWindows.forEach(win => win.hide());
+
     if (settingsWindow && !settingsWindow.isDestroyed()) {
         settingsWindow.focus();
         return;
@@ -181,9 +200,18 @@ function createSettingsWindow() {
     });
     settingsWindow.loadFile('settings.html');
     settingsWindow.setMenu(null); // Hide menu bar
+
+    settingsWindow.on('closed', () => {
+        settingsWindow = null;
+        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
+    });
 }
 
 function createHelpWindow() {
+
+    overlayWasVisible = overlayWindows.some(win => win.isVisible());
+    overlayWindows.forEach(win => win.hide());
+
     if (helpWindow && !helpWindow.isDestroyed()) {
         helpWindow.focus();
         return;
@@ -203,7 +231,71 @@ function createHelpWindow() {
     });
     helpWindow.loadFile('help.html');
     helpWindow.setMenu(null);
+
+    helpWindow.on('closed', () => {
+        helpWindow = null;
+        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
+    });
 }
+
+function showBreakTimerWindow() {
+
+    overlayWasVisible = overlayWindows.some(win => win.isVisible());
+    overlayWindows.forEach(win => win.hide());
+
+    if (breakTimerWindow && !breakTimerWindow.isDestroyed()) {
+        breakTimerWindow.focus();
+        return;
+    }
+    breakTimerWindow = new BrowserWindow({
+        width: 600,
+        height: 300,
+        fullscreen: true,
+        backgroundColor: '#ffffff',
+        frame: false,
+        alwaysOnTop: true,
+        skipTaskbar: true,
+        webPreferences: {
+            nodeIntegration: false,
+            contextIsolation: true,
+            preload: path.join(__dirname, 'breaktimer-preload.js')
+        }
+    });
+    breakTimerWindow.loadFile('breaktimer.html');
+    breakTimerWindow.on('closed', () => {
+        breakTimerWindow = null;
+        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
+    });
+}
+
+function showAboutWindow() {
+    overlayWasVisible = overlayWindows.some(win => win.isVisible());
+    overlayWindows.forEach(win => win.hide());
+    if (aboutWindow && !aboutWindow.isDestroyed()) {
+        aboutWindow.focus();
+        return;
+    }
+    aboutWindow = new BrowserWindow({
+        width: 340,
+        height: 410,
+        resizable: false,
+        minimizable: false,
+        maximizable: false,
+        title: "About PresentInk",
+        alwaysOnTop: true,
+        webPreferences: {
+            preload: path.join(__dirname, 'about-preload.js'),
+            contextIsolation: true,
+            nodeIntegration: false
+        }
+    });
+    aboutWindow.loadFile('about.html');
+    aboutWindow.setMenu(null);
+    aboutWindow.on('closed', () => {
+        aboutWindow = null;
+    });
+}
+
 
 
 app.whenReady().then(() => {
@@ -223,13 +315,17 @@ app.whenReady().then(() => {
     Menu.setApplicationMenu(menu);
 
     // Setup tray/menu bar icon
-    tray = new Tray(trayIconRed); // Use a "Template Image" for best results on Mac
+    tray = new Tray(trayIconRed);
 
-    const contextMenu = Menu.buildFromTemplate([
-        // { label: 'Settings…', click: () => createSettingsWindow() },
+    contextMenu = Menu.buildFromTemplate([
+        { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: true, accelerator: 'CommandOrControl+Shift+D' },
+        { type: 'separator' },
+        { label: 'Settings…', click: () => createSettingsWindow() },
         { label: 'Help', click: () => createHelpWindow() },
         { type: 'separator' },
-        { label: 'Quit PresentInk', click: () => app.quit() }
+        { label: 'About PresentInk', click: () => showAboutWindow() },
+        { type: 'separator' },
+        { label: 'Quit PresentInk', click: () => app.quit(), accelerator: 'CommandOrControl+Q' },
     ]);
     tray.setToolTip('PresentInk');
     tray.setContextMenu(contextMenu);
@@ -245,12 +341,10 @@ app.whenReady().then(() => {
 
     });
 
-    // globalShortcut.register('CommandOrControl+1', () => {
-    //     overlayWindows.forEach(win => win.webContents.send('set-mode', 'freehand'));
-    // });
-    // globalShortcut.register('CommandOrControl+2', () => {
-    //     overlayWindows.forEach(win => win.webContents.send('set-mode', 'arrow'));
-    // });
+    globalShortcut.register('CommandOrControl+Shift+B', () => {
+        showBreakTimerWindow();
+    });
+
 });
 
 
@@ -259,18 +353,22 @@ app.on('will-quit', () => {
     globalShortcut.unregisterAll();
 });
 
-// ipcMain.on('save-settings', (event, settings) => {
-//     // You can store settings in a file, database, or memory
-//     // For demo: broadcast to overlay windows
-//     store.set('settings', settings);
-//     overlayWindows.forEach(win =>
-//         win.webContents.send('update-settings', settings)
-//     );
-//     // Optionally: persist with electron-store or similar
-// });
-
 ipcMain.on('exit-drawing', (event) => {
     toggleOverlay();
 });
 
+ipcMain.on('close-break-timer', () => {
+    if (breakTimerWindow) breakTimerWindow.close();
+});
 
+ipcMain.handle('get-settings', () => loadSettings());
+
+ipcMain.on('save-settings', (event, newSettings) => {
+    saveSettings(newSettings);
+    // Optionally, broadcast to overlay windows
+    overlayWindows.forEach(win =>
+        win.webContents.send('update-settings', loadSettings())
+    );
+});
+
+ipcMain.handle('get-version', () => app.getVersion());

@@ -7,6 +7,8 @@ const ctx = canvas.getContext('2d');
 const previewCanvas = document.getElementById('preview-canvas');
 const previewCtx = previewCanvas.getContext('2d');
 
+canvas.style.cursor = "crosshair";
+
 
 let drawingMode = 'freehand'; // Default mode
 let startX = 0, startY = 0;
@@ -18,6 +20,8 @@ function resize() {
     canvas.height = window.innerHeight;
     previewCanvas.width = window.innerWidth;
     previewCanvas.height = window.innerHeight;
+
+
 }
 resize();
 window.addEventListener('resize', resize);
@@ -32,13 +36,14 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         intro.style.display = 'none';
     }, 3000); // Fully hide after fade out
+
 });
 let drawing = false;
 let last = null;
 
 window.electronAPI.onSetMode((event, mode) => {
-    drawingMode = mode;  
-    drawScreenBorder(); 
+    drawingMode = mode;
+    drawScreenBorder();
     saveState();
 });
 
@@ -74,6 +79,7 @@ let isPreviewingStraightLine = false;
 let isPreviewingArrow = false;
 let isPreviewingBox = false;
 let isPreviewingCircle = false;
+
 canvas.onmousedown = (e) => {
     isPreviewingArrow = false;
     isPreviewingBox = false;
@@ -180,7 +186,7 @@ canvas.onmousemove = (e) => {
             const w = Math.abs(e.offsetX - startX);
             const h = Math.abs(e.offsetY - startY);
             previewCtx.lineWidth = 3;
-            previewCtx.strokeStyle = strokeColor; 
+            previewCtx.strokeStyle = strokeColor;
             previewCtx.beginPath();
             previewCtx.ellipse(
                 x + w / 2,        // centerX
@@ -197,11 +203,11 @@ canvas.onmousemove = (e) => {
 };
 
 canvas.oncontextmenu = (e) => {
-  e.preventDefault();
+    e.preventDefault();
 };
 
 canvas.onmouseup = (e) => {
-    if(e.button === 2) {
+    if (e.button === 2) {
         // Right-click: do nothing
         drawingMode = 'none';
         drawing = false;
@@ -209,11 +215,11 @@ canvas.onmouseup = (e) => {
         previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         window.electronAPI.exitDrawing();
         return;
-    } 
+    }
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
 
     if (drawingMode === 'freehand' && drawing) {
-        ctx.strokeStyle = strokeColor; 
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         if (isPreviewingStraightLine || e.shiftKey) {
@@ -230,7 +236,7 @@ canvas.onmouseup = (e) => {
         drawArrow(ctx, startX, startY, e.offsetX, e.offsetY);
     } else if (drawingMode === 'box' && drawing) {
         drawing = false;
-        ctx.strokeStyle = strokeColor; 
+        ctx.strokeStyle = strokeColor;
         ctx.lineWidth = 3;
         ctx.lineCap = 'round';
         ctx.strokeRect(
@@ -292,7 +298,6 @@ canvas.onmouseleave = () => { drawing = false; };
 // Prevent right-click context menu
 window.addEventListener('contextmenu', e => e.preventDefault());
 
-
 function drawArrow(ctx, fromX, fromY, toX, toY) {
     const headlen = 20; // Arrowhead length
     const dx = toX - fromX;
@@ -329,11 +334,12 @@ function drawArrow(ctx, fromX, fromY, toX, toY) {
 }
 
 function drawScreenBorder() {
-    ctx.save();
-    ctx.lineWidth = 3;
-    ctx.strokeStyle = "#cceeeeee"; 
-    ctx.setLineDash([]); // Solid line, no dash
-    ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
-    ctx.restore();
-}
 
+    // ctx.save();
+    // ctx.lineWidth = 3;
+    // ctx.strokeStyle = "#cceeeeee";
+    // ctx.setLineDash([]); // Solid line, no dash
+    // ctx.strokeRect(3, 3, canvas.width - 6, canvas.height - 6);
+    // ctx.restore();
+
+}

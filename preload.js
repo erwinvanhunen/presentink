@@ -9,5 +9,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onClearUndo: (callback) => ipcRenderer.on('clear-undo', (event) => callback(event)),
   // saveSettings: (settings) => ipcRenderer.invoke('save-settings', settings),
   // updateSettings: (settings) => ipcRenderer.on('update-settings', settings, (event) => callback(event)),
-  exitDrawing: () => ipcRenderer.send('exit-drawing')
+  exitDrawing: () => ipcRenderer.send('exit-drawing'),
+  getSettings: () => ipcRenderer.invoke('get-settings'),
+  saveSettings: (settings) => ipcRenderer.send('save-settings', settings),
 });

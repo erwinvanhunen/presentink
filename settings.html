@@ -2,58 +2,182 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MacZoomIt Settings</title>
+  <title>PresentInk Preferences</title>
   <style>
     body {
-      font-family: system-ui, sans-serif;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      background: #f7f7fa;
       margin: 0;
-      padding: 24px;
-      background: #f8f8fa;
+      padding: 0;
       color: #222;
     }
-    h2 { margin-top: 0; }
-    .section { margin-bottom: 22px; }
-    label { display: flex; align-items: center; margin-bottom: 12px; }
-    input[type="color"], input[type="range"] { margin-left: 12px; }
-    button { margin-top: 24px; padding: 7px 18px; font-size: 1em; }
+    .window {
+      max-width: 410px;
+      margin: 32px auto 0 auto;
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+      padding: 28px 30px 22px 30px;
+    }
+    h2 {
+      font-size: 1.6em;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+      margin-top: 0;
+      margin-bottom: 16px;
+      color: #222;
+    }
+    .section {
+      margin-bottom: 22px;
+    }
+    label.setting-label {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 18px;
+      font-size: 1.1em;
+      font-weight: 500;
+    }
+    input[type="color"] {
+      border: none;
+      width: 30px;
+      height: 30px;
+      background: none;
+      border-radius: 7px;
+      box-shadow: 0 1px 4px #0001;
+      cursor: pointer;
+    }
+    .toggle {
+      width: 42px;
+      height: 24px;
+      border-radius: 12px;
+      background: #d5d6dc;
+      position: relative;
+      margin-left: 8px;
+      transition: background 0.2s;
+      cursor: pointer;
+      flex-shrink: 0;
+      display: inline-block;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .slider {
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 18px;
+      height: 18px;
+      background: #fff;
+      border-radius: 50%;
+      transition: transform 0.2s;
+      box-shadow: 0 2px 6px #0002;
+    }
+    .toggle input:checked + .slider {
+      transform: translateX(18px);
+      background: #34c759;
+    }
+    .toggle input:checked ~ .slider {
+      background: #34c759;
+    }
+    .toggle input:checked ~ .toggle {
+      background: #b6f2d3;
+    }
+    .toggle input:checked {
+      background: #b6f2d3;
+    }
+    .toggle input:checked + .slider {
+      box-shadow: 0 2px 10px #34c75944;
+    }
+    .slider {
+      border: 1px solid #e0e0e0;
+    }
+    .footer {
+      text-align: right;
+      margin-top: 24px;
+    }
+    button {
+      font-size: 1.1em;
+      background: linear-gradient(90deg, #e9e9f1 0%, #f4f6ff 100%);
+      border: none;
+      padding: 8px 20px;
+      border-radius: 8px;
+      color: #222;
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 0 2px 8px #0001;
+      transition: background 0.18s;
+    }
+    button:active {
+      background: #e5e5ed;
+    }
+    .section-title {
+      font-size: 1.06em;
+      font-weight: 600;
+      margin-bottom: 7px;
+      color: #85889b;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
   </style>
 </head>
 <body>
-  <h2>PresentInk Settings</h2>
-  <div class="section">
-    <label>
-      Pen color: <input id="penColor" type="color" value="#ff3333">
-    </label>
-    <label>
-      Arrow color: <input id="arrowColor" type="color" value="#3399ff">
-    </label>
-    <label>
-      Arrowhead size: <input id="arrowHead" type="range" min="8" max="40" value="20"> <span id="arrowHeadValue">20</span> px
-    </label>
-    <label>
-      <input id="showBorder" type="checkbox" checked> Show border while drawing
-    </label>
+  <div class="window">
+    <h2>PresentInk Preferences</h2>
+    <div class="section">
+      <div class="section-title">Drawing Tools</div>
+      <label class="setting-label">
+        Break time (minutes)
+        <input id="breakTime" type="number" value="10">
+      </label>
+      <!-- <label class="setting-label">
+        Arrow color
+        <input id="arrowColor" type="color" value="#3399ff">
+      </label>
+      <label class="setting-label">
+        Arrowhead size
+        <input id="arrowHead" type="range" min="8" max="40" value="20" style="margin-left: 14px; margin-right: 8px;">
+        <span id="arrowHeadValue">20</span> px
+      </label> -->
+    </div>
+    <!-- <div class="section">
+      <div class="section-title">Display</div>
+      <label class="setting-label">
+        Show border while drawing
+        <span class="toggle">
+          <input id="showBorder" type="checkbox" checked>
+          <span class="slider"></span>
+        </span>
+      </label>
+    </div> -->
+    <div class="footer">
+      <button id="saveBtn">Save</button>
+    </div>
   </div>
-  <button id="saveBtn">Save</button>
   <script>
-    // Update label for arrowhead size
-    const arrowHead = document.getElementById('arrowHead');
-    const arrowHeadValue = document.getElementById('arrowHeadValue');
-    arrowHead.oninput = () => { arrowHeadValue.textContent = arrowHead.value; };
+    // Arrowhead live update
+    // const arrowHead = document.getElementById('arrowHead');
+    // const arrowHeadValue = document.getElementById('arrowHeadValue');
+    // arrowHead.oninput = () => { arrowHeadValue.textContent = arrowHead.value; };
 
-    // Save settings
+    // Save action
     document.getElementById('saveBtn').onclick = () => {
-      // Use IPC to send settings to main/renderer
       window.electronAPI.saveSettings({
-        penColor: document.getElementById('penColor').value,
-        arrowColor: document.getElementById('arrowColor').value,
-        arrowHead: parseInt(arrowHead.value, 10),
-        showBorder: document.getElementById('showBorder').checked
+        breakTime: document.getElementById('breakTime').value,
+     //   showBorder: document.getElementById('showBorder').checked
       });
       window.close();
     };
 
-    // Optionally, preload existing settings here (with IPC)
+    // Load existing settings on open (if you use IPC)
+    if (window.electronAPI && window.electronAPI.getSettings) {
+      window.electronAPI.getSettings().then(s => {
+        document.getElementById('breakTime').value = s.breakTime || '10';
+      //  document.getElementById('showBorder').checked = s.showBorder !== false;
+      });
+    }
   </script>
 </body>
 </html>

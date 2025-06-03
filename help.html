@@ -17,30 +17,40 @@
             margin-top: 0;
         }
 
-        ul,
-        dl {
+        ul{
             margin-bottom: 18px;
         }
 
-        kbd {
+        .keylist-table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 460px;
+            margin: 16px 0;
+        }
+
+        .keylist-table td {
+            padding: 8px 10px;
+            vertical-align: middle;
+            font-size: 1.08em;
+        }
+
+        .keylist-table td:first-child {
+            width: 200px;
+            text-align: right;
+            font-family: system-ui, Menlo, Monaco, monospace;
+            color: #3a3a40;
+        }
+
+        .kbd {
             background: #eee;
-            border-radius: 4px;
+            border-radius: 5px;
             padding: 2px 8px;
-            font-size: 0.95em;
-            font-family: Menlo, Monaco, monospace;
             border: 1px solid #ddd;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 1em;
             margin: 0 2px;
-        }
-
-        dt {
-            font-weight: bold;
-            margin-top: 10px;
-        }
-
-        dd {
-            margin-left: 10px;
-            margin-top: 3px;
-            margin-bottom: 8px;
+            display: inline-block;
         }
 
         .section {
@@ -66,41 +76,74 @@
     </div>
 
     <div class="section">
-        <strong>Modes</strong>
-        <dl>
-            <dt><kbd>Command</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd></dt>
-            <dd>Toggle active mode</dd>
-            <dt><kbd>Shift</kbd></dt>
-            <dd>Draw perfectly straight lines</dd>
-            <dt><kbd>Command</kbd> + <kbd>Shift</kbd></dt>
-            <dd>Arrow drawing mode</dd>
-            <dt><kbd>Command</kbd></dt>
-            <dd>Box drawing mode (rectangle)</dd>
-            <dt><kbd>Option</kbd></dt>
-            <dd>Draw ellipses</dd>
-            <dt><kbd>Cmd</kbd> + <kbd>Z</kbd></dt>
-            <dd>Undo last drawing</dd>
-
-        </dl>
+        <strong>Keyboard</strong>
+        <table class="keylist-table">
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">Shift</span> + <span class="kbd">D</span></td>
+                <td>Toggle draw mode on or off</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Shift</span></td>
+                <td>Draw perfectly straight lines</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">Shift</span></td>
+                <td>Draw arrows</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span></td>
+                <td>Draw boxes (rectangles)</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Option</span></td>
+                <td>Draw ellipses</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">E</span></td>
+                <td>Clear all drawings but stay in draw mode</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">Z</span></td>
+                <td>Undo last drawing</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">Shift</span> + <span class="kbd">B</span></td>
+                <td>Break mode. Set the time in the settings</td>
+            </tr>
+        </table>
     </div>
     <div class="section">
         <strong>Colors</strong>
-        <dl>
-            <dt><kbd>R</kbd></dt>
-            <dd>Draw in red</dd>
-            <dt><kbd>G</kbd></dt>
-            <dd>Draw in green</dd>
-            <dt><kbd>B</kbd></dt>
-            <dd>Draw in blue</dd>
-            <dt><kbd>Y</kbd></dt>
-            <dd>Draw in yellow</dd>
-            <dt><kbd>P</kbd></dt>
-            <dd>Draw in pink</dd>
-            <dt><kbd>O</kbd></dt>
-            <dd>Draw in orange</dd>
-            <dt><kbd>W</kbd></dt>
-            <dd>Draw in white</dd>
-        </dl>
+        <table class="keylist-table">
+            <tr>
+                <td><span class="kbd">R</span></td>
+                <td>Draw in red</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">G</span></td>
+                <td>Draw in green</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">B</span></td>
+                <td>Draw in blue</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Y</span></td>
+                <td>Draw in yellow</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">P</span></td>
+                <td>Draw in pink</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">O</span></td>
+                <td>Draw in orange</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">W</span></td>
+                <td>Draw in white</td>
+            </tr>
+        </table>
     </div>
     <div class="section">
         <strong>Mouse Actions</strong>
