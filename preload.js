@@ -12,4 +12,6 @@ contextBridge.exposeInMainWorld('electronAPI', {
   exitDrawing: () => ipcRenderer.send('exit-drawing'),
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.send('save-settings', settings),
+  openDonate: (url) => ipcRenderer.invoke('open-donate', url),
+
 });

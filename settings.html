@@ -4,60 +4,115 @@
   <meta charset="UTF-8">
   <title>PresentInk Preferences</title>
   <style>
-    body {
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
-      background: #f7f7fa;
+   html, body {
+      height: 100%; width: 100%;
       margin: 0;
       padding: 0;
+      background: #fff;
       color: #222;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
     }
     .window {
-      max-width: 410px;
-      margin: 32px auto 0 auto;
+      box-sizing: border-box;
+      width: 100%;
+      height: 100%;
       background: #fff;
-      border-radius: 18px;
-      box-shadow: 0 8px 32px rgba(0,0,0,0.12);
-      padding: 28px 30px 22px 30px;
+      padding: 36px 32px 24px 32px;
+      /* No border-radius here! */
+      box-shadow: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: flex-start;
     }
-    h2 {
+   h2 {
       font-size: 1.6em;
       font-weight: 600;
-      letter-spacing: 0.01em;
       margin-top: 0;
-      margin-bottom: 16px;
-      color: #222;
+      margin-bottom: 20px;
+      color: #27305a;
+      letter-spacing: 0.01em;
     }
     .section {
       margin-bottom: 22px;
+      width: 100%;
     }
     label.setting-label {
       display: flex;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 18px;
-      font-size: 1.1em;
+      font-size: 1.07em;
       font-weight: 500;
+      width: 100%;
     }
     input[type="color"] {
       border: none;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       background: none;
-      border-radius: 7px;
-      box-shadow: 0 1px 4px #0001;
+      border-radius: 6px;
+      box-shadow: 0 1px 3px #0001;
       cursor: pointer;
+      margin-left: 16px;
     }
+    input[type="range"] {
+      margin-left: 18px;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    input[type="number"] {
+      width: 60px;
+      height: 32px;
+      border: none;
+      border-radius: 6px;
+      padding: 0 8px;
+      font-size: 1em;
+      box-shadow: 0 1px 3px #0001;
+      color: #222;
+      background: #f0f2fa;
+      transition: background 0.18s, box-shadow 0.18s;
+    }
+    .footer {
+      text-align: right;
+      width: 100%;
+      margin-top: 28px;
+    }
+    button {
+      font-size: 1.08em;
+      background: #f0f2fa;
+      border: none;
+      padding: 9px 24px;
+      border-radius: 8px;
+      color: #1d263b;
+      cursor: pointer;
+      font-weight: 500;
+      box-shadow: 0 2px 6px #0001;
+      transition: background 0.18s;
+    }
+    button:active {
+      background: #e5e7ef;
+    }
+    .section-title {
+      font-size: 1em;
+      font-weight: 600;
+      margin-bottom: 7px;
+      color: #8a8b97;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    /* Toggle switch for checkbox (minimal) */
     .toggle {
       width: 42px;
       height: 24px;
       border-radius: 12px;
-      background: #d5d6dc;
+      background: #e3e3e9;
       position: relative;
       margin-left: 8px;
       transition: background 0.2s;
       cursor: pointer;
-      flex-shrink: 0;
       display: inline-block;
+      flex-shrink: 0;
     }
     .toggle input {
       opacity: 0;
@@ -66,71 +121,29 @@
     }
     .slider {
       position: absolute;
-      left: 3px;
-      top: 3px;
-      width: 18px;
-      height: 18px;
+      left: 3px; top: 3px;
+      width: 18px; height: 18px;
       background: #fff;
       border-radius: 50%;
       transition: transform 0.2s;
-      box-shadow: 0 2px 6px #0002;
+      box-shadow: 0 1px 4px #0001;
+      border: 1px solid #e0e0e0;
     }
     .toggle input:checked + .slider {
       transform: translateX(18px);
       background: #34c759;
-    }
-    .toggle input:checked ~ .slider {
-      background: #34c759;
-    }
-    .toggle input:checked ~ .toggle {
-      background: #b6f2d3;
-    }
-    .toggle input:checked {
-      background: #b6f2d3;
-    }
-    .toggle input:checked + .slider {
-      box-shadow: 0 2px 10px #34c75944;
-    }
-    .slider {
-      border: 1px solid #e0e0e0;
-    }
-    .footer {
-      text-align: right;
-      margin-top: 24px;
-    }
-    button {
-      font-size: 1.1em;
-      background: linear-gradient(90deg, #e9e9f1 0%, #f4f6ff 100%);
-      border: none;
-      padding: 8px 20px;
-      border-radius: 8px;
-      color: #222;
-      cursor: pointer;
-      font-weight: 500;
-      box-shadow: 0 2px 8px #0001;
-      transition: background 0.18s;
-    }
-    button:active {
-      background: #e5e5ed;
-    }
-    .section-title {
-      font-size: 1.06em;
-      font-weight: 600;
-      margin-bottom: 7px;
-      color: #85889b;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
+      box-shadow: 0 1px 8px #34c75933;
     }
   </style>
 </head>
 <body>
   <div class="window">
-    <h2>PresentInk Preferences</h2>
     <div class="section">
-      <div class="section-title">Drawing Tools</div>
+      <div class="section-title">Break time</div>
       <label class="setting-label">
-        Break time (minutes)
-        <input id="breakTime" type="number" value="10">
+        Minutes
+        <input id="breakTime" type="range" min="1" max="60" value="10">
+        <span id="breakTimeValue">10</span> min
       </label>
       <!-- <label class="setting-label">
         Arrow color
@@ -162,6 +175,9 @@
     // const arrowHeadValue = document.getElementById('arrowHeadValue');
     // arrowHead.oninput = () => { arrowHeadValue.textContent = arrowHead.value; };
 
+    const breakTime = document.getElementById('breakTime');
+    const breakTimeValue = document.getElementById('breakTimeValue');
+    breakTime.oninput = () => { breakTimeValue.textContent = breakTime.value; };
     // Save action
     document.getElementById('saveBtn').onclick = () => {
       window.electronAPI.saveSettings({

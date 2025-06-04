@@ -12,6 +12,8 @@ let contextMenu = null;
 
 let tray = null;
 let overlayWindows = [];
+let breakTimerWindows = [];
+
 const trayIconIdle = path.join(__dirname, 'penimages/pendrawingidle.png');
 const trayIconRed = path.join(__dirname, 'penimages/pendrawingred.png');
 const trayIconGreen = path.join(__dirname, 'penimages/pendrawinggreen.png');
@@ -243,29 +245,35 @@ function showBreakTimerWindow() {
     overlayWasVisible = overlayWindows.some(win => win.isVisible());
     overlayWindows.forEach(win => win.hide());
 
-    if (breakTimerWindow && !breakTimerWindow.isDestroyed()) {
-        breakTimerWindow.focus();
-        return;
+    if (breakTimerWindows.length) {
+        breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
+        breakTimerWindows = [];
     }
-    breakTimerWindow = new BrowserWindow({
-        width: 600,
-        height: 300,
-        fullscreen: true,
-        backgroundColor: '#ffffff',
-        frame: false,
-        alwaysOnTop: true,
-        skipTaskbar: true,
-        webPreferences: {
-            nodeIntegration: false,
-            contextIsolation: true,
-            preload: path.join(__dirname, 'breaktimer-preload.js')
-        }
+    const displays = screen.getAllDisplays();
+    breakTimerWindows = displays.map((display, idx) => {
+        const win = new BrowserWindow({
+            x: display.bounds.x,
+            y: display.bounds.y,
+            width: display.bounds.width,
+            height: display.bounds.height,
+            fullscreen: true,
+            backgroundColor: '#ffffff',
+            frame: false,
+            alwaysOnTop: true,
+            skipTaskbar: true,
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                preload: path.join(__dirname, 'breaktimer-preload.js')
+            }
+        });
+        win.loadFile('breaktimer.html');
+        win.on('closed', () => {
+            breakTimerWindows = breakTimerWindows.filter(w => w !== win);
+        });
+        return win;
     });
-    breakTimerWindow.loadFile('breaktimer.html');
-    breakTimerWindow.on('closed', () => {
-        breakTimerWindow = null;
-        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
-    });
+    
 }
 
 function showAboutWindow() {
@@ -358,7 +366,10 @@ ipcMain.on('exit-drawing', (event) => {
 });
 
 ipcMain.on('close-break-timer', () => {
-    if (breakTimerWindow) breakTimerWindow.close();
+    if (breakTimerWindows.length) {
+    breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
+    breakTimerWindows = [];
+  }
 });
 
 ipcMain.handle('get-settings', () => loadSettings());
@@ -372,3 +383,8 @@ ipcMain.on('save-settings', (event, newSettings) => {
 });
 
 ipcMain.handle('get-version', () => app.getVersion());
+
+ipcMain.handle('open-donate', (event, url) => {
+    const { shell } = require('electron');
+    shell.openExternal(url);
+});

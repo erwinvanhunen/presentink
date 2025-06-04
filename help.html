@@ -62,11 +62,32 @@
             color: #888;
             margin-top: 22px;
         }
+
+           .donate-btn {
+            display: inline-block;
+            padding: 11px 30px;
+            font-size: 1.18em;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(90deg, #fd7e14, #f76707 60%, #f48f2c 100%);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px #fae2c2bb;
+            margin: 32px auto 0 auto;
+            cursor: pointer;
+            text-align: center;
+            transition: box-shadow 0.15s, background 0.2s;
+            outline: none;
+        }
+
+        .donate-btn:hover {
+            background: linear-gradient(90deg, #fb8500, #f9b53e 80%);
+            box-shadow: 0 2px 16px #f7b26788;
+        }
     </style>
 </head>
 
 <body>
-    <h2>PresentInk – Help</h2>
     <div class="section">
         <strong>What is PresentInk?</strong>
         <p>
@@ -163,17 +184,23 @@
             <li>When drawing is active, the icon displays background changes to the color selected.</li>
         </ul>
     </div>
-
-    <!-- <div class="section">
-        <strong>Settings</strong>
-        <ul>
-            <li>Open <b>Settings…</b> from the menu bar icon for customization options.</li>
-        </ul>
-    </div> -->
-
+    <div class="section">
+       <div><button class="donate-btn" id="donateBtn">Donate ❤️</button></div>
+    </div>
     <div class="footer">
         &copy; 2025 Erwin van Hunen
     </div>
+    <script>
+   
+        document.getElementById('donateBtn').onclick = function () {
+            if (window.electronAPI && window.electronAPI.openDonate) {
+                window.electronAPI.openDonate('https://github.com/sponsors/erwinvanhunen');
+            } else {
+                // Fallback for dev/testing: open in new tab
+                window.open('https://github.com/sponsors/erwinvanhunen', '_blank');
+            }
+        };
+    </script>
 </body>
 
 </html>
