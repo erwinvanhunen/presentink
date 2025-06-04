@@ -13,5 +13,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.send('save-settings', settings),
   openDonate: (url) => ipcRenderer.invoke('open-donate', url),
-
+  autoTypeText: (text) => ipcRenderer.send('auto-type-text', text),
 });

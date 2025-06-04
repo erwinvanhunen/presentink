@@ -1,9 +1,11 @@
 const { app, BrowserWindow, globalShortcut, Tray, Menu, screen, ipcMain } = require('electron');
-
+const { exec } = require('child_process');
 const path = require('path');
 const { glob } = require('fs');
 const { register } = require('module');
 const { electron } = require('process');
+
+
 let settingsWindow = null;
 let helpWindow = null;
 let breakTimerWindow = null;
@@ -273,7 +275,7 @@ function showBreakTimerWindow() {
         });
         return win;
     });
-    
+
 }
 
 function showAboutWindow() {
@@ -333,6 +335,7 @@ app.whenReady().then(() => {
         { type: 'separator' },
         { label: 'About PresentInk', click: () => showAboutWindow() },
         { type: 'separator' },
+        { label: 'Type Text', click: () => typeText("Hello from PresentInk!"), accelerator: 'CommandOrControl+T' },
         { label: 'Quit PresentInk', click: () => app.quit(), accelerator: 'CommandOrControl+Q' },
     ]);
     tray.setToolTip('PresentInk');
@@ -367,9 +370,9 @@ ipcMain.on('exit-drawing', (event) => {
 
 ipcMain.on('close-break-timer', () => {
     if (breakTimerWindows.length) {
-    breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
-    breakTimerWindows = [];
-  }
+        breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
+        breakTimerWindows = [];
+    }
 });
 
 ipcMain.handle('get-settings', () => loadSettings());
@@ -388,3 +391,18 @@ ipcMain.handle('open-donate', (event, url) => {
     const { shell } = require('electron');
     shell.openExternal(url);
 });
+
+ipcMain.on('auto-type-text', (event, text) => {
+    typeText(text);
+});
+
+function typeText(text) {
+   require('electron').clipboard.writeText(text);
+
+  BrowserWindow.getAllWindows().forEach(win => win.minimize());
+
+  // Wait for the previous app to regain focus
+  setTimeout(() => {
+    exec(`osascript -e 'tell application "System Events" to keystroke "v" using command down'`);
+  }, 350); // 350ms is usually enough, adjust if needed
+}
