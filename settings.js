@@ -22,10 +22,15 @@ const settingsPath = getSettingsPath();
 const defaultSettings = {
    breakTime : 10,
    penWidth: 3,
-   arrowHead: 20
+   arrowHead: 20,
+   showOverlayOnAllDesktops: true
 };
 
 function loadSettings() {
+  if (!fs.existsSync(settingsPath)) {
+    // If the file does not exist, return default settings
+    return { ...defaultSettings };
+  }
   try {
     const raw = fs.readFileSync(settingsPath, 'utf8');
     return { ...defaultSettings, ...JSON.parse(raw) };

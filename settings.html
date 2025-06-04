@@ -177,6 +177,13 @@
             <span class="value-label" id="breakTimeValue">10 min</span>
           </td>
         </tr>
+        <tr>
+          <td class="settings-label">Show overlay on all virtual desktops</td>
+          <td class="settings-control">
+            <input id="showOverlayOnAllDesktops" type="checkbox">
+            <label for="showOverlayOnAllDesktops" style="font-weight:400; color:#555;">(Recommended, only available on macOS/Linux)</label>
+          </td>
+        </tr>
       </table>
       <div class="footer">
         <button type="submit" id="saveBtn">Save</button>
@@ -217,6 +224,7 @@
         breakTime: document.getElementById('breakTime').value,
         penWidth: document.getElementById('penWidth').value,
         arrowHead: document.getElementById('arrowHead').value,
+        showOverlayOnAllDesktops: document.getElementById('showOverlayOnAllDesktops').checked,
       });
       window.close();
     };
@@ -232,6 +240,7 @@
         drawArrow(arrowCtx, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, s.penWidth || 3, s.arrowHead || 20);
         document.getElementById('arrowHead').value = s.arrowHead || '20';
         document.getElementById('arrowHeadValue').textContent = s.arrowHead || '20';
+        document.getElementById('showOverlayOnAllDesktops').checked = (typeof s.showOverlayOnAllDesktops === 'undefined') ? true : !!s.showOverlayOnAllDesktops;
       });
     }
 
@@ -278,6 +287,15 @@
       ctx.closePath();
       ctx.fillStyle = "#ff0000"; // Use the selected fill color
       ctx.fill();
+    }
+
+    // Disable the checkbox on Windows and show a note
+    if (navigator.userAgent.includes('Windows')) {
+      const overlayCheckbox = document.getElementById('showOverlayOnAllDesktops');
+      overlayCheckbox.disabled = true;
+      overlayCheckbox.checked = false;
+      const label = overlayCheckbox.nextElementSibling;
+      if (label) label.textContent = '(Not available on Windows)';
     }
   </script>
 </body>

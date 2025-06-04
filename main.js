@@ -29,6 +29,10 @@ const { loadSettings, saveSettings } = require('./settings');
 
 // Load settings at startup
 let settings = loadSettings();
+if (typeof settings.showOverlayOnAllDesktops !== 'boolean') {
+    settings.showOverlayOnAllDesktops = true; // Default to true
+    saveSettings(settings);
+}
 
 function createOverlayWindows() {
     // Remove previous overlays if any
@@ -56,6 +60,11 @@ function createOverlayWindows() {
         });
 
         win.setIgnoreMouseEvents(false); // Set to true if you want passthrough
+
+        // Only set visible on all workspaces if supported (macOS/Linux)
+        if ((process.platform === 'darwin' || process.platform === 'linux') && settings.showOverlayOnAllDesktops) {
+            win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+        }
 
         win.loadFile('index.html');
         // Optional: Open devtools for debugging per window
@@ -180,8 +189,8 @@ function changeColor(color) {
 
 function createSettingsWindow() {
 
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    overlayWasVisible = overlayWindows.some(win => win && !win.isDestroyed() && win.isVisible());
+    overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.hide(); });
 
     if (settingsWindow && !settingsWindow.isDestroyed()) {
         settingsWindow.focus();
@@ -205,14 +214,14 @@ function createSettingsWindow() {
 
     settingsWindow.on('closed', () => {
         settingsWindow = null;
-        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
+        if (overlayWasVisible) overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.show(); });
     });
 }
 
 function createHelpWindow() {
 
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    overlayWasVisible = overlayWindows.some(win => win && !win.isDestroyed() && win.isVisible());
+    overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.hide(); });
 
     if (helpWindow && !helpWindow.isDestroyed()) {
         helpWindow.focus();
@@ -236,14 +245,14 @@ function createHelpWindow() {
 
     helpWindow.on('closed', () => {
         helpWindow = null;
-        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
+        if (overlayWasVisible) overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.show(); });
     });
 }
 
 function showBreakTimerWindow() {
 
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    overlayWasVisible = overlayWindows.some(win => win && !win.isDestroyed() && win.isVisible());
+    overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.hide(); });
 
     if (breakTimerWindows.length) {
         breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
@@ -277,8 +286,8 @@ function showBreakTimerWindow() {
 }
 
 function showAboutWindow() {
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    overlayWasVisible = overlayWindows.some(win => win && !win.isDestroyed() && win.isVisible());
+    overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.hide(); });
     if (aboutWindow && !aboutWindow.isDestroyed()) {
         aboutWindow.focus();
         return;
@@ -301,6 +310,7 @@ function showAboutWindow() {
     aboutWindow.setMenu(null);
     aboutWindow.on('closed', () => {
         aboutWindow = null;
+        if (overlayWasVisible) overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.show(); });
     });
 }
 
@@ -308,7 +318,10 @@ function showAboutWindow() {
 
 app.whenReady().then(() => {
 
-    app.dock.hide();
+    // Hide dock icon only on macOS
+    if (process.platform === 'darwin' && app.dock) {
+        app.dock.hide();
+    }
 
     const template = [
         {
@@ -376,10 +389,15 @@ ipcMain.handle('get-settings', () => loadSettings());
 
 ipcMain.on('save-settings', (event, newSettings) => {
     saveSettings(newSettings);
+    settings = loadSettings();
     // Optionally, broadcast to overlay windows
     overlayWindows.forEach(win =>
-        win.webContents.send('update-settings', loadSettings())
+        win.webContents.send('update-settings', settings)
     );
+    // If the overlay setting changed, recreate overlays
+    if (typeof newSettings.showOverlayOnAllDesktops !== 'undefined') {
+        createOverlayWindows();
+    }
 });
 
 ipcMain.handle('get-version', () => app.getVersion());
