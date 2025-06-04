@@ -21,8 +21,8 @@ const settingsPath = getSettingsPath();
 
 const defaultSettings = {
    breakTime : 10,
-   showBorder: true
-  // Add other defaults as needed
+   penWidth: 3,
+   arrowHead: 20
 };
 
 function loadSettings() {

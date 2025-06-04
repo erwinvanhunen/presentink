@@ -79,12 +79,18 @@ let isPreviewingStraightLine = false;
 let isPreviewingArrow = false;
 let isPreviewingBox = false;
 let isPreviewingCircle = false;
+let penWidth = 3; // Default pen width
+let arrowHeadLength = 20; // Default arrow head length
 
 canvas.onmousedown = (e) => {
     isPreviewingArrow = false;
     isPreviewingBox = false;
     isPreviewingStraightLine = false;
     isPreviewingCircle = false;
+    window.electronAPI.getSettings().then(s => {
+        penWidth = s.penWidth || 3; // Use settings or default to 3
+        arrowHeadLength = s.arrowHead || 20; // Use settings or default to 20
+    });
     if (e.shiftKey && e.metaKey) {
         drawingMode = 'arrow';
     }
@@ -136,10 +142,10 @@ canvas.onmousemove = (e) => {
     if (drawingMode === 'freehand' && drawing) {
 
         ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = penWidth;
         ctx.lineCap = 'round';
         previewCtx.strokeStyle = strokeColor;
-        previewCtx.lineWidth = 3;
+        previewCtx.lineWidth = penWidth;
         previewCtx.lineCap = 'round';
         // If shift is held either since mousedown or now
         if (isPreviewingStraightLine || e.shiftKey) {
@@ -170,7 +176,7 @@ canvas.onmousemove = (e) => {
         previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         if (isPreviewingBox) {
             previewCtx.strokeStyle = strokeColor; // or any box color you want
-            previewCtx.lineWidth = 3;
+            previewCtx.lineWidth = penWidth;
             previewCtx.strokeRect(
                 startX,
                 startY,
@@ -185,7 +191,7 @@ canvas.onmousemove = (e) => {
             const y = Math.min(startY, e.offsetY);
             const w = Math.abs(e.offsetX - startX);
             const h = Math.abs(e.offsetY - startY);
-            previewCtx.lineWidth = 3;
+            previewCtx.lineWidth = penWidth;
             previewCtx.strokeStyle = strokeColor;
             previewCtx.beginPath();
             previewCtx.ellipse(
@@ -220,7 +226,7 @@ canvas.onmouseup = (e) => {
 
     if (drawingMode === 'freehand' && drawing) {
         ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = penWidth;
         ctx.lineCap = 'round';
         if (isPreviewingStraightLine || e.shiftKey) {
             // Commit the straight line
@@ -237,7 +243,7 @@ canvas.onmouseup = (e) => {
     } else if (drawingMode === 'box' && drawing) {
         drawing = false;
         ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = penWidth;
         ctx.lineCap = 'round';
         ctx.strokeRect(
             startX,
@@ -248,7 +254,7 @@ canvas.onmouseup = (e) => {
     } else if (drawingMode === 'circle' && drawing) {
         drawing = false;
         ctx.strokeStyle = strokeColor;
-        ctx.lineWidth = 3;
+        ctx.lineWidth = penWidth;
         const x = Math.min(startX, e.offsetX);
         const y = Math.min(startY, e.offsetY);
         const w = Math.abs(e.offsetX - startX);
@@ -291,15 +297,13 @@ function undo() {
 
 let shiftDown = false;
 
-
-
 canvas.onmouseleave = () => { drawing = false; };
 
 // Prevent right-click context menu
 window.addEventListener('contextmenu', e => e.preventDefault());
 
 function drawArrow(ctx, fromX, fromY, toX, toY) {
-    const headlen = 20; // Arrowhead length
+    const headlen = arrowHeadLength; // Arrowhead length
     const dx = toX - fromX;
     const dy = toY - fromY;
     const angle = Math.atan2(dy, dx);
@@ -310,7 +314,7 @@ function drawArrow(ctx, fromX, fromY, toX, toY) {
 
     // Draw shaft
     ctx.strokeStyle = strokeColor; // Use the selected stroke color
-    ctx.lineWidth = 4;
+    ctx.lineWidth = penWidth;
     ctx.lineCap = 'round';
     ctx.beginPath();
     ctx.moveTo(fromX, fromY);

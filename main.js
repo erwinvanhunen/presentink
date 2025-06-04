@@ -188,9 +188,9 @@ function createSettingsWindow() {
         return;
     }
     settingsWindow = new BrowserWindow({
-        width: 400,
+        width: 640,
         height: 350,
-        resizable: false,
+        resizable: true,
         minimizable: false,
         maximizable: false,
         title: "PresentInk Settings",
