@@ -48,6 +48,8 @@ Lightweight, always accessible, and fully optimized for Mac.
 | <kbd>Cmd</kbd> + <kbd>Shift</kdb> + <kdb>B</kdb>                     | Start break timer     |
 | <kdb>ESC</kdb> | Exit break timer |
 
+## Auto Typing
+There is preliminary support for auto typing based upon a script, which uses the same format as the ZoomIt script format. E.g. it supports tags like [up],[down],[left],[right],[enter] and [end]. It uses a binary MacOS application to type, which is called PresentInkTyper, and you will be required to grant permissions to this application when using the auto typing functionality. You can load a script using the menu of PresentInk. Notice that this is an EARLY implementation and I've seen already some issues with cursor movement not working as correct. 
 ## ⚙️ Development
 
 1. **Clone the repo:**
