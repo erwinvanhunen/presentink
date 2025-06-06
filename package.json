@@ -1,6 +1,6 @@
 {
   "name": "presentink",
-  "version": "0.9.3",
+  "version": "0.9.4",
   "main": "main.js",
   "icon": "icon.icns",
   "scripts": {
@@ -19,6 +19,9 @@
   "build": {
     "appId": "com.erwinmcm.presentink",
     "productName": "PresentInk",
+    "extraFiles": [
+      "KeyTyper"
+    ],
     "mac": {
       "category": "public.app-category.utilities",
       "target": [

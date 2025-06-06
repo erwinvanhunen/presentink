@@ -1,20 +1,22 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu, screen, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, screen, dialog, ipcMain } = require('electron');
 const { exec } = require('child_process');
 const path = require('path');
 const { glob } = require('fs');
 const { register } = require('module');
-const { electron } = require('process');
-
+const fs = require('fs').promises; // Use Node's fs/promises for async reading
 
 let settingsWindow = null;
 let helpWindow = null;
-let breakTimerWindow = null;
 let aboutWindow = null;
 let contextMenu = null;
 
 let tray = null;
 let overlayWindows = [];
 let breakTimerWindows = [];
+
+let originalScript = [];
+let currentScript = [];
+let fileNameLoaded = "";
 
 const trayIconIdle = path.join(__dirname, 'penimages/pendrawingidle.png');
 const trayIconRed = path.join(__dirname, 'penimages/pendrawingred.png');
@@ -24,10 +26,15 @@ const trayIconYellow = path.join(__dirname, 'penimages/pendrawingyellow.png');
 const trayIconWhite = path.join(__dirname, 'penimages/pendrawingwhite.png');
 const trayIconPink = path.join(__dirname, 'penimages/pendrawingpink.png');
 const trayIconOrange = path.join(__dirname, 'penimages/pendrawingorange.png');
+const keyTyper = getKeyTyperPath(); // Path to the KeyTyper executable
 let selectedColor = '#ff0000'; // Default color
 
+console.log(`KeyTyper path: ${keyTyper}`);
 
 const { loadSettings, saveSettings } = require('./settings');
+const { type } = require('os');
+const { Console } = require('console');
+const { get } = require('http');
 
 // Load settings at startup
 let settings = loadSettings();
@@ -75,7 +82,10 @@ function toggleOverlay() {
     }
     const anyVisible = overlayWindows.some(win => win.isVisible());
     const drawMenuItem = contextMenu.getMenuItemById('drawing-toggle');
-
+     overlayWindows.forEach(win => {
+            win.webContents.send('clear-undo');
+            win.webContents.send('clear-drawing');
+        });
     if (anyVisible) {
         unregisterShortcuts();
         tray.setImage(trayIconIdle);
@@ -327,7 +337,26 @@ app.whenReady().then(() => {
     // Setup tray/menu bar icon
     tray = new Tray(trayIconRed);
 
-    contextMenu = Menu.buildFromTemplate([
+    contextMenu = Menu.buildFromTemplate(getMenuTemplate());
+    tray.setToolTip('PresentInk');
+    tray.setContextMenu(contextMenu);
+
+    createOverlayWindows();
+    registerShortcuts();
+    globalShortcut.register('CommandOrControl+Shift+D', () => {
+        toggleOverlay();
+    });
+    globalShortcut.register('CommandOrControl+Shift+T', () => {
+        runScript();
+    });
+    globalShortcut.register('CommandOrControl+Shift+B', () => {
+        showBreakTimerWindow();
+    });
+
+});
+
+function getMenuTemplate() {
+    return [
         { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: true, accelerator: 'CommandOrControl+Shift+D' },
         { type: 'separator' },
         { label: 'Settings…', click: () => createSettingsWindow() },
@@ -335,30 +364,38 @@ app.whenReady().then(() => {
         { type: 'separator' },
         { label: 'About PresentInk', click: () => showAboutWindow() },
         { type: 'separator' },
-        { label: 'Type Text', click: () => typeText("Hello from PresentInk!"), accelerator: 'CommandOrControl+T' },
+        {
+            label: 'Text Typer',
+            submenu: [
+                {
+                    id: 'select-script-file',
+                    label: 'Select Script file',
+                    click: async (menuItem, browserWindow) => {
+                        // Open a file dialog, for example:
+                        pickFile();
+                    }
+                },
+                {
+                    label: fileNameLoaded != "" ? fileNameLoaded : "No script loaded",
+                    enabled: false // Disable this item, just for display
+                },
+                {
+                    label: 'Type Text',
+                    accelerator: 'CmdOrCtrl+Shift+T',
+                    click: (menuItem, browserWindow) => {
+                        // Implement your text-typing logic here
+                        runScript();
+                        // You might send an IPC message or invoke your typeText logic
+                    }
+                },
+
+            ]
+        },
+
+        // { label: `Type Text ${keyTyper}`, click: () => runScript(), accelerator: 'CommandOrControl+Shift+T' },
         { label: 'Quit PresentInk', click: () => app.quit(), accelerator: 'CommandOrControl+Q' },
-    ]);
-    tray.setToolTip('PresentInk');
-    tray.setContextMenu(contextMenu);
-
-    createOverlayWindows();
-    registerShortcuts();
-    globalShortcut.register('CommandOrControl+Shift+D', () => {
-        overlayWindows.forEach(win => {
-            win.webContents.send('clear-undo');
-            win.webContents.send('clear-drawing');
-        });
-        toggleOverlay();
-
-    });
-
-    globalShortcut.register('CommandOrControl+Shift+B', () => {
-        showBreakTimerWindow();
-    });
-
-});
-
-
+    ];
+}
 
 app.on('will-quit', () => {
     globalShortcut.unregisterAll();
@@ -392,17 +429,176 @@ ipcMain.handle('open-donate', (event, url) => {
     shell.openExternal(url);
 });
 
-ipcMain.on('auto-type-text', (event, text) => {
-    typeText(text);
+function parseZoomItText(input) {
+    input = input.replace(/\[([^\]\[]+)\]/g, '\n[$1]\n')
+        // Remove accidental double newlines if tag is already on a line
+        .replace(/\n{2,}/g, '\n')
+        .trim(); // Normalize line endings
+
+    const lines = input.split(/\r?\n/);
+    const actions = [];
+    const pauseRe = /^\s*\[pause\s*:\s*([0-9.]+)\s*\]\s*$/i;
+    const endRe = /^\s*\[end\]\s*$/i;
+
+    let buffer = [];
+
+    function flushBuffer() {
+        if (buffer.length > 0) {
+            const text = buffer.join('');
+            if (text) actions.push({ type: "text", value: text });
+            buffer = [];
+        }
+    }
+
+    for (let line of lines) {
+        if (pauseRe.test(line)) {
+            flushBuffer();
+            const [, val] = line.match(pauseRe);
+            actions.push({ type: "pause", value: parseFloat(val) });
+        } else if (line.trim() === '') {
+            // Ignore empty lines
+            continue;
+        } else if (endRe.test(line)) {
+            flushBuffer();
+            actions.push({ type: "end" });
+            // Do not accumulate buffer after an end tag
+        } else {
+            buffer.push(line);
+        }
+    }
+    flushBuffer();
+
+    return actions;
+}
+
+function pause(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+async function runScript() {
+    const anyVisible = hideOverlayWindows();
+    pause(100);
+    if (currentScript.length === 0 && originalScript.length > 0) {
+        currentScript = JSON.parse(JSON.stringify(originalScript))
+    }
+
+    if (currentScript.length === 0) {
+        return;
+    }
+    console.log("Running script with actions:", currentScript);
+    while (currentScript.length > 0) {
+        const action = currentScript.shift();
+
+        if (action.type === "text") {
+            // Split into lines, type one by one
+            const lines = action.value.split(/\r?\n/).filter(Boolean);
+            for (const line of lines) {
+                typeTextWithSwift(line.replace(/\\n/g, ''));
+            }
+        } else if (action.type === "pause") {
+            await pause(action.value * 1000); // value is in seconds
+        } else if (action.type === "end") {
+            break;
+        }
+
+    }
+    if (anyVisible) {
+        {
+            showOverlayWindows();
+        }
+    }
+}
+
+function hideOverlayWindows() {
+    const anyVisible = overlayWindows.some(win => win.isVisible());
+
+    if (anyVisible) {
+
+        overlayWindows.forEach(win => win.hide());
+        unregisterShortcuts();
+    }
+    return anyVisible;
+}
+
+function showOverlayWindows() {
+    registerShortcuts();
+
+    overlayWindows.forEach(win => {
+        win.show();
+        win.focus();
+    });
+}
+
+function typeTextWithSwift(text) {
+    console.warn(`Typing text: ${text}`);
+    const child = exec(keyTyper);
+
+    child.stdin.write(text);
+    child.stdin.end();
+
+    child.stdout.on('data', (data) => {
+        console.log(`KeyTyper stdout: ${data}`);
+    });
+
+    child.stderr.on('data', (data) => {
+        console.error(`KeyTyper stderr: ${data}`);
+    });
+
+    child.on('close', (code) => {
+        if (code !== 0) {
+            console.error(`KeyTyper process exited with code ${code}`);
+        }
+    });
+}
+
+function getKeyTyperPath() {
+
+    let appPath = app.getAppPath();
+
+    console.log(`App path: ${appPath}`);
+
+    const isAsar = appPath.endsWith('.asar');
+    if (isAsar) {
+        appPath = path.dirname(appPath); // .../Contents
+    } else {
+        // In development, point to your build path, or provide a fallback
+        return path.resolve(__dirname, './KeyTyper'); // Adjust as needed for dev
+    }
+
+    return path.join(appPath, '../KeyTyper');
+}
+
+ipcMain.on('import-script-text', (event, { text, name }) => {
+    originalScript = parseZoomItText(text)
+    currentScript = [];
 });
 
-function typeText(text) {
-   require('electron').clipboard.writeText(text);
+async function pickFile() {
+    anyVisible = hideOverlayWindows();
+    const { canceled, filePaths } = await dialog.showOpenDialog({
+        title: "Select a script file",
+        filters: [{ name: "Text Files", extensions: ["txt"] }],
+        properties: ["openFile"]
+    });
+    if (!canceled && filePaths.length > 0) {
 
-  BrowserWindow.getAllWindows().forEach(win => win.minimize());
+        try {
+            const path = require('path');
+            const fileName = path.basename(filePaths[0]);
+            const content = await fs.readFile(filePaths[0], 'utf-8');
 
-  // Wait for the previous app to regain focus
-  setTimeout(() => {
-    exec(`osascript -e 'tell application "System Events" to keystroke "v" using command down'`);
-  }, 350); // 350ms is usually enough, adjust if needed
+            originalScript = parseZoomItText(content);
+            currentScript = [];
+
+            fileNameLoaded = fileName;
+            contextMenu = Menu.buildFromTemplate(getMenuTemplate());
+            tray.setContextMenu(contextMenu);
+        } catch (err) {
+            console.error('Error reading file:', err);
+        }
+    }
+    if(anyVisible) {
+        showOverlayWindows();
+    }
+    tray.setContextMenu(contextMenu);
 }
