@@ -6,8 +6,12 @@ const canvas = document.getElementById('draw-canvas');
 const ctx = canvas.getContext('2d');
 const previewCanvas = document.getElementById('preview-canvas');
 const previewCtx = previewCanvas.getContext('2d');
+const cursorCanvas = document.getElementById('cursor-canvas');
+const cursorCtx = cursorCanvas.getContext('2d');
 
-canvas.style.cursor = "crosshair";
+let mousePos = { x: 0, y: 0 };
+
+canvas.style.cursor = "none";
 
 
 let drawingMode = 'freehand'; // Default mode
@@ -20,7 +24,9 @@ function resize() {
     canvas.height = window.innerHeight;
     previewCanvas.width = window.innerWidth;
     previewCanvas.height = window.innerHeight;
-
+    cursorCanvas.width = window.innerWidth;
+    cursorCanvas.height = window.innerHeight;
+    cursorCanvas.cursor = "none"; // Hide the default cursor
 
 }
 resize();
@@ -36,7 +42,17 @@ window.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         intro.style.display = 'none';
     }, 3000); // Fully hide after fade out
-
+    window.electronAPI.getSettings().then(settings => {
+        if (settings.penWidth) {
+            penWidth = settings.penWidth;
+        }
+        if (settings.arrowHead) {
+            arrowHeadLength = settings.arrowHead;
+        }
+        strokeColor = settings.strokeColor || '#ff0000'; // Default color
+        drawCursor(); // Draw initial preview dot
+    }
+    );
 });
 let drawing = false;
 let last = null;
@@ -54,7 +70,7 @@ window.electronAPI.onClearDrawing(() => {
 
 window.electronAPI.onSetColor((event, color) => {
     strokeColor = color; // Update the stroke color
-    drawScreenBorder(); // Draw the border
+    drawCursor();
 });
 
 window.electronAPI.onShiftToggle(() => {
@@ -67,6 +83,16 @@ window.electronAPI.onUndo(() => {
 
 window.electronAPI.onClearUndo(() => {
     undoStack = []; // Clear the undo stack
+});
+
+window.electronAPI.updateSettings((event, settings) => {
+    if (settings.penWidth) {
+        penWidth = settings.penWidth;
+    }
+    if (settings.arrowHead) {
+        arrowHeadLength = settings.arrowHead;
+    }
+    drawCursor();
 });
 
 function saveState() {
@@ -205,8 +231,29 @@ canvas.onmousemove = (e) => {
             );
             previewCtx.stroke();
         }
+    } else {
+
+        mousePos.x = e.offsetX;
+        mousePos.y = e.offsetY;
+        drawCursor();
     }
-};
+}
+
+function drawCursor() {
+    // Clear previous preview
+    cursorCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+    // Draw the dot at mouse position
+    cursorCtx.beginPath();
+    cursorCtx.strokeColor = strokeColor;
+    cursorCtx.arc(mousePos.x, mousePos.y, penWidth / 2, 0, 2 * Math.PI);
+    cursorCtx.fillStyle = strokeColor;
+    // previewCtx.globalAlpha = 1; // full opacity, change if needed
+    cursorCtx.shadowColor = 'rgba(0,0,0,0.18)';
+    cursorCtx.shadowBlur = 2;
+    cursorCtx.fill();
+    // Reset shadow so other drawings aren't affected
+    cursorCtx.shadowBlur = 0;
+}
 
 canvas.oncontextmenu = (e) => {
     e.preventDefault();
@@ -297,7 +344,7 @@ function undo() {
 
 let shiftDown = false;
 
-canvas.onmouseleave = () => { drawing = false; };
+canvas.onmouseleave = () => { drawing = false; cursorCanvas.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height); };
 
 // Prevent right-click context menu
 window.addEventListener('contextmenu', e => e.preventDefault());

@@ -37,18 +37,23 @@
             font-family: -apple-system, BlinkMacSystemFont, "San Francisco", Helvetica, Arial, sans-serif;
             text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
         }
+        body { cursor: none !important}
+    
     </style>
 </head>
 
 <body>
-    <div id="app-intro" class="intro-overlay">
-        <h1><img src="icon_128x128.png" /></h1><h1>PresentInk</h1>
+    <div id="app-intro" class="intro-overlay" style="cursor:none !important">
+        <h1><img src="icon_128x128.png" /></h1>
+        <h1>PresentInk</h1>
     </div>
-    <div style="position: fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999;">
+    <div style="position: fixed; top:0; left:0; width:100vw; height:100vh; pointer-events:none; z-index:9999;cursor:none !important">
         <canvas id="draw-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:auto !important;cursor:crosshair !important"></canvas>
+            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:auto !important; cursor: none !important;z-index:9997"></canvas>
         <canvas id="preview-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:none;"></canvas>
+            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:none;cursor: none !important;z-index:9998"></canvas>
+        <canvas id="cursor-canvas"
+            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:none !important;cursor: none !important;z-index:9999"></canvas>
     </div>
     <script src="renderer.js"></script>
 </body>

@@ -46,6 +46,8 @@ Lightweight, always accessible, and fully optimized for Mac.
 | <kbd>Cmd</kbd> + <kbd>Z</kbd>      | Undo last action              |
 | <kbd>Right-click</kbd>              | Exit drawing mode             |
 | <kbd>Cmd</kbd> + <kbd>Shift</kdb> + <kdb>B</kdb>                     | Start break timer     |
+| <kbd>Up</kbd> | Increase line width    |
+| <kbd>Down</kbd> | Decrease line width    |
 | <kdb>ESC</kdb> | Exit break timer |
 
 ## Auto Typing

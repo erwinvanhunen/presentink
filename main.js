@@ -64,11 +64,15 @@ function createOverlayWindows() {
             }
         });
 
+        // if ((process.platform === 'darwin' || process.platform === 'linux')) {
+        //     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
+        // }
+
         win.setIgnoreMouseEvents(false); // Set to true if you want passthrough
 
         win.loadFile('index.html');
         // Optional: Open devtools for debugging per window
-        // win.webContents.openDevTools();
+        win.webContents.openDevTools();
 
         overlayWindows.push(win);
     });
@@ -82,10 +86,10 @@ function toggleOverlay() {
     }
     const anyVisible = overlayWindows.some(win => win.isVisible());
     const drawMenuItem = contextMenu.getMenuItemById('drawing-toggle');
-     overlayWindows.forEach(win => {
-            win.webContents.send('clear-undo');
-            win.webContents.send('clear-drawing');
-        });
+    overlayWindows.forEach(win => {
+        win.webContents.send('clear-undo');
+        win.webContents.send('clear-drawing');
+    });
     if (anyVisible) {
         unregisterShortcuts();
         tray.setImage(trayIconIdle);
@@ -103,6 +107,7 @@ function toggleOverlay() {
         } else {
             win.show();
             win.focus();
+            win.setVisibleOnAllWorkspaces(true);
             win.webContents.send('set-mode', 'freehand');
         }
     });
@@ -117,6 +122,8 @@ function unregisterShortcuts() {
     globalShortcut.unregister('w');
     globalShortcut.unregister('p');
     globalShortcut.unregister('o');
+    globalShortcut.unregister('Up');
+    globalShortcut.unregister('Down');
     globalShortcut.unregister('CommandOrControl+Z');
     globalShortcut.unregister('CommandOrControl+C');
 }
@@ -144,6 +151,27 @@ function registerShortcuts() {
     });
     globalShortcut.register('o', () => {
         changeColor('#ffa500');
+    });
+
+    globalShortcut.register('Up', () => {
+        s = loadSettings();
+        if(s.penWidth < 20) {
+            s.penWidth += 1;
+            saveSettings(s);
+            overlayWindows.forEach(win => {
+                win.webContents.send('update-settings', s);
+            });
+        }
+    });
+    globalShortcut.register('Down', () => {
+        s = loadSettings();
+        if(s.penWidth > 1) {
+            s.penWidth -= 1;
+            saveSettings(s);
+            overlayWindows.forEach(win => {
+                win.webContents.send('update-settings', s);
+            });
+        }
     });
 
     globalShortcut.register('CommandOrControl+Z', () => {
@@ -192,8 +220,7 @@ function changeColor(color) {
 
 function createSettingsWindow() {
 
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    overlayWasVisible = hideOverlayWindows();
 
     if (settingsWindow && !settingsWindow.isDestroyed()) {
         settingsWindow.focus();
@@ -205,6 +232,7 @@ function createSettingsWindow() {
         resizable: true,
         minimizable: false,
         maximizable: false,
+        modal: true,
         title: "PresentInk Settings",
         webPreferences: {
             preload: path.join(__dirname, 'preload.js'),
@@ -217,14 +245,13 @@ function createSettingsWindow() {
 
     settingsWindow.on('closed', () => {
         settingsWindow = null;
-        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
+        if (overlayWasVisible) showOverlayWindows();
     });
 }
 
 function createHelpWindow() {
 
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    overlayWasVisible = hideOverlayWindows();
 
     if (helpWindow && !helpWindow.isDestroyed()) {
         helpWindow.focus();
@@ -248,14 +275,13 @@ function createHelpWindow() {
 
     helpWindow.on('closed', () => {
         helpWindow = null;
-        if (overlayWasVisible) overlayWindows.forEach(win => win.show());
+        showOverlayWindows();
     });
 }
 
 function showBreakTimerWindow() {
 
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    hideOverlayWindows();
 
     if (breakTimerWindows.length) {
         breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
@@ -289,8 +315,8 @@ function showBreakTimerWindow() {
 }
 
 function showAboutWindow() {
-    overlayWasVisible = overlayWindows.some(win => win.isVisible());
-    overlayWindows.forEach(win => win.hide());
+    overlayWasVisible = hideOverlayWindows();
+
     if (aboutWindow && !aboutWindow.isDestroyed()) {
         aboutWindow.focus();
         return;
@@ -313,10 +339,9 @@ function showAboutWindow() {
     aboutWindow.setMenu(null);
     aboutWindow.on('closed', () => {
         aboutWindow = null;
+        showOverlayWindows();
     });
 }
-
-
 
 app.whenReady().then(() => {
 
@@ -371,7 +396,6 @@ function getMenuTemplate() {
                     id: 'select-script-file',
                     label: 'Select Script file',
                     click: async (menuItem, browserWindow) => {
-                        // Open a file dialog, for example:
                         pickFile();
                     }
                 },
@@ -383,16 +407,13 @@ function getMenuTemplate() {
                     label: 'Type Text',
                     accelerator: 'CmdOrCtrl+Shift+T',
                     click: (menuItem, browserWindow) => {
-                        // Implement your text-typing logic here
                         runScript();
-                        // You might send an IPC message or invoke your typeText logic
                     }
                 },
 
             ]
         },
-
-        // { label: `Type Text ${keyTyper}`, click: () => runScript(), accelerator: 'CommandOrControl+Shift+T' },
+        { type: 'separator' },
         { label: 'Quit PresentInk', click: () => app.quit(), accelerator: 'CommandOrControl+Q' },
     ];
 }
@@ -427,6 +448,10 @@ ipcMain.handle('get-version', () => app.getVersion());
 ipcMain.handle('open-donate', (event, url) => {
     const { shell } = require('electron');
     shell.openExternal(url);
+});
+
+ipcMain.handle('write-log', (event, message) => {
+    console.log(message);
 });
 
 function parseZoomItText(input) {
@@ -510,11 +535,11 @@ async function runScript() {
 }
 
 function hideOverlayWindows() {
-    const anyVisible = overlayWindows.some(win => win.isVisible());
+    const anyVisible = overlayWindows.some(win => win && !win.isDestroyed() && win.isVisible());
 
     if (anyVisible) {
 
-        overlayWindows.forEach(win => win.hide());
+        overlayWindows.forEach(win => { if (win && !win.isDestroyed()) win.hide(); });
         unregisterShortcuts();
     }
     return anyVisible;
@@ -597,7 +622,7 @@ async function pickFile() {
             console.error('Error reading file:', err);
         }
     }
-    if(anyVisible) {
+    if (anyVisible) {
         showOverlayWindows();
     }
     tray.setContextMenu(contextMenu);

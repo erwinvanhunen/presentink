@@ -200,7 +200,7 @@
         <tr>
           <td class="settings-label">Break timer length</td>
           <td class="settings-control">
-            <input id="breakTime" type="range" min="1" max="30" value="10">
+            <input id="breakTime" type="range" min="1" max="60" value="10">
             <span class="value-label" id="breakTimeValue">10 min</span>
           </td>
         </tr>
@@ -229,7 +229,7 @@
       drawArrow(arrowCtx, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, penWidth.value, arrowHead.value);
     };
 
-    breakTime.oninput = () => { breakTimeValue.textContent = breakTime.value; };
+    breakTime.oninput = () => { breakTimeValue.textContent = `${breakTime.value} min` };
 
 
     penWidth.oninput = () => {
@@ -252,7 +252,7 @@
     if (window.electronAPI && window.electronAPI.getSettings) {
       window.electronAPI.getSettings().then(s => {
         document.getElementById('breakTime').value = s.breakTime || '10';
-        document.getElementById('breakTimeValue').textContent = s.breakTime || '10';
+        document.getElementById('breakTimeValue').textContent = `${s.breakTime} min` || '10 min';
         document.getElementById('penWidth').value = s.penWidth || '3';
         document.getElementById('penWidthValue').textContent = s.penWidth || '3';
         drawPenWidth(s.penWidth || 3);
@@ -285,7 +285,7 @@
       // Draw shaft
       ctx.strokeStyle = "#ff0000"; // Use the selected stroke color
       ctx.lineWidth = penWidth;
-      ctx.lineCap = 'round';
+      ctx.lineCap = 'flat'; // Flat line cap for better arrow appearance
       ctx.beginPath();
       ctx.moveTo(fromX, fromY);
       ctx.lineTo(shaftX, shaftY);
