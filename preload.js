@@ -1,5 +1,6 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
+
 contextBridge.exposeInMainWorld('electronAPI', {
   onSetMode: (callback) => ipcRenderer.on('set-mode', (event, mode) => callback(event, mode)),
   onClearDrawing: (callback) => ipcRenderer.on('clear-drawing', (event) => callback(event)),
@@ -13,5 +14,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   getSettings: () => ipcRenderer.invoke('get-settings'),
   saveSettings: (settings) => ipcRenderer.send('save-settings', settings),
   openDonate: (url) => ipcRenderer.invoke('open-donate', url),
-  writeLog(message) { ipcRenderer.invoke('write-log', message);}
+  writeLog(message) { ipcRenderer.invoke('write-log', message)},
 });

@@ -55,8 +55,9 @@ function createOverlayWindows() {
             frame: false,
             alwaysOnTop: true,
             hasShadow: false,
-            focusable: false, // Not focus-stealing
+            focusable: true, // Not focus-stealing
             skipTaskbar: true,
+            collectionBehavior: 'all',
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'),
                 contextIsolation: true,
@@ -67,12 +68,18 @@ function createOverlayWindows() {
         // if ((process.platform === 'darwin' || process.platform === 'linux')) {
         //     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
         // }
+        win.on('focus', () => {
+            win.webContents.send('window-focused');
+        });
+        win.on('show', () => {
+            win.webContents.send('window-shown');
+        });
 
         win.setIgnoreMouseEvents(false); // Set to true if you want passthrough
 
         win.loadFile('index.html');
         // Optional: Open devtools for debugging per window
-        win.webContents.openDevTools();
+        //win.webContents.openDevTools();
 
         overlayWindows.push(win);
     });
@@ -108,6 +115,7 @@ function toggleOverlay() {
             win.show();
             win.focus();
             win.setVisibleOnAllWorkspaces(true);
+            win.collectionBehavior = 'all';
             win.webContents.send('set-mode', 'freehand');
         }
     });
@@ -126,6 +134,7 @@ function unregisterShortcuts() {
     globalShortcut.unregister('Down');
     globalShortcut.unregister('CommandOrControl+Z');
     globalShortcut.unregister('CommandOrControl+C');
+    globalShortcut.unregister('t');
 }
 
 function registerShortcuts() {
@@ -155,7 +164,7 @@ function registerShortcuts() {
 
     globalShortcut.register('Up', () => {
         s = loadSettings();
-        if(s.penWidth < 20) {
+        if (s.penWidth < 20) {
             s.penWidth += 1;
             saveSettings(s);
             overlayWindows.forEach(win => {
@@ -165,7 +174,7 @@ function registerShortcuts() {
     });
     globalShortcut.register('Down', () => {
         s = loadSettings();
-        if(s.penWidth > 1) {
+        if (s.penWidth > 1) {
             s.penWidth -= 1;
             saveSettings(s);
             overlayWindows.forEach(win => {

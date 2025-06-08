@@ -2,8 +2,8 @@ let undoStack = [];
 const MAX_UNDO = 30; // Adjust for memory usage, if you want
 
 
-const canvas = document.getElementById('draw-canvas');
-const ctx = canvas.getContext('2d');
+const drawCanvas = document.getElementById('draw-canvas');
+const ctx = drawCanvas.getContext('2d');
 const previewCanvas = document.getElementById('preview-canvas');
 const previewCtx = previewCanvas.getContext('2d');
 const cursorCanvas = document.getElementById('cursor-canvas');
@@ -11,7 +11,7 @@ const cursorCtx = cursorCanvas.getContext('2d');
 
 let mousePos = { x: 0, y: 0 };
 
-canvas.style.cursor = "none";
+drawCanvas.style.cursor = "none";
 
 
 let drawingMode = 'freehand'; // Default mode
@@ -20,8 +20,8 @@ let prevX = 0, prevY = 0;
 let lineStartX = 0, lineStartY = 0;
 let strokeColor = '#ff0000'
 function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
+    drawCanvas.width = window.innerWidth;
+    drawCanvas.height = window.innerHeight;
     previewCanvas.width = window.innerWidth;
     previewCanvas.height = window.innerHeight;
     cursorCanvas.width = window.innerWidth;
@@ -59,13 +59,11 @@ let last = null;
 
 window.electronAPI.onSetMode((event, mode) => {
     drawingMode = mode;
-    drawScreenBorder();
     saveState();
 });
 
 window.electronAPI.onClearDrawing(() => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    drawScreenBorder(); // Draw the border
+    ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
 });
 
 window.electronAPI.onSetColor((event, color) => {
@@ -97,7 +95,7 @@ window.electronAPI.updateSettings((event, settings) => {
 
 function saveState() {
     if (undoStack.length >= MAX_UNDO) undoStack.shift(); // Limit history
-    undoStack.push(canvas.toDataURL());
+    undoStack.push(drawCanvas.toDataURL());
 }
 
 
@@ -108,7 +106,7 @@ let isPreviewingCircle = false;
 let penWidth = 3; // Default pen width
 let arrowHeadLength = 20; // Default arrow head length
 
-canvas.onmousedown = (e) => {
+drawCanvas.onmousedown = (e) => {
     isPreviewingArrow = false;
     isPreviewingBox = false;
     isPreviewingStraightLine = false;
@@ -153,8 +151,17 @@ canvas.onmousedown = (e) => {
     }
 };
 
+window.addEventListener('focus', () => {
+    drawCanvas.style.cursor = 'none';
+});
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        drawCanvas.style.cursor = 'none';
+    }
+});
 
-canvas.onmousemove = (e) => {
+drawCanvas.onmousemove = (e) => {
+    drawCanvas.style.cursor = 'none';
     if (e.shiftKey && e.metaKey) {
         drawingMode = 'arrow';
     }
@@ -176,7 +183,7 @@ canvas.onmousemove = (e) => {
         // If shift is held either since mousedown or now
         if (isPreviewingStraightLine || e.shiftKey) {
             // Optional: live preview by clearing and redrawing background/border
-            previewCtx.clearRect(0, 0, canvas.width, canvas.height);
+            previewCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
             previewCtx.beginPath();
             previewCtx.moveTo(lineStartX, lineStartY);
             previewCtx.lineTo(e.offsetX, e.offsetY);
@@ -255,16 +262,16 @@ function drawCursor() {
     cursorCtx.shadowBlur = 0;
 }
 
-canvas.oncontextmenu = (e) => {
+drawCanvas.oncontextmenu = (e) => {
     e.preventDefault();
 };
 
-canvas.onmouseup = (e) => {
+drawCanvas.onmouseup = (e) => {
     if (e.button === 2) {
         // Right-click: do nothing
         drawingMode = 'none';
         drawing = false;
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
         previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
         window.electronAPI.exitDrawing();
         return;
@@ -329,22 +336,22 @@ function undo() {
         const imgData = undoStack[undoStack.length - 1];
         let img = new window.Image();
         img.onload = function () {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
+            ctx.drawImage(img, 0, 0, drawCanvas.width, drawCanvas.height);
             // Redraw border if needed:
             if (drawingMode === 'freehand' || drawingMode === 'arrow') drawScreenBorder && drawScreenBorder();
         };
         img.src = imgData;
     } else if (undoStack.length === 1) {
         // Clear canvas if only the initial state remains
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
         if (drawingMode === 'freehand' || drawingMode === 'arrow') drawScreenBorder && drawScreenBorder();
     }
 }
 
 let shiftDown = false;
 
-canvas.onmouseleave = () => { drawing = false; cursorCanvas.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height); };
+drawCanvas.onmouseleave = () => { drawing = false; cursorCanvas.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height); };
 
 // Prevent right-click context menu
 window.addEventListener('contextmenu', e => e.preventDefault());
@@ -394,3 +401,20 @@ function drawScreenBorder() {
     // ctx.restore();
 
 }
+
+function rehideCursor() {
+    document.body.classList.add('hide-cursor');
+    // Or reapply `cursor: none` directly if needed
+    const drawCanvas = document.getElementById('draw-canvas');
+    if (drawCanvas) drawCanvas.style.cursor = 'none';
+}
+
+ipcRenderer.on('window-focused', rehideCursor);
+ipcRenderer.on('window-shown', rehideCursor);
+
+document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+        const drawCanvas = document.getElementById('draw-canvas');
+        if (drawCanvas) drawCanvas.style.cursor = 'none';
+    }
+});
