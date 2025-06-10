@@ -1,21 +1,21 @@
-const { app, BrowserWindow, globalShortcut, Tray, Menu, screen, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, screen: electronScreen, dialog, ipcMain } = require('electron');
 const { exec } = require('child_process');
 const path = require('path');
 const { glob } = require('fs');
 const { register } = require('module');
 const fs = require('fs').promises; // Use Node's fs/promises for async reading
 
-let settingsWindow = null;
-let helpWindow = null;
-let aboutWindow = null;
-let contextMenu = null;
+let settingsWindow: Electron.BrowserWindow | null = null;
+let helpWindow: Electron.BrowserWindow | null = null;
+let aboutWindow: Electron.BrowserWindow | null = null;
+let contextMenu: Electron.Menu | null = null;
 
-let tray = null;
-let overlayWindows = [];
-let breakTimerWindows = [];
+let tray: Electron.Tray | null = null;
+let overlayWindows: Electron.BrowserWindow[] = [];
+let breakTimerWindows: Electron.BrowserWindow[] = [];
 
-let originalScript = [];
-let currentScript = [];
+let originalScript: ScriptAction[] = [];
+let currentScript: ScriptAction[] = [];
 let fileNameLoaded = "";
 
 const trayIconIdle = path.join(__dirname, 'penimages/pendrawingidle.png');
@@ -43,9 +43,9 @@ function createOverlayWindows() {
     // Remove previous overlays if any
     overlayWindows.forEach(win => win.close());
     overlayWindows = [];
-
-    const displays = screen.getAllDisplays();
-    displays.forEach((display, idx) => {
+    console.log(path.join(__dirname, 'preload.js'));
+    const displays = electronScreen.getAllDisplays();
+    displays.forEach((display: Electron.Display, idx: number) => {
         const win = new BrowserWindow({
             x: display.bounds.x,
             y: display.bounds.y,
@@ -64,7 +64,7 @@ function createOverlayWindows() {
                 nodeIntegration: false,
             }
         });
-
+        console.log(`Creating overlay window for display ${idx} at ${display.bounds.x},${display.bounds.y} with size ${display.bounds.width}x${display.bounds.height}`);
         // if ((process.platform === 'darwin' || process.platform === 'linux')) {
         //     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
         // }
@@ -77,10 +77,12 @@ function createOverlayWindows() {
 
         win.setIgnoreMouseEvents(false); // Set to true if you want passthrough
 
-        win.loadFile('index.html');
+    
+        win.loadFile(`${__dirname}/index.html`);
+        console.log(`${__dirname}/index.html`);
         // Optional: Open devtools for debugging per window
         //win.webContents.openDevTools();
-
+        
         overlayWindows.push(win);
     });
     overlayWindows.forEach(win => win.webContents.send('set-mode', 'freehand'));
@@ -92,21 +94,22 @@ function toggleOverlay() {
         createOverlayWindows();
     }
     const anyVisible = overlayWindows.some(win => win.isVisible());
-    const drawMenuItem = contextMenu.getMenuItemById('drawing-toggle');
+ 
+    const drawMenuItem = contextMenu ? contextMenu.getMenuItemById('drawing-toggle') : null;
     overlayWindows.forEach(win => {
         win.webContents.send('clear-undo');
         win.webContents.send('clear-drawing');
     });
     if (anyVisible) {
         unregisterShortcuts();
-        tray.setImage(trayIconIdle);
-        drawMenuItem.checked = false;
+        if (tray) tray.setImage(trayIconIdle);
+        if (drawMenuItem) drawMenuItem.checked = false;
     } else {
         changeColor(selectedColor); // Reset to default color
         registerShortcuts();
-        drawMenuItem.checked = true;
+        if (drawMenuItem) drawMenuItem.checked = true;
     }
-    tray.setContextMenu(contextMenu);
+    if (tray) tray.setContextMenu(contextMenu);
 
     overlayWindows.forEach(win => {
         if (anyVisible) {
@@ -115,8 +118,8 @@ function toggleOverlay() {
             win.show();
             win.focus();
             win.setVisibleOnAllWorkspaces(true);
-            win.collectionBehavior = 'all';
             win.webContents.send('set-mode', 'freehand');
+            console.log(`Showing overlay window for display at ${win.getBounds().x},${win.getBounds().y}`);
         }
     });
 }
@@ -163,7 +166,7 @@ function registerShortcuts() {
     });
 
     globalShortcut.register('Up', () => {
-        s = loadSettings();
+        const s = loadSettings();
         if (s.penWidth < 20) {
             s.penWidth += 1;
             saveSettings(s);
@@ -173,7 +176,7 @@ function registerShortcuts() {
         }
     });
     globalShortcut.register('Down', () => {
-        s = loadSettings();
+        const s = loadSettings();
         if (s.penWidth > 1) {
             s.penWidth -= 1;
             saveSettings(s);
@@ -195,41 +198,43 @@ function registerShortcuts() {
     });
 }
 
-function changeColor(color) {
+function changeColor(color: string) {
     selectedColor = color;
     overlayWindows.forEach(win => {
         win.webContents.send('change-color', color);
     });
-    switch (color) {
-        case '#00ff00':
-            tray.setImage(trayIconGreen);
-            break;
-        case '#ff0000':
-            tray.setImage(trayIconRed);
-            break;
-        case '#0000ff':
-            tray.setImage(trayIconBlue);
-            break;
-        case '#ffff00':
-            tray.setImage(trayIconYellow);
-            break;
-        case '#ffffff':
-            tray.setImage(trayIconWhite);
-            break;
-        case '#ff00ff':
-            tray.setImage(trayIconPink);
-            break;
-        case '#ffa500':
-            tray.setImage(trayIconOrange);
-            break;
-        default:
-            tray.setImage(trayIconIdle);
+    if (tray) {
+        switch (color) {
+            case '#00ff00':
+                tray.setImage(trayIconGreen);
+                break;
+            case '#ff0000':
+                tray.setImage(trayIconRed);
+                break;
+            case '#0000ff':
+                tray.setImage(trayIconBlue);
+                break;
+            case '#ffff00':
+                tray.setImage(trayIconYellow);
+                break;
+            case '#ffffff':
+                tray.setImage(trayIconWhite);
+                break;
+            case '#ff00ff':
+                tray.setImage(trayIconPink);
+                break;
+            case '#ffa500':
+                tray.setImage(trayIconOrange);
+                break;
+            default:
+                tray.setImage(trayIconIdle);
+        }
     }
 }
 
 function createSettingsWindow() {
 
-    overlayWasVisible = hideOverlayWindows();
+    const overlayWasVisible = hideOverlayWindows();
 
     if (settingsWindow && !settingsWindow.isDestroyed()) {
         settingsWindow.focus();
@@ -249,18 +254,19 @@ function createSettingsWindow() {
             nodeIntegration: false
         }
     });
-    settingsWindow.loadFile('settings.html');
-    settingsWindow.setMenu(null); // Hide menu bar
-
-    settingsWindow.on('closed', () => {
-        settingsWindow = null;
-        if (overlayWasVisible) showOverlayWindows();
-    });
+    if (settingsWindow) {
+        settingsWindow.loadFile('settings.html');
+        settingsWindow.setMenu(null); // Hide menu bar
+        settingsWindow.on('closed', () => {
+            settingsWindow = null;
+            if (overlayWasVisible) showOverlayWindows();
+        });
+    }
 }
 
 function createHelpWindow() {
 
-    overlayWasVisible = hideOverlayWindows();
+    const overlayWasVisible = hideOverlayWindows();
 
     if (helpWindow && !helpWindow.isDestroyed()) {
         helpWindow.focus();
@@ -279,13 +285,14 @@ function createHelpWindow() {
             nodeIntegration: false
         }
     });
-    helpWindow.loadFile('help.html');
-    helpWindow.setMenu(null);
-
-    helpWindow.on('closed', () => {
-        helpWindow = null;
-        showOverlayWindows();
-    });
+    if (helpWindow) {
+        helpWindow.loadFile('help.html');
+        helpWindow.setMenu(null);
+        helpWindow.on('closed', () => {
+            helpWindow = null;
+            showOverlayWindows();
+        });
+    }
 }
 
 function showBreakTimerWindow() {
@@ -296,8 +303,8 @@ function showBreakTimerWindow() {
         breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
         breakTimerWindows = [];
     }
-    const displays = screen.getAllDisplays();
-    breakTimerWindows = displays.map((display, idx) => {
+    const displays = electronScreen.getAllDisplays();
+    breakTimerWindows = displays.map((display: Electron.Display, idx: number) => {
         const win = new BrowserWindow({
             x: display.bounds.x,
             y: display.bounds.y,
@@ -324,7 +331,7 @@ function showBreakTimerWindow() {
 }
 
 function showAboutWindow() {
-    overlayWasVisible = hideOverlayWindows();
+    const overlayWasVisible = hideOverlayWindows();
 
     if (aboutWindow && !aboutWindow.isDestroyed()) {
         aboutWindow.focus();
@@ -344,12 +351,14 @@ function showAboutWindow() {
             nodeIntegration: false
         }
     });
-    aboutWindow.loadFile('about.html');
-    aboutWindow.setMenu(null);
-    aboutWindow.on('closed', () => {
-        aboutWindow = null;
-        showOverlayWindows();
-    });
+    if (aboutWindow) {
+        aboutWindow.loadFile('about.html');
+        aboutWindow.setMenu(null);
+        aboutWindow.on('closed', () => {
+            aboutWindow = null;
+            showOverlayWindows();
+        });
+    }
 }
 
 app.whenReady().then(() => {
@@ -370,11 +379,11 @@ app.whenReady().then(() => {
 
     // Setup tray/menu bar icon
     tray = new Tray(trayIconRed);
-
-    contextMenu = Menu.buildFromTemplate(getMenuTemplate());
-    tray.setToolTip('PresentInk');
-    tray.setContextMenu(contextMenu);
-
+    if (tray) {
+        contextMenu = Menu.buildFromTemplate(getMenuTemplate());
+        tray.setToolTip('PresentInk');
+        tray.setContextMenu(contextMenu);
+    }
     createOverlayWindows();
     registerShortcuts();
     globalShortcut.register('CommandOrControl+Shift+D', () => {
@@ -404,7 +413,7 @@ function getMenuTemplate() {
                 {
                     id: 'select-script-file',
                     label: 'Select Script file',
-                    click: async (menuItem, browserWindow) => {
+                    click: async (menuItem: any, browserWindow: any) => {
                         pickFile();
                     }
                 },
@@ -415,7 +424,7 @@ function getMenuTemplate() {
                 {
                     label: 'Type Text',
                     accelerator: 'CmdOrCtrl+Shift+T',
-                    click: (menuItem, browserWindow) => {
+                    click: (menuItem: any, browserWindow: any) => {
                         runScript();
                     }
                 },
@@ -431,7 +440,7 @@ app.on('will-quit', () => {
     globalShortcut.unregisterAll();
 });
 
-ipcMain.on('exit-drawing', (event) => {
+ipcMain.on('exit-drawing', (event: any) => {
     toggleOverlay();
 });
 
@@ -444,7 +453,7 @@ ipcMain.on('close-break-timer', () => {
 
 ipcMain.handle('get-settings', () => loadSettings());
 
-ipcMain.on('save-settings', (event, newSettings) => {
+ipcMain.on('save-settings', (event: any, newSettings: any) => {
     saveSettings(newSettings);
     // Optionally, broadcast to overlay windows
     overlayWindows.forEach(win =>
@@ -454,27 +463,22 @@ ipcMain.on('save-settings', (event, newSettings) => {
 
 ipcMain.handle('get-version', () => app.getVersion());
 
-ipcMain.handle('open-donate', (event, url) => {
+ipcMain.handle('open-donate', (event: any, url: any) => {
     const { shell } = require('electron');
     shell.openExternal(url);
 });
-
-ipcMain.handle('write-log', (event, message) => {
-    console.log(message);
-});
-
-function parseZoomItText(input) {
+function parseZoomItText(input: string): ScriptAction[] {
     input = input.replace(/\[([^\]\[]+)\]/g, '\n[$1]\n')
         // Remove accidental double newlines if tag is already on a line
         .replace(/\n{2,}/g, '\n')
         .trim(); // Normalize line endings
 
     const lines = input.split(/\r?\n/);
-    const actions = [];
+    const actions: ScriptAction[] = [];
     const pauseRe = /^\s*\[pause\s*:\s*([0-9.]+)\s*\]\s*$/i;
     const endRe = /^\s*\[end\]\s*$/i;
 
-    let buffer = [];
+    let buffer: string[] = [];
 
     function flushBuffer() {
         if (buffer.length > 0) {
@@ -487,14 +491,17 @@ function parseZoomItText(input) {
     for (let line of lines) {
         if (pauseRe.test(line)) {
             flushBuffer();
-            const [, val] = line.match(pauseRe);
-            actions.push({ type: "pause", value: parseFloat(val) });
+            const match = line.match(pauseRe);
+            if (match) {
+                const [, val] = match;
+                actions.push({ type: "pause", value: parseFloat(val) });
+            }
         } else if (line.trim() === '') {
             // Ignore empty lines
             continue;
         } else if (endRe.test(line)) {
             flushBuffer();
-            actions.push({ type: "end" });
+            actions.push({ type: "end", value: null });
             // Do not accumulate buffer after an end tag
         } else {
             buffer.push(line);
@@ -505,7 +512,7 @@ function parseZoomItText(input) {
     return actions;
 }
 
-function pause(ms) {
+function pause(ms: number | undefined) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
@@ -522,17 +529,18 @@ async function runScript() {
     console.log("Running script with actions:", currentScript);
     while (currentScript.length > 0) {
         const action = currentScript.shift();
-
-        if (action.type === "text") {
-            // Split into lines, type one by one
-            const lines = action.value.split(/\r?\n/).filter(Boolean);
-            for (const line of lines) {
-                typeTextWithSwift(line.replace(/\\n/g, ''));
+        if (action != null) {
+            if (action.type === "text") {
+                // Split into lines, type one by one
+                const lines = action.value.split(/\r?\n/).filter(Boolean);
+                for (const line of lines) {
+                    typeTextWithSwift(line.replace(/\\n/g, ''));
+                }
+            } else if (action.type === "pause") {
+                await pause(action.value * 1000); // value is in seconds
+            } else if (action.type === "end") {
+                break;
             }
-        } else if (action.type === "pause") {
-            await pause(action.value * 1000); // value is in seconds
-        } else if (action.type === "end") {
-            break;
         }
 
     }
@@ -563,22 +571,22 @@ function showOverlayWindows() {
     });
 }
 
-function typeTextWithSwift(text) {
+function typeTextWithSwift(text: any) {
     console.warn(`Typing text: ${text}`);
     const child = exec(keyTyper);
 
     child.stdin.write(text);
     child.stdin.end();
 
-    child.stdout.on('data', (data) => {
+    child.stdout.on('data', (data: any) => {
         console.log(`KeyTyper stdout: ${data}`);
     });
 
-    child.stderr.on('data', (data) => {
+    child.stderr.on('data', (data: any) => {
         console.error(`KeyTyper stderr: ${data}`);
     });
 
-    child.on('close', (code) => {
+    child.on('close', (code: number) => {
         if (code !== 0) {
             console.error(`KeyTyper process exited with code ${code}`);
         }
@@ -602,13 +610,13 @@ function getKeyTyperPath() {
     return path.join(appPath, '../KeyTyper');
 }
 
-ipcMain.on('import-script-text', (event, { text, name }) => {
+ipcMain.on('import-script-text', (event: any, { text, name }: any) => {
     originalScript = parseZoomItText(text)
     currentScript = [];
 });
 
 async function pickFile() {
-    anyVisible = hideOverlayWindows();
+    const anyVisible = hideOverlayWindows();
     const { canceled, filePaths } = await dialog.showOpenDialog({
         title: "Select a script file",
         filters: [{ name: "Text Files", extensions: ["txt"] }],
@@ -626,7 +634,8 @@ async function pickFile() {
 
             fileNameLoaded = fileName;
             contextMenu = Menu.buildFromTemplate(getMenuTemplate());
-            tray.setContextMenu(contextMenu);
+            if (tray) tray.setContextMenu(contextMenu);
+
         } catch (err) {
             console.error('Error reading file:', err);
         }
@@ -634,5 +643,5 @@ async function pickFile() {
     if (anyVisible) {
         showOverlayWindows();
     }
-    tray.setContextMenu(contextMenu);
+     if (tray)tray.setContextMenu(contextMenu);
 }

@@ -1,0 +1,22 @@
+{
+  "name": "presentink",
+  "version": "0.9.5",
+  "main": "main.js",
+  "icon": "icon.icns",
+  "keywords": [],
+  "author": "Erwin van Hunen",
+  "license": "ISC",
+  "description": "An open source screen annotation tool for macOS.",
+  "devDependencies": {
+    "copy-webpack-plugin": "^13.0.0",
+    "electron": "^36.3.2",
+    "electron-builder": "^26.0.12",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
+  },
+  "dependencies": {
+    "source-map-loader": "^5.0.0"
+  }
+}

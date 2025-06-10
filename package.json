@@ -1,24 +1,35 @@
 {
   "name": "presentink",
   "version": "0.9.5",
-  "main": "main.js",
+  "main": "dist/main.js",
   "icon": "icon.icns",
   "scripts": {
+    "clean": "rm -rf dist",
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder"
+    "dist": "electron-builder --mac --x64",
+    "build": "webpack"
   },
   "keywords": [],
   "author": "Erwin van Hunen",
   "license": "ISC",
   "description": "",
   "devDependencies": {
+    "copy-webpack-plugin": "^13.0.0",
     "electron": "^36.3.2",
-    "electron-builder": "^26.0.12"
+    "electron-builder": "^26.0.12",
+    "ts-loader": "^9.5.2",
+    "typescript": "^5.8.3",
+    "webpack": "^5.99.9",
+    "webpack-cli": "^6.0.1"
   },
   "build": {
     "appId": "com.erwinmcm.presentink",
     "productName": "PresentInk",
+    "directories": {
+      "output": "built",
+      "app": "dist"
+    },
     "extraFiles": [
       "KeyTyper"
     ],
@@ -29,5 +40,8 @@
         "zip"
       ]
     }
+  },
+  "dependencies": {
+    "source-map-loader": "^5.0.0"
   }
 }
