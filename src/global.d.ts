@@ -17,6 +17,11 @@ declare global {
             writeLog: (message: string) => Promise<void>
             onWindowFocused: (callback: (event: Electron.IpcRendererEvent) => void) => void,
             onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => void
-        };
+        },
+        aboutPreload: {
+            getVersion: () => Promise<string>,
+            openDonate: (url: string) => Promise<void>,
+            sendVersion: (version: string) => void
+        }
     }
 }

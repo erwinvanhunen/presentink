@@ -1,6 +1,6 @@
 {
   "name": "presentink",
-  "version": "0.9.5",
+  "version": "0.9.6",
   "main": "main.js",
   "icon": "icon.icns",
   "keywords": [],
@@ -15,8 +15,5 @@
     "typescript": "^5.8.3",
     "webpack": "^5.99.9",
     "webpack-cli": "^6.0.1"
-  },
-  "dependencies": {
-    "source-map-loader": "^5.0.0"
   }
 }

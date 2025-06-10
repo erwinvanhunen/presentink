@@ -115,10 +115,10 @@
         <div class="copyright">&copy; 2025 Erwin van Hunen</div>
     </div>
     <script>
-        let v = window.electronAPI.getVersion().then(version => {
-            document.getElementById('version').textContent = 'Version ' + version;
-        }).catch(() => {
-        });
+
+        // let v = window.electronAPI.getVersion().then(version => {
+        // }).catch(() => {
+        // });
         document.getElementById('donateBtn').onclick = function () {
             if (window.electronAPI && window.electronAPI.openDonate) {
                 window.electronAPI.openDonate('https://github.com/sponsors/erwinvanhunen');

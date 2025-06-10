@@ -29,8 +29,6 @@ const trayIconOrange = path.join(__dirname, 'penimages/pendrawingorange.png');
 const keyTyper = getKeyTyperPath(); // Path to the KeyTyper executable
 let selectedColor = '#ff0000'; // Default color
 
-console.log(`KeyTyper path: ${keyTyper}`);
-
 const { loadSettings, saveSettings } = require('./settings');
 const { type } = require('os');
 const { Console } = require('console');
@@ -40,10 +38,10 @@ const { get } = require('http');
 let settings = loadSettings();
 
 function createOverlayWindows() {
+
     // Remove previous overlays if any
     overlayWindows.forEach(win => win.close());
     overlayWindows = [];
-    console.log(path.join(__dirname, 'preload.js'));
     const displays = electronScreen.getAllDisplays();
     displays.forEach((display: Electron.Display, idx: number) => {
         const win = new BrowserWindow({
@@ -64,7 +62,6 @@ function createOverlayWindows() {
                 nodeIntegration: false,
             }
         });
-        console.log(`Creating overlay window for display ${idx} at ${display.bounds.x},${display.bounds.y} with size ${display.bounds.width}x${display.bounds.height}`);
         // if ((process.platform === 'darwin' || process.platform === 'linux')) {
         //     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
         // }
@@ -77,12 +74,10 @@ function createOverlayWindows() {
 
         win.setIgnoreMouseEvents(false); // Set to true if you want passthrough
 
-    
         win.loadFile(`${__dirname}/index.html`);
-        console.log(`${__dirname}/index.html`);
         // Optional: Open devtools for debugging per window
         //win.webContents.openDevTools();
-        
+
         overlayWindows.push(win);
     });
     overlayWindows.forEach(win => win.webContents.send('set-mode', 'freehand'));
@@ -94,7 +89,7 @@ function toggleOverlay() {
         createOverlayWindows();
     }
     const anyVisible = overlayWindows.some(win => win.isVisible());
- 
+
     const drawMenuItem = contextMenu ? contextMenu.getMenuItemById('drawing-toggle') : null;
     overlayWindows.forEach(win => {
         win.webContents.send('clear-undo');
@@ -119,7 +114,6 @@ function toggleOverlay() {
             win.focus();
             win.setVisibleOnAllWorkspaces(true);
             win.webContents.send('set-mode', 'freehand');
-            console.log(`Showing overlay window for display at ${win.getBounds().x},${win.getBounds().y}`);
         }
     });
 }
@@ -255,7 +249,7 @@ function createSettingsWindow() {
         }
     });
     if (settingsWindow) {
-        settingsWindow.loadFile('settings.html');
+        settingsWindow.loadFile(`${__dirname}/settings.html`);
         settingsWindow.setMenu(null); // Hide menu bar
         settingsWindow.on('closed', () => {
             settingsWindow = null;
@@ -286,7 +280,7 @@ function createHelpWindow() {
         }
     });
     if (helpWindow) {
-        helpWindow.loadFile('help.html');
+        helpWindow.loadFile(`${__dirname}/help.html`);
         helpWindow.setMenu(null);
         helpWindow.on('closed', () => {
             helpWindow = null;
@@ -321,7 +315,7 @@ function showBreakTimerWindow() {
                 preload: path.join(__dirname, 'breaktimer-preload.js')
             }
         });
-        win.loadFile('breaktimer.html');
+        win.loadFile(`${__dirname}/breaktimer.html`);
         win.on('closed', () => {
             breakTimerWindows = breakTimerWindows.filter(w => w !== win);
         });
@@ -346,14 +340,19 @@ function showAboutWindow() {
         title: "About PresentInk",
         alwaysOnTop: true,
         webPreferences: {
-            preload: path.join(__dirname, 'about-preload.js'),
+            preload: path.join(__dirname, 'aboutpreload.js'),
             contextIsolation: true,
             nodeIntegration: false
         }
     });
     if (aboutWindow) {
-        aboutWindow.loadFile('about.html');
+        aboutWindow.loadFile(`${__dirname}/about.html`);
         aboutWindow.setMenu(null);
+
+        aboutWindow.webContents.on('did-finish-load', () => {
+            aboutWindow?.webContents.send('set-version', app.getVersion());
+        });
+        //aboutWindow.webContents.openDevTools();
         aboutWindow.on('closed', () => {
             aboutWindow = null;
             showOverlayWindows();
@@ -512,6 +511,10 @@ function parseZoomItText(input: string): ScriptAction[] {
     return actions;
 }
 
+function getVersion(): any {
+    return app.getVersion()
+}
+
 function pause(ms: number | undefined) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
@@ -526,7 +529,6 @@ async function runScript() {
     if (currentScript.length === 0) {
         return;
     }
-    console.log("Running script with actions:", currentScript);
     while (currentScript.length > 0) {
         const action = currentScript.shift();
         if (action != null) {
@@ -542,7 +544,6 @@ async function runScript() {
                 break;
             }
         }
-
     }
     if (anyVisible) {
         {
@@ -572,7 +573,6 @@ function showOverlayWindows() {
 }
 
 function typeTextWithSwift(text: any) {
-    console.warn(`Typing text: ${text}`);
     const child = exec(keyTyper);
 
     child.stdin.write(text);
@@ -596,8 +596,6 @@ function typeTextWithSwift(text: any) {
 function getKeyTyperPath() {
 
     let appPath = app.getAppPath();
-
-    console.log(`App path: ${appPath}`);
 
     const isAsar = appPath.endsWith('.asar');
     if (isAsar) {
@@ -643,5 +641,5 @@ async function pickFile() {
     if (anyVisible) {
         showOverlayWindows();
     }
-     if (tray)tray.setContextMenu(contextMenu);
+    if (tray) tray.setContextMenu(contextMenu);
 }

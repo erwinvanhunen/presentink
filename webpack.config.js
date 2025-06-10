@@ -4,9 +4,10 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 module.exports = {
   mode: 'development',
   entry: {
-    main: './src/main.ts', // Change if your entry file is different
-    preload: './src/preload.ts', // Change if your preload file is different
-    renderer: './src/renderer.ts' // Change if your renderer file is different
+    main: './src/main.ts', 
+    preload: './src/preload.ts', 
+    renderer: './src/renderer.ts',
+    aboutpreload: './src/about-preload.ts' 
   },
   target: 'electron-main',
   module: {
@@ -36,6 +37,7 @@ module.exports = {
       patterns: [
         { from: 'src/distpackage.json', to: 'package.json' },
         { from: 'penimages', to: 'penimages' },
+        { from: 'src/about.html', to: 'about.html' },
         { from: 'src/index.html', to: 'index.html' },
         { from: 'src/breaktimer.html', to: 'breaktimer.html' },
         { from: 'src/help.html', to: 'help.html' },
