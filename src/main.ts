@@ -4,6 +4,7 @@ const path = require('path');
 const { glob } = require('fs');
 const { register } = require('module');
 const fs = require('fs').promises; // Use Node's fs/promises for async reading
+const scriptRunner = require('./ScriptRunner');
 
 let settingsWindow: Electron.BrowserWindow | null = null;
 let helpWindow: Electron.BrowserWindow | null = null;
@@ -38,7 +39,6 @@ const { get } = require('http');
 let settings = loadSettings();
 
 function createOverlayWindows() {
-
     // Remove previous overlays if any
     overlayWindows.forEach(win => win.close());
     overlayWindows = [];
@@ -320,7 +320,7 @@ function showBreakTimerWindow() {
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
-                preload: path.join(__dirname, 'breaktimer-preload.js')
+                preload: path.join(__dirname, 'breaktimerpreload.js')
             }
         });
         win.loadFile(`${__dirname}/breaktimer.html`);
@@ -393,13 +393,13 @@ app.whenReady().then(() => {
     }
     createOverlayWindows();
     registerShortcuts();
-    globalShortcut.register('CommandOrControl+Shift+D', () => {
+    globalShortcut.register('Option+Shift+D', () => {
         toggleOverlay();
     });
-    globalShortcut.register('CommandOrControl+Shift+T', () => {
+    globalShortcut.register('Option+Shift+T', () => {
         runScript();
     });
-    globalShortcut.register('CommandOrControl+Shift+B', () => {
+    globalShortcut.register('Option+Shift+B', () => {
         showBreakTimerWindow();
     });
 

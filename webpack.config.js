@@ -7,7 +7,8 @@ module.exports = {
     main: './src/main.ts', 
     preload: './src/preload.ts', 
     renderer: './src/renderer.ts',
-    aboutpreload: './src/about-preload.ts' 
+    aboutpreload: './src/about-preload.ts',
+    breaktimerpreload: './src/breaktimer-preload.js',
   },
   target: 'electron-main',
   module: {

@@ -29,6 +29,7 @@
             font-weight: bold;
             font-family: system-ui, sans-serif;
             margin-bottom: 2vw;
+            visibility: hidden; /* Initially hidden, will be shown when settings are loaded */
         }
 
         #text {
@@ -51,11 +52,11 @@
         settings.then(s => {
             if (s.breakTime && !isNaN(s.breakTime)) {
                 timeLeft = s.breakTime * 60; // convert minutes to seconds 
-              
+                timerElem.style.visibility = 'visible';
+                updateDisplay();
+
             }
         });
-
-        //let timeLeft = 10 * 60; // seconds
 
         function updateDisplay() {
             const min = Math.floor(timeLeft / 60).toString().padStart(2, '0');

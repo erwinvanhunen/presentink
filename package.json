@@ -35,7 +35,7 @@
     ],
     "mac": {
       "category": "public.app-category.utilities",
-      "hardenedRuntime": true,
+      "hardenedRuntime": false,
       "entitlements": "entitlements.plist",
       "entitlementsInherit": "entitlements.plist",
       "target": {
@@ -45,7 +45,9 @@
           "arm64"
         ]
       },
-      "extendInfo": "Info.plist"
+      "type": "distribution",
+      "extendInfo": "Info.plist",
+      "gatekeeperAssess": false
     }
   },
   "dependencies": {
