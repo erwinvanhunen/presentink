@@ -53,7 +53,7 @@ function createOverlayWindows() {
             frame: false,
             alwaysOnTop: true,
             hasShadow: false,
-            focusable: true, // Not focus-stealing
+            focusable: false, // Not focus-stealing
             skipTaskbar: true,
             collectionBehavior: 'all',
             webPreferences: {
@@ -85,6 +85,7 @@ function createOverlayWindows() {
 
 
 function toggleOverlay() {
+
     if (overlayWindows.length === 0) {
         createOverlayWindows();
     }
@@ -110,12 +111,14 @@ function toggleOverlay() {
         if (anyVisible) {
             win.hide();
         } else {
-            win.show();
-            win.focus();
+            win.showInactive();
+            //win.focus();
             win.setVisibleOnAllWorkspaces(true);
             win.webContents.send('set-mode', 'freehand');
         }
     });
+        app.dock.hide();
+
 }
 
 function unregisterShortcuts() {
@@ -567,8 +570,8 @@ function showOverlayWindows() {
     registerShortcuts();
 
     overlayWindows.forEach(win => {
-        win.show();
-        win.focus();
+        win.showInactive();
+       // win.focus();
     });
 }
 
