@@ -135,6 +135,7 @@ function unregisterShortcuts() {
     globalShortcut.unregister('CommandOrControl+Z');
     globalShortcut.unregister('CommandOrControl+C');
     globalShortcut.unregister('t');
+    globalShortcut.unregister('Escape');
 }
 
 function registerShortcuts() {
@@ -181,6 +182,10 @@ function registerShortcuts() {
                 win.webContents.send('update-settings', s);
             });
         }
+    });
+
+    globalShortcut.register('Escape', () => {
+        toggleOverlay();
     });
 
     globalShortcut.register('CommandOrControl+Z', () => {
