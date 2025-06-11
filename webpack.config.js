@@ -43,7 +43,9 @@ module.exports = {
         { from: 'src/help.html', to: 'help.html' },
         { from: 'src/settings.html', to: 'settings.html' },
         { from: 'icon_128x128.png', to: 'icon_128x128.png' },
-        { from: 'icon.icns', to: 'icon.icns' }
+        { from: 'icon.icns', to: 'icon.icns' },
+        { from: 'entitlements.plist', to: 'entitlements.plist' },
+        { from: 'Info.plist', to: 'Info.plist' }
       ]
     })
   ]

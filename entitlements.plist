@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+    <!-- Enable hardened runtime -->
+    <key>com.apple.security.app-sandbox</key>
+    <false/>
+
+    <!-- Allow Apple Events (for screen recording permissions, accessibility, etc) -->
+    <key>com.apple.security.automation.apple-events</key>
+    <true/>
+
+    <!-- Allow access to user-preference files (safe for Electron apps) -->
+    <key>com.apple.security.files.user-selected.read-write</key>
+    <true/>
+
+    <!-- Allow network access -->
+    <key>com.apple.security.network.client</key>
+    <false/>
+
+    <!-- Allow microphone access (only if you're recording audio) -->
+    <key>com.apple.security.device.audio-input</key>
+    <false/>
+
+    <!-- Allow screen recording (optional; macOS 10.15+) -->
+    <key>com.apple.security.device.screen-recording</key>
+    <false/>
+
+    <!-- Allow accessibility API access (needed for global keyboard/mouse hooks) -->
+    <key>com.apple.security.accessibility</key>
+    <true/>
+
+    <!-- Allow camera access (if you're not using it, keep false) -->
+    <key>com.apple.security.device.camera</key>
+    <false/>
+
+</dict>
+</plist>

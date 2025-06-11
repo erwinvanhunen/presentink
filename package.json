@@ -7,7 +7,7 @@
     "clean": "rm -rf dist",
     "start": "electron .",
     "pack": "electron-builder --dir",
-    "dist": "electron-builder --mac --x64",
+    "dist": "rm -rf dist && webpack && electron-builder --mac --arm64",
     "build": "webpack"
   },
   "keywords": [],
@@ -35,10 +35,17 @@
     ],
     "mac": {
       "category": "public.app-category.utilities",
-      "target": [
-        "dmg",
-        "zip"
-      ]
+      "hardenedRuntime": true,
+      "entitlements": "entitlements.plist",
+      "entitlementsInherit": "entitlements.plist",
+      "target": {
+        "target": "default",
+        "arch": [
+          "x64",
+          "arm64"
+        ]
+      },
+      "extendInfo": "Info.plist"
     }
   },
   "dependencies": {
