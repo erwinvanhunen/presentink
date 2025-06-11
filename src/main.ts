@@ -4,7 +4,6 @@ const path = require('path');
 const { glob } = require('fs');
 const { register } = require('module');
 const fs = require('fs').promises; // Use Node's fs/promises for async reading
-const scriptRunner = require('./ScriptRunner');
 
 let settingsWindow: Electron.BrowserWindow | null = null;
 let helpWindow: Electron.BrowserWindow | null = null;
@@ -62,9 +61,9 @@ function createOverlayWindows() {
                 nodeIntegration: false,
             }
         });
-        // if ((process.platform === 'darwin' || process.platform === 'linux')) {
-        //     win.setVisibleOnAllWorkspaces(true, { visibleOnFullScreen: true });
-        // }
+
+        win.setVisibleOnAllWorkspaces(true);
+       
         win.on('focus', () => {
             win.webContents.send('window-focused');
         });
@@ -407,7 +406,7 @@ app.whenReady().then(() => {
 
 function getMenuTemplate() {
     return [
-        { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: true, accelerator: 'CommandOrControl+Shift+D' },
+        { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: true, accelerator: 'Option+Shift+D' },
         { type: 'separator' },
         { label: 'Settings…', click: () => createSettingsWindow() },
         { label: 'Help', click: () => createHelpWindow() },
@@ -430,7 +429,7 @@ function getMenuTemplate() {
                 },
                 {
                     label: 'Type Text',
-                    accelerator: 'CmdOrCtrl+Shift+T',
+                    accelerator: 'Option+Shift+T',
                     click: (menuItem: any, browserWindow: any) => {
                         runScript();
                     }

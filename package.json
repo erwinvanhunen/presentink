@@ -5,7 +5,7 @@
   "icon": "icon.icns",
   "scripts": {
     "clean": "rm -rf dist",
-    "start": "electron .",
+    "start": "webpack && electron .",
     "pack": "electron-builder --dir",
     "dist": "rm -rf dist && webpack && electron-builder --mac --arm64",
     "build": "webpack"
@@ -34,6 +34,7 @@
       "KeyTyper"
     ],
     "mac": {
+      "compression": "maximum",
       "category": "public.app-category.utilities",
       "hardenedRuntime": false,
       "entitlements": "entitlements.plist",
@@ -46,11 +47,10 @@
         ]
       },
       "type": "distribution",
-      "extendInfo": "Info.plist",
+      "extendInfo": {
+        "LSUIElement" : "1"
+      },
       "gatekeeperAssess": false
     }
-  },
-  "dependencies": {
-    "source-map-loader": "^5.0.0"
   }
 }
