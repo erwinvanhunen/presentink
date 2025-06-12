@@ -19,6 +19,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 - **Break Timer** — Launch a distraction-free, full-screen break timer with one keystroke.
 - **Minimal Menu Bar Icon** — PresentInk stays out of your Dock, always available from your Mac’s menu bar.
 - **Multi-Screen Aware** — Works across all your displays.
+- **Available when you need it** - PresentInk can be set to launch on login, ready when you need it with a single keypress.
 
 
 ---

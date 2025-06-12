@@ -32,7 +32,8 @@ contextBridge.exposeInMainWorld('electronAPI', {
   openDonate: (url: string): Promise<any> => ipcRenderer.invoke('open-donate', url),
   writeLog(message: string): Promise<void> { return ipcRenderer.invoke('write-log', message); },
   onWindowFocused: (callback: (event: Electron.IpcRendererEvent) => void) => ipcRenderer.on('window-focused', (event) => callback(event)),
-  onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => ipcRenderer.on('window-shown', (event) => callback(event))
+  onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => ipcRenderer.on('window-shown', (event) => callback(event)),
+  setLaunchAtLogin: (enabled: boolean): Promise<void> => ipcRenderer.invoke('set-launch-at-login', enabled),
 });
 
 

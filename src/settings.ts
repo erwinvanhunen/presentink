@@ -4,6 +4,7 @@ import path = require('path');
 
 const appName = 'PresentInk'; // Change as needed
 
+
 function getSettingsPath() {
   let base;
   if (process.platform === 'darwin') {
@@ -25,13 +26,14 @@ function getSettingsPath() {
 
 const settingsPath = getSettingsPath();
 
-const defaultSettings = {
-   breakTime : 10,
-   penWidth: 3,
-   arrowHead: 20
+const defaultSettings: Settings = {
+  breakTime: 10,
+  penWidth: 3,
+  arrowHead: 20,
+  launchOnStartup: false
 };
 
-function loadSettings()  {
+function loadSettings(): Settings {
   try {
     const raw = fs.readFileSync(settingsPath, 'utf8');
     return { ...defaultSettings, ...JSON.parse(raw) };
@@ -45,11 +47,11 @@ function loadSettings()  {
   }
 }
 
-function saveSettings(newSettings: Partial<typeof defaultSettings>) {
+function saveSettings(newSettings: Partial<Settings>) {
   const current = loadSettings();
   const merged = { ...current, ...newSettings };
   fs.writeFileSync(settingsPath, JSON.stringify(merged, null, 2), 'utf8');
   return merged;
 }
 
-module.exports = { loadSettings, saveSettings, settingsPath };
+module.exports = { loadSettings, saveSettings };

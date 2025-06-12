@@ -1,6 +1,6 @@
 {
   "name": "presentink",
-  "version": "0.9.6",
+  "version": "0.9.7",
   "main": "dist/main.js",
   "icon": "icon.icns",
   "scripts": {
@@ -34,15 +34,15 @@
       "KeyTyper"
     ],
     "mac": {
-      "compression": "maximum",
+      "compression": "normal",
       "category": "public.app-category.utilities",
       "hardenedRuntime": false,
       "entitlements": "entitlements.plist",
       "entitlementsInherit": "entitlements.plist",
+      "notarize": false,
       "target": {
         "target": "default",
         "arch": [
-          "x64",
           "arm64"
         ]
       },
@@ -50,7 +50,7 @@
       "extendInfo": {
         "LSUIElement" : "1"
       },
-      "gatekeeperAssess": false
+      "gatekeeperAssess": true
     }
   }
 }

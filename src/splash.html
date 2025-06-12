@@ -21,9 +21,7 @@
             width: 100%;
             height: 100%;
             backdrop-filter: blur(20px);
-            background-color: rgba(74,113,139,0.8);
-            /* background-color: rgba(0, 0, 0, 0.8); */
-            /* background-color: rgba(5, 120, 220, 0.8); */
+            background-color: rgba(74, 113, 139, 0.8);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -88,25 +86,20 @@
             </div>
         </div>
     </div>
-    <div style="position: fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999;">
-        <canvas id="draw-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:auto; cursor: none !important;z-index:9997"></canvas>
-        <canvas id="preview-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9998"></canvas>
-        <canvas id="cursor-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:9999"></canvas>
-    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            intro = document.getElementById('app-intro');
+            intro.style.opacity = '1';
 
+            setTimeout(() => {
+                intro.style.opacity = '0';
+            }, 2000); // Show for 2 seconds
 
-    <!-- <div style="position: fixed; top:0; left:0; width:100vw; height:100vh;z-index:9999">
-        <canvas id="draw-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:auto !important; cursor: none !important;z-index:9997"></canvas>
-        <canvas id="preview-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:none;cursor: none !important;z-index:9998"></canvas>
-        <canvas id="cursor-canvas"
-            style="position:absolute;top:0;left:0;width:100vw;height:100vh;pointer-events:none !important;cursor: none !important;z-index:9999"></canvas>
-    </div> -->
-    <script src="renderer.js"></script>
+            setTimeout(() => {
+                intro.style.display = 'none';
+            }, 3000); // Fully hide after fade out
+        });
+    </script>
 </body>
 
 </html>

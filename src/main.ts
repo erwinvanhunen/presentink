@@ -35,7 +35,7 @@ const { Console } = require('console');
 const { get } = require('http');
 
 // Load settings at startup
-let settings = loadSettings();
+let settings : Settings = loadSettings();
 
 function createOverlayWindows() {
     // Remove previous overlays if any
@@ -63,7 +63,7 @@ function createOverlayWindows() {
         });
 
         win.setVisibleOnAllWorkspaces(true);
-       
+
         win.on('focus', () => {
             win.webContents.send('window-focused');
         });
@@ -72,24 +72,26 @@ function createOverlayWindows() {
         });
 
         win.setIgnoreMouseEvents(false); // Set to true if you want passthrough
+        win.loadFile(`${__dirname}/overlay.html`);
 
-        win.loadFile(`${__dirname}/index.html`);
         // Optional: Open devtools for debugging per window
         //win.webContents.openDevTools();
 
         overlayWindows.push(win);
+
     });
     overlayWindows.forEach(win => win.webContents.send('set-mode', 'freehand'));
+    changeColor(selectedColor); // Set initial color
 }
 
 
 function toggleOverlay() {
-
+    let anyVisible = false;
     if (overlayWindows.length === 0) {
         createOverlayWindows();
+    } else {
+        anyVisible = overlayWindows.some(win => win.isVisible());
     }
-    const anyVisible = overlayWindows.some(win => win.isVisible());
-
     const drawMenuItem = contextMenu ? contextMenu.getMenuItemById('drawing-toggle') : null;
     overlayWindows.forEach(win => {
         win.webContents.send('clear-undo');
@@ -101,6 +103,7 @@ function toggleOverlay() {
         if (drawMenuItem) drawMenuItem.checked = false;
     } else {
         changeColor(selectedColor); // Reset to default color
+
         registerShortcuts();
         if (drawMenuItem) drawMenuItem.checked = true;
     }
@@ -116,7 +119,7 @@ function toggleOverlay() {
             win.webContents.send('set-mode', 'freehand');
         }
     });
-        app.dock.hide();
+    app.dock.hide();
 
 }
 
@@ -199,13 +202,14 @@ function registerShortcuts() {
     });
 }
 
-function changeColor(color: string) {
+function changeColor(color: string, setTrayIcon = true) {
     selectedColor = color;
     overlayWindows.forEach(win => {
         win.webContents.send('change-color', color);
     });
-    if (tray) {
-        switch (color) {
+    //const anyVisible = overlayWindows.some(win => win.isVisible());
+    if (tray && setTrayIcon) {
+        switch (selectedColor) {
             case '#00ff00':
                 tray.setImage(trayIconGreen);
                 break;
@@ -291,7 +295,8 @@ function createHelpWindow() {
         helpWindow.setMenu(null);
         helpWindow.on('closed', () => {
             helpWindow = null;
-            showOverlayWindows();
+            if (overlayWasVisible)
+                showOverlayWindows();
         });
     }
 }
@@ -362,9 +367,43 @@ function showAboutWindow() {
         //aboutWindow.webContents.openDevTools();
         aboutWindow.on('closed', () => {
             aboutWindow = null;
-            showOverlayWindows();
+            if (overlayWasVisible) {
+                showOverlayWindows();
+            }
         });
     }
+}
+
+function showSplashWindow() {
+    const displays = electronScreen.getAllDisplays();
+    displays.forEach((display: Electron.Display, idx: number) => {
+        const win = new BrowserWindow({
+            x: display.bounds.x,
+            y: display.bounds.y,
+            width: display.bounds.width,
+            height: display.bounds.height,
+            transparent: true,
+            frame: false,
+            alwaysOnTop: true,
+            hasShadow: false,
+            focusable: false, // Not focus-stealing
+            skipTaskbar: true,
+            webPreferences: {
+                contextIsolation: true,
+                nodeIntegration: false,
+            }
+        });
+        win.setVisibleOnAllWorkspaces(true);
+        win.setMenu(null);
+        win.loadFile(`${__dirname}/splash.html`);
+        win.webContents.on('did-finish-load', () => {
+            setTimeout(() => {
+                win.hide();
+            }, 3000); // 
+        });
+
+        win.show();
+    });
 }
 
 app.whenReady().then(() => {
@@ -384,14 +423,15 @@ app.whenReady().then(() => {
     Menu.setApplicationMenu(menu);
 
     // Setup tray/menu bar icon
-    tray = new Tray(trayIconRed);
+    tray = new Tray(trayIconIdle);
+
     if (tray) {
         contextMenu = Menu.buildFromTemplate(getMenuTemplate());
         tray.setToolTip('PresentInk');
         tray.setContextMenu(contextMenu);
     }
-    createOverlayWindows();
-    registerShortcuts();
+    //createOverlayWindows();
+    //registerShortcuts();
     globalShortcut.register('Option+Shift+D', () => {
         toggleOverlay();
     });
@@ -401,13 +441,30 @@ app.whenReady().then(() => {
     globalShortcut.register('Option+Shift+B', () => {
         showBreakTimerWindow();
     });
-
+    settings
+    if(!settings.launchOnStartup) {
+        showSplashWindow();
+    }   
 });
 
 function getMenuTemplate() {
     return [
-        { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: true, accelerator: 'Option+Shift+D' },
+        { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: false, accelerator: 'Option+Shift+D' },
+
         { type: 'separator' },
+        {
+            label: 'Color', submenu: [
+                { label: 'Red', click: () => changeColor('#ff0000',false), type: 'radio', checked: selectedColor === '#ff0000' },
+                { label: 'Green', click: () => changeColor('#00ff00',false), type: 'radio', checked: selectedColor === '#00ff00' },
+                { label: 'Blue', click: () => changeColor('#0000ff',false), type: 'radio', checked: selectedColor === '#0000ff' },
+                { label: 'Yellow', click: () => changeColor('#ffff00',false), type: 'radio', checked: selectedColor === '#ffff00' },
+                { label: 'White', click: () => changeColor('#ffffff',false), type: 'radio', checked: selectedColor === '#ffffff' },
+                { label: 'Pink', click: () => changeColor('#ff00ff',false), type: 'radio', checked: selectedColor === '#ff00ff' },
+                { label: 'Orange', click: () => changeColor('#ffa500',false), type: 'radio', checked: selectedColor === '#ffa500' },
+            ]
+        },
+        { type: 'separator' },
+
         { label: 'Settings…', click: () => createSettingsWindow() },
         { label: 'Help', click: () => createHelpWindow() },
         { type: 'separator' },
@@ -465,6 +522,18 @@ ipcMain.on('save-settings', (event: any, newSettings: any) => {
     overlayWindows.forEach(win =>
         win.webContents.send('update-settings', loadSettings())
     );
+});
+
+ipcMain.handle('set-launch-at-login', (event: any, enabled: boolean) => {
+   // console.log(app.getPath('exe'));
+    // const appFolder = path.dirname(process.execPath)
+    // const ourExeName = path.basename(process.execPath)
+    // const stubLauncher = path.resolve(appFolder, '..', ourExeName)
+    // console.log(stubLauncher);
+    app.setLoginItemSettings({
+        openAtLogin: enabled,
+        path: app.getPath('exe')
+    });
 });
 
 ipcMain.handle('get-version', () => app.getVersion());
@@ -575,7 +644,7 @@ function showOverlayWindows() {
 
     overlayWindows.forEach(win => {
         win.showInactive();
-       // win.focus();
+        // win.focus();
     });
 }
 

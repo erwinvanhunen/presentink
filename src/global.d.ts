@@ -16,12 +16,20 @@ declare global {
             openDonate: (url: string) => Promise<any>,
             writeLog: (message: string) => Promise<void>
             onWindowFocused: (callback: (event: Electron.IpcRendererEvent) => void) => void,
-            onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => void
+            onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => void,
+            setLaunchAtLogin: (enabled: boolean) => Promise<void>
         },
         aboutPreload: {
             getVersion: () => Promise<string>,
             openDonate: (url: string) => Promise<void>,
             sendVersion: (version: string) => void
         }
+    }
+
+    interface Settings {
+        breakTime: number;
+        penWidth: number;
+        arrowHead: number;
+        launchOnStartup: boolean;
     }
 }
