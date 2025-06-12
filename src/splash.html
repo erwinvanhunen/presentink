@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>PresentInk</title>
+    <style>
+        body,
+        html {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            cursor: none !important;
+            background: rgba(0, 0, 0, 0.01);
+        }
+
+        .intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(20px);
+            background-color: rgba(74, 113, 139, 0.8);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 1.5s ease;
+            pointer-events: none;
+        }
+
+        .intro-overlay .container {
+            display: flex;
+            align-items: flex-start;
+            /* top align icon and text */
+        }
+
+        .intro-overlay .icon {
+            width: 128px;
+            height: 128px;
+            margin-right: 10px;
+        }
+
+        .intro-overlay kbd {
+            border: 1px solid #ffffffcc;
+            border-radius: 4px;
+            padding: 4px 8px;
+        }
+
+        .intro-overlay .text {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .intro-overlay .title {
+            color: #ffffffcc;
+            font-size: 64px;
+            font-weight: 600;
+            font-family: -apple-system, BlinkMacSystemFont, "San Francisco", Helvetica, Arial, sans-serif;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .intro-overlay .hint {
+            color: #ffffffcc;
+            font-size: 24px;
+            font-weight: 400;
+            font-family: -apple-system, BlinkMacSystemFont, "San Francisco", Helvetica, Arial, sans-serif;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        body {
+            cursor: none !important
+        }
+    </style>
+</head>
+
+<body>
+    <div id="app-intro" class="intro-overlay" style="cursor:none !important">
+        <div class="container">
+            <div clas="icon"><img src="icon_128x128.png" /></div>
+            <div class="text">
+                <div class="title">PresentInk</div>
+                <div class="hint">Press <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> to toggle drawing</div>
+            </div>
+        </div>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            intro = document.getElementById('app-intro');
+            intro.style.opacity = '1';
+
+            setTimeout(() => {
+                intro.style.opacity = '0';
+            }, 2000); // Show for 2 seconds
+
+            setTimeout(() => {
+                intro.style.display = 'none';
+            }, 3000); // Fully hide after fade out
+        });
+    </script>
+</body>
+
+</html>

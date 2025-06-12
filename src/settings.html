@@ -171,12 +171,9 @@
     .macos-upload-label:active {
       background: #d6d7dc;
     }
-
-    #scriptFileInput {
-      display: none;
-    }
   </style>
 </head>
+
 <body>
   <div class="settings-container">
     <form id="settingsForm" autocomplete="off">
@@ -204,10 +201,14 @@
             <span class="value-label" id="breakTimeValue">10 min</span>
           </td>
         </tr>
+        <tr>
+          <td class="settings-label">Launch at login</td>
+          <td class="settings-control">
+            <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
+            <label for="launchAtLogin">Enable</label>
+          </td>
+        </tr>
       </table>
-      <div class="footer">
-        <button type="submit" id="saveBtn">Save</button>
-      </div>
     </form>
   </div>
   <script>
@@ -223,30 +224,43 @@
     const breakTimeValue = document.getElementById('breakTimeValue');
     const arrowHead = document.getElementById('arrowHead');
     const arrowHeadValue = document.getElementById('arrowHeadValue');
+    const launchAtLogin = document.getElementById('launchAtLogin');
 
     arrowHead.oninput = () => {
       arrowHeadValue.textContent = arrowHead.value;
       drawArrow(arrowCtx, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, penWidth.value, arrowHead.value);
+      saveSettings();
     };
 
-    breakTime.oninput = () => { breakTimeValue.textContent = `${breakTime.value} min` };
+    breakTime.oninput = () => {
+      breakTimeValue.textContent = `${breakTime.value} min`;
+      saveSettings();
+    };
+    // Initial draw for pen width and arrow
 
 
     penWidth.oninput = () => {
       penWidthValue.textContent = penWidth.value;
       drawPenWidth(penWidth.value);
       drawArrow(arrowCtx, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, penWidth.value, arrowHead.value);
+      saveSettings();
     };
 
-    // Save action
-    document.getElementById('saveBtn').onclick = () => {
-      window.electronAPI.saveSettings({
-        breakTime: document.getElementById('breakTime').value,
-        penWidth: document.getElementById('penWidth').value,
-        arrowHead: document.getElementById('arrowHead').value,
-      });
-      window.close();
+    launchAtLogin.onchange = () => {
+      saveSettings();
+      window.electronAPI.setLaunchAtLogin(launchAtLogin.checked);
     };
+
+    function saveSettings() {
+      // This function can be used to save settings immediately if needed
+      // For example, you can call it on pen width change
+      window.electronAPI.saveSettings({
+        breakTime: breakTime.value,
+        penWidth: penWidth.value,
+        arrowHead: arrowHead.value,
+        launchOnStartup: document.getElementById('launchAtLogin').checked
+      });
+    }
 
     // Load existing settings on open (if you use IPC)
     if (window.electronAPI && window.electronAPI.getSettings) {
@@ -259,6 +273,7 @@
         drawArrow(arrowCtx, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, s.penWidth || 3, s.arrowHead || 20);
         document.getElementById('arrowHead').value = s.arrowHead || '20';
         document.getElementById('arrowHeadValue').textContent = s.arrowHead || '20';
+        document.getElementById('launchAtLogin').checked = s.launchOnStartup || false;
       });
     }
 

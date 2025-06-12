@@ -1,0 +1,10 @@
+{
+  "name": "presentink",
+  "version": "0.9.7",
+  "main": "main.js",
+  "icon": "icon.icns",
+  "keywords": [],
+  "author": "Erwin van Hunen",
+  "license": "ISC",
+  "description": "An open source screen annotation tool for macOS."
+}
