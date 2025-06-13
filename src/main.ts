@@ -1,3 +1,5 @@
+import { create } from "domain";
+
 const { app, BrowserWindow, globalShortcut, Tray, Menu, screen: electronScreen, dialog, ipcMain } = require('electron');
 const { exec } = require('child_process');
 const path = require('path');
@@ -35,7 +37,7 @@ const { Console } = require('console');
 const { get } = require('http');
 
 // Load settings at startup
-let settings : Settings = loadSettings();
+let settings: Settings = loadSettings();
 
 function createOverlayWindows() {
     // Remove previous overlays if any
@@ -200,6 +202,10 @@ function registerShortcuts() {
             win.webContents.send('clear-drawing');
         });
     });
+}
+
+function zoom(): void {
+    exec(`osascript -e 'tell application "System Events" to key code 28 using {option down, command down}'`);
 }
 
 function changeColor(color: string, setTrayIcon = true) {
@@ -402,7 +408,7 @@ function showSplashWindow() {
             }, 3000); // 
         });
 
-        win.show();
+        win.showInactive();
     });
 }
 
@@ -441,11 +447,33 @@ app.whenReady().then(() => {
     globalShortcut.register('Option+Shift+B', () => {
         showBreakTimerWindow();
     });
-    settings
-    if(!settings.launchOnStartup) {
+    globalShortcut.register('CommandOrControl+1', () => {
+        zoom();
+    });
+    if (!settings.launchOnStartup) {
         showSplashWindow();
-    }   
+    }
+    createBaseWindow();
+
 });
+
+function createBaseWindow()
+{
+    const win = new BrowserWindow({
+        show: false,
+        width: 1,
+        height: 1,
+        x: -1000, // Move off-screen
+        y: -1000, // Move off-screen
+        webPreferences: {
+            contextIsolation: true,
+            nodeIntegration: false,
+        }
+    });
+    win.loadFile(`${__dirname}/base.html`);
+    win.hide();
+    return win;
+}
 
 function getMenuTemplate() {
     return [
@@ -454,13 +482,13 @@ function getMenuTemplate() {
         { type: 'separator' },
         {
             label: 'Color', submenu: [
-                { label: 'Red', click: () => changeColor('#ff0000',false), type: 'radio', checked: selectedColor === '#ff0000' },
-                { label: 'Green', click: () => changeColor('#00ff00',false), type: 'radio', checked: selectedColor === '#00ff00' },
-                { label: 'Blue', click: () => changeColor('#0000ff',false), type: 'radio', checked: selectedColor === '#0000ff' },
-                { label: 'Yellow', click: () => changeColor('#ffff00',false), type: 'radio', checked: selectedColor === '#ffff00' },
-                { label: 'White', click: () => changeColor('#ffffff',false), type: 'radio', checked: selectedColor === '#ffffff' },
-                { label: 'Pink', click: () => changeColor('#ff00ff',false), type: 'radio', checked: selectedColor === '#ff00ff' },
-                { label: 'Orange', click: () => changeColor('#ffa500',false), type: 'radio', checked: selectedColor === '#ffa500' },
+                { label: 'Red', click: () => changeColor('#ff0000', false), type: 'radio', checked: selectedColor === '#ff0000' },
+                { label: 'Green', click: () => changeColor('#00ff00', false), type: 'radio', checked: selectedColor === '#00ff00' },
+                { label: 'Blue', click: () => changeColor('#0000ff', false), type: 'radio', checked: selectedColor === '#0000ff' },
+                { label: 'Yellow', click: () => changeColor('#ffff00', false), type: 'radio', checked: selectedColor === '#ffff00' },
+                { label: 'White', click: () => changeColor('#ffffff', false), type: 'radio', checked: selectedColor === '#ffffff' },
+                { label: 'Pink', click: () => changeColor('#ff00ff', false), type: 'radio', checked: selectedColor === '#ff00ff' },
+                { label: 'Orange', click: () => changeColor('#ffa500', false), type: 'radio', checked: selectedColor === '#ffa500' },
             ]
         },
         { type: 'separator' },
@@ -471,7 +499,7 @@ function getMenuTemplate() {
         { label: 'About PresentInk', click: () => showAboutWindow() },
         { type: 'separator' },
         {
-            label: 'Text Typer',
+            label: 'Text Typer (EXPERIMENTAL)',
             submenu: [
                 {
                     id: 'select-script-file',
@@ -525,11 +553,6 @@ ipcMain.on('save-settings', (event: any, newSettings: any) => {
 });
 
 ipcMain.handle('set-launch-at-login', (event: any, enabled: boolean) => {
-   // console.log(app.getPath('exe'));
-    // const appFolder = path.dirname(process.execPath)
-    // const ourExeName = path.basename(process.execPath)
-    // const stubLauncher = path.resolve(appFolder, '..', ourExeName)
-    // console.log(stubLauncher);
     app.setLoginItemSettings({
         openAtLogin: enabled,
         path: app.getPath('exe')

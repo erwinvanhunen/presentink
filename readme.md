@@ -38,6 +38,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 
 | Key Combo                          | Action                        |
 |-------------------------------------|-------------------------------|
+| <kbd>Cmd</kbd> + 1 | Toggle Zoom mode. This effectively executes Cmd + Option + 8, which is the built-in zoom functionality of MacOS |
 | <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>D</kdb>     | Toggle drawing mode         |
  <kbd>Esc</kdb>     | Leave drawing mode         |
 | <kbd>Shift</kbd>     | Draw straight lines            |
