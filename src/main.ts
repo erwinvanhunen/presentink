@@ -1,6 +1,6 @@
 import { create } from "domain";
 
-const { app, BrowserWindow, globalShortcut, Tray, Menu, screen: electronScreen, dialog, ipcMain } = require('electron');
+const { app, BrowserWindow, globalShortcut, Tray, Menu, screen: electronScreen, dialog, ipcMain, systemPreferences } = require('electron');
 const { exec } = require('child_process');
 const path = require('path');
 const { glob } = require('fs');
@@ -205,6 +205,10 @@ function registerShortcuts() {
 }
 
 function zoom(): void {
+    if(!systemPreferences.isTrustedAccessibilityClient(false))
+    {
+        systemPreferences.isTrustedAccessibilityClient(true);
+    }
     exec(`osascript -e 'tell application "System Events" to key code 28 using {option down, command down}'`);
 }
 
