@@ -42,6 +42,7 @@ module.exports = {
         { from: 'src/overlay.html', to: 'overlay.html' },
         { from: 'src/breaktimer.html', to: 'breaktimer.html' },
         { from: 'src/base.html', to: 'base.html' },
+        { from: 'src/splash.html', to: 'splash.html' },
         { from: 'src/help.html', to: 'help.html' },
         { from: 'src/settings.html', to: 'settings.html' },
         { from: 'icon_128x128.png', to: 'icon_128x128.png' },

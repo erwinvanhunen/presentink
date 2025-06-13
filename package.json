@@ -1,6 +1,6 @@
 {
   "name": "presentink",
-  "version": "0.9.7",
+  "version": "0.9.8",
   "main": "dist/main.js",
   "icon": "icon.icns",
   "scripts": {
@@ -37,10 +37,10 @@
     "mac": {
       "compression": "normal",
       "category": "public.app-category.utilities",
-      "hardenedRuntime": false,
+      "hardenedRuntime": true,
       "entitlements": "entitlements.plist",
       "entitlementsInherit": "entitlements.plist",
-      "notarize": false,
+      "notarize": true,
       "target": {
         "target": "default",
         "arch": [
