@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <title>PresentInk – Draw Anywhere During Your Presentation</title>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;400&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Montserrat', Arial, sans-serif;
+      background: #e8f2fb;
+      color: #1a2634;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    .container {
+      width: 100%;
+      max-width: 500px;
+      margin-top: 60px;
+      padding: 32px;
+      background: rgba(255,255,255,0.93);
+      border-radius: 24px;
+      box-shadow: 0 4px 32px 0 rgba(58,120,180,0.08);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .logo {
+      margin-bottom: 24px;
+    }
+    .title {
+      font-size: 2.3rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+      color: #2a4e83;
+      text-align: center;
+    }
+    .tagline {
+      font-size: 1.1rem;
+      color: #4774a5;
+      margin-bottom: 32px;
+      text-align: center;
+    }
+    .features {
+      width: 100%;
+      margin-bottom: 32px;
+      list-style: none;
+      padding: 0;
+      color: #34577a;
+    }
+    .features li {
+      margin-bottom: 16px;
+      display: flex;
+      align-items: flex-start;
+      font-size: 1rem;
+    }
+    .features svg {
+      margin-right: 12px;
+      flex-shrink: 0;
+      margin-top: 3px;
+    }
+    .cta {
+      margin-top: 16px;
+      padding: 12px 30px;
+      font-size: 1rem;
+      background: #4ea1ef;
+      color: #fff;
+      border: none;
+      border-radius: 30px;
+      box-shadow: 0 2px 8px 0 rgba(78,161,239,0.10);
+      cursor: pointer;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      transition: background 0.2s;
+    }
+    .cta:hover {
+      background: #3085ce;
+    }
+    @media (max-width: 600px) {
+      .container {
+        margin-top: 28px;
+        padding: 12px;
+      }
+      .title {
+        font-size: 1.4rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Simple PresentInk Logo SVG -->
+    <div class="logo">
+      <img src="icon_128x128.png" alt="PresentInk Logo" width="128" height="128">
+    </div>
+    <div class="title">PresentInk</div>
+    <div class="tagline">Draw anywhere. Present anywhere.<br>Take your presentations to the next level.</div>
+
+    <ul class="features">
+      <li>
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <circle cx="10" cy="10" r="9" fill="#b7e0fa"/>
+          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        Draw directly on your screen over any application – annotate live!
+      </li>
+      <li>
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <circle cx="10" cy="10" r="9" fill="#b7e0fa"/>
+          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        Use arrows and freehand tools for instant highlights and emphasis.
+      </li>
+      <li>
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <circle cx="10" cy="10" r="9" fill="#b7e0fa"/>
+          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        Activate overlay with a hotkey – works seamlessly with video calls and screen sharing.
+      </li>
+      <li>
+        <svg width="20" height="20" viewBox="0 0 20 20">
+          <circle cx="10" cy="10" r="9" fill="#b7e0fa"/>
+          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round"/>
+        </svg>
+        Minimal, distraction-free interface designed for macOS.
+      </li>
+    </ul>
+
+    <!-- <button class="cta" onclick="window.open('mailto:info@presentink.app', '_blank')">
+      Get Notified When It's Ready
+    </button> -->
+    <div style="margin-top:36px; font-size:0.93rem; color:#9ab4ce; text-align:center;">
+      &copy; 2025 PresentInk
+    </div>
+  </div>
+</body>
+</html>
