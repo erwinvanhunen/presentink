@@ -199,8 +199,7 @@ function registerShortcuts() {
 }
 
 function zoom(): void {
-    if(!systemPreferences.isTrustedAccessibilityClient(false))
-    {
+    if (!systemPreferences.isTrustedAccessibilityClient(false)) {
         systemPreferences.isTrustedAccessibilityClient(true);
     }
     exec(`osascript -e 'tell application "System Events" to key code 28 using {option down, command down}'`);
@@ -451,8 +450,7 @@ app.whenReady().then(() => {
 
 });
 
-function createBaseWindow()
-{
+function createBaseWindow() {
     const win = new BrowserWindow({
         show: false,
         width: 1,
@@ -664,10 +662,16 @@ function showOverlayWindows() {
     });
 }
 
+function sanitizeInput(input: string): string {
+    // Remove all control characters except newline and tab
+    return input.replace(/[^\x09\x0A\x20-\x7E]/g, '');
+}
+
 function typeTextWithSwift(text: any) {
     const child = exec(keyTyper);
 
-    child.stdin.write(text);
+    const safeText = sanitizeInput(text);
+    child.stdin.write(safeText);
     child.stdin.end();
 
     child.stdout.on('data', (data: any) => {

@@ -1,12 +1,13 @@
 {
   "name": "presentink",
-  "version": "0.9.9",
+  "version": "0.9.10",
   "main": "dist/main.js",
   "icon": "icon.icns",
   "scripts": {
     "clean": "rm -rf dist",
     "start": "webpack && electron .",
     "pack": "electron-builder --dir",
+    "predist": "pwsh -ExecutionPolicy Bypass -File ./copyversion.ps1",
     "dist": "rm -rf dist && webpack && electron-builder --mac --arm64",
     "build": "webpack"
   },
@@ -34,13 +35,14 @@
     "extraFiles": [
       "KeyTyper"
     ],
+    "asar": true,
     "mac": {
       "compression": "normal",
       "category": "public.app-category.utilities",
       "hardenedRuntime": true,
       "entitlements": "entitlements.plist",
       "entitlementsInherit": "entitlements.plist",
-      "notarize": false,
+      "notarize": true,
       "target": {
         "target": "default",
         "arch": [
@@ -62,7 +64,7 @@
           "path": "/Applications"
         },
         {
-          "x": 112,
+          "x": 102,
           "y": 175,
           "type": "file"
         }
