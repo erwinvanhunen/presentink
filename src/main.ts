@@ -20,21 +20,20 @@ let originalScript: ScriptAction[] = [];
 let currentScript: ScriptAction[] = [];
 let fileNameLoaded = "";
 
-const trayIconIdle = path.join(__dirname, 'penimages/pendrawingidle.png');
-const trayIconRed = path.join(__dirname, 'penimages/pendrawingred.png');
-const trayIconGreen = path.join(__dirname, 'penimages/pendrawinggreen.png');
-const trayIconBlue = path.join(__dirname, 'penimages/pendrawingblue.png');
-const trayIconYellow = path.join(__dirname, 'penimages/pendrawingyellow.png');
-const trayIconWhite = path.join(__dirname, 'penimages/pendrawingwhite.png');
-const trayIconPink = path.join(__dirname, 'penimages/pendrawingpink.png');
-const trayIconOrange = path.join(__dirname, 'penimages/pendrawingorange.png');
+const trayIconRed = path.join(__dirname, 'penimages/red.png');
+const trayIconGreen = path.join(__dirname, 'penimages/green.png');
+const trayIconBlue = path.join(__dirname, 'penimages/blue.png');
+const trayIconYellow = path.join(__dirname, 'penimages/yellow.png');
+const trayIconPink = path.join(__dirname, 'penimages/pink.png');
+const trayIconOrange = path.join(__dirname, 'penimages/orange.png');
+const trayIconTemplate = path.join(__dirname, 'penimages/idleTemplate.png');
 const keyTyper = getKeyTyperPath(); // Path to the KeyTyper executable
 let selectedColor = '#ff0000'; // Default color
 
 const { loadSettings, saveSettings } = require('./settings');
-const { type } = require('os');
-const { Console } = require('console');
-const { get } = require('http');
+// const { type } = require('os');
+// const { Console } = require('console');
+// const { get } = require('http');
 
 // Load settings at startup
 let settings: Settings = loadSettings();
@@ -101,7 +100,7 @@ function toggleOverlay() {
     });
     if (anyVisible) {
         unregisterShortcuts();
-        if (tray) tray.setImage(trayIconIdle);
+        if (tray) tray.setImage(trayIconTemplate);
         if (drawMenuItem) drawMenuItem.checked = false;
     } else {
         changeColor(selectedColor); // Reset to default color
@@ -143,8 +142,6 @@ function unregisterShortcuts() {
 }
 
 function registerShortcuts() {
-
-
     globalShortcut.register('g', () => {
         changeColor('#00ff00');
     });
@@ -156,9 +153,6 @@ function registerShortcuts() {
     });
     globalShortcut.register('y', () => {
         changeColor('#ffff00');
-    });
-    globalShortcut.register('w', () => {
-        changeColor('#ffffff');
     });
     globalShortcut.register('p', () => {
         changeColor('#ff00ff');
@@ -232,9 +226,6 @@ function changeColor(color: string, setTrayIcon = true) {
             case '#ffff00':
                 tray.setImage(trayIconYellow);
                 break;
-            case '#ffffff':
-                tray.setImage(trayIconWhite);
-                break;
             case '#ff00ff':
                 tray.setImage(trayIconPink);
                 break;
@@ -242,7 +233,7 @@ function changeColor(color: string, setTrayIcon = true) {
                 tray.setImage(trayIconOrange);
                 break;
             default:
-                tray.setImage(trayIconIdle);
+                tray.setImage(trayIconTemplate);
         }
     }
 }
@@ -432,8 +423,7 @@ app.whenReady().then(() => {
     const menu = Menu.buildFromTemplate(template);
     Menu.setApplicationMenu(menu);
 
-    // Setup tray/menu bar icon
-    tray = new Tray(trayIconIdle);
+    tray = new Tray(trayIconTemplate);
 
     if (tray) {
         contextMenu = Menu.buildFromTemplate(getMenuTemplate());
@@ -490,7 +480,6 @@ function getMenuTemplate() {
                 { label: 'Green', click: () => changeColor('#00ff00', false), type: 'radio', checked: selectedColor === '#00ff00' },
                 { label: 'Blue', click: () => changeColor('#0000ff', false), type: 'radio', checked: selectedColor === '#0000ff' },
                 { label: 'Yellow', click: () => changeColor('#ffff00', false), type: 'radio', checked: selectedColor === '#ffff00' },
-                { label: 'White', click: () => changeColor('#ffffff', false), type: 'radio', checked: selectedColor === '#ffffff' },
                 { label: 'Pink', click: () => changeColor('#ff00ff', false), type: 'radio', checked: selectedColor === '#ff00ff' },
                 { label: 'Orange', click: () => changeColor('#ffa500', false), type: 'radio', checked: selectedColor === '#ffa500' },
             ]

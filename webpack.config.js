@@ -47,7 +47,9 @@ module.exports = {
         { from: 'src/settings.html', to: 'settings.html' },
         { from: 'icon_128x128.png', to: 'icon_128x128.png' },
         { from: 'icon.icns', to: 'icon.icns' },
-        { from: 'entitlements.plist', to: 'entitlements.plist' }]
+        { from: 'entitlements.plist', to: 'entitlements.plist' },
+        { from: 'dmgbackground.png', to: 'dmgbackground.png' }
+      ]
     })
   ]
 };

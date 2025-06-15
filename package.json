@@ -40,7 +40,7 @@
       "hardenedRuntime": true,
       "entitlements": "entitlements.plist",
       "entitlementsInherit": "entitlements.plist",
-      "notarize": true,
+      "notarize": false,
       "target": {
         "target": "default",
         "arch": [
@@ -52,6 +52,26 @@
         "LSUIElement": true
       },
       "gatekeeperAssess": true
+    },
+    "dmg": {
+      "contents": [
+        {
+          "x": 448,
+          "y": 175,
+          "type": "link",
+          "path": "/Applications"
+        },
+        {
+          "x": 112,
+          "y": 175,
+          "type": "file"
+        }
+      ],
+      "window": {
+        "width": 540,
+        "height": 380
+      },
+      "background": "dmgbackground.png"
     }
   }
 }
