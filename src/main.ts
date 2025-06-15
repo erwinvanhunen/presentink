@@ -613,7 +613,7 @@ function pause(ms: number | undefined) {
 
 async function runScript() {
     const anyVisible = hideOverlayWindows();
-    pause(100);
+    await pause(100);
     if (currentScript.length === 0 && originalScript.length > 0) {
         currentScript = JSON.parse(JSON.stringify(originalScript))
     }
