@@ -1,21 +1,5 @@
-// const { contextBridge, ipcRenderer } = require('electron');
 import { contextBridge, ipcRenderer } from 'electron';
 
-// interface ElectronAPI {
-//   onSetMode: (callback: (event: Electron.IpcRendererEvent, mode: any) => void) => void;
-//   onClearDrawing: (callback: (event: Electron.IpcRendererEvent) => void) => void;
-//   onSetColor: (callback: (event: Electron.IpcRendererEvent, color: any) => void) => void;
-//   onShiftToggle: (callback: (event: Electron.IpcRendererEvent) => void) => void;
-//   onUndo: (callback: (event: Electron.IpcRendererEvent) => void) => void;
-//   onClearUndo: (callback: (event: Electron.IpcRendererEvent) => void) => void;
-//   // saveSettings: (settings: any) => void;
-//   updateSettings: (callback: (event: Electron.IpcRendererEvent, settings: any) => void) => void;
-//   exitDrawing: () => void;
-//   getSettings: () => Promise<any>;
-//   saveSettings: (settings: any) => void;
-//   openDonate: (url: string) => Promise<any>;
-//   writeLog: (message: string) => Promise<void>;
-// }
 
 contextBridge.exposeInMainWorld('electronAPI', {
   onSetMode: (callback: (event: Electron.IpcRendererEvent, mode: any) => void) => ipcRenderer.on('set-mode', (event, mode) => callback(event, mode)),
@@ -35,10 +19,3 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => ipcRenderer.on('window-shown', (event) => callback(event)),
   setLaunchAtLogin: (enabled: boolean): Promise<void> => ipcRenderer.invoke('set-launch-at-login', enabled),
 });
-
-
-// declare global {
-//   interface Window {
-//     electronAPI: ElectronAPI;
-//   }
-// }

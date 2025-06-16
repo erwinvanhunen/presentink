@@ -23,6 +23,10 @@ declare global {
             getVersion: () => Promise<string>,
             openDonate: (url: string) => Promise<void>,
             sendVersion: (version: string) => void
+        },
+        breakTimerPreload: {
+            closeBreakTimer: () => void,
+            getSettings: () => Promise<any>
         }
     }
 
@@ -31,5 +35,10 @@ declare global {
         penWidth: number;
         arrowHead: number;
         launchOnStartup: boolean;
+    }
+
+    interface ScriptAction {
+        type: string,
+        value: any
     }
 }

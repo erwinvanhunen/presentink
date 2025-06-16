@@ -1,20 +1,16 @@
-import { create } from "domain";
+import { app, globalShortcut, screen, Display, dialog, ipcMain, systemPreferences, BrowserWindow, Tray, Menu, shell } from 'electron';
+import { exec } from 'child_process';
+import * as path from 'path'
+import { promises as fs } from 'fs';
+import { loadSettings, saveSettings }from './settings';
+let settingsWindow: BrowserWindow | null = null;
+let helpWindow: BrowserWindow | null = null;
+let aboutWindow: BrowserWindow | null = null;
+let contextMenu: Menu | null = null;
 
-const { app, BrowserWindow, globalShortcut, Tray, Menu, screen: electronScreen, dialog, ipcMain, systemPreferences } = require('electron');
-const { exec } = require('child_process');
-const path = require('path');
-const { glob } = require('fs');
-const { register } = require('module');
-const fs = require('fs').promises; // Use Node's fs/promises for async reading
-
-let settingsWindow: Electron.BrowserWindow | null = null;
-let helpWindow: Electron.BrowserWindow | null = null;
-let aboutWindow: Electron.BrowserWindow | null = null;
-let contextMenu: Electron.Menu | null = null;
-
-let tray: Electron.Tray | null = null;
-let overlayWindows: Electron.BrowserWindow[] = [];
-let breakTimerWindows: Electron.BrowserWindow[] = [];
+let tray: Tray | null = null;
+let overlayWindows: BrowserWindow[] = [];
+let breakTimerWindows: BrowserWindow[] = [];
 
 let originalScript: ScriptAction[] = [];
 let currentScript: ScriptAction[] = [];
@@ -30,11 +26,6 @@ const trayIconTemplate = path.join(__dirname, 'penimages/idleTemplate.png');
 const keyTyper = getKeyTyperPath(); // Path to the KeyTyper executable
 let selectedColor = '#ff0000'; // Default color
 
-const { loadSettings, saveSettings } = require('./settings');
-// const { type } = require('os');
-// const { Console } = require('console');
-// const { get } = require('http');
-
 // Load settings at startup
 let settings: Settings = loadSettings();
 
@@ -42,8 +33,8 @@ function createOverlayWindows() {
     // Remove previous overlays if any
     overlayWindows.forEach(win => win.close());
     overlayWindows = [];
-    const displays = electronScreen.getAllDisplays();
-    displays.forEach((display: Electron.Display, idx: number) => {
+    const displays = screen.getAllDisplays();
+    displays.forEach((display: Display, idx: number) => {
         const win = new BrowserWindow({
             x: display.bounds.x,
             y: display.bounds.y,
@@ -55,7 +46,6 @@ function createOverlayWindows() {
             hasShadow: false,
             focusable: false, // Not focus-stealing
             skipTaskbar: true,
-            collectionBehavior: 'all',
             webPreferences: {
                 preload: path.join(__dirname, 'preload.js'),
                 contextIsolation: true,
@@ -120,7 +110,7 @@ function toggleOverlay() {
             win.webContents.send('set-mode', 'freehand');
         }
     });
-    app.dock.hide();
+    app.dock?.hide();
 
 }
 
@@ -309,7 +299,7 @@ function showBreakTimerWindow() {
         breakTimerWindows.forEach(win => { if (!win.isDestroyed()) win.close(); });
         breakTimerWindows = [];
     }
-    const displays = electronScreen.getAllDisplays();
+    const displays = screen.getAllDisplays();
     breakTimerWindows = displays.map((display: Electron.Display, idx: number) => {
         const win = new BrowserWindow({
             x: display.bounds.x,
@@ -375,7 +365,7 @@ function showAboutWindow() {
 }
 
 function showSplashWindow() {
-    const displays = electronScreen.getAllDisplays();
+    const displays = screen.getAllDisplays();
     displays.forEach((display: Electron.Display, idx: number) => {
         const win = new BrowserWindow({
             x: display.bounds.x,
@@ -408,9 +398,9 @@ function showSplashWindow() {
 
 app.whenReady().then(() => {
 
-    app.dock.hide();
+    app.dock?.hide();
 
-    const template = [
+    const template: Array<(Electron.MenuItemConstructorOptions) | (Electron.MenuItem)> = [
         {
             label: app.name,
             submenu: [
@@ -467,7 +457,7 @@ function createBaseWindow() {
     return win;
 }
 
-function getMenuTemplate() {
+function getMenuTemplate(): Array<(Electron.MenuItemConstructorOptions) | (Electron.MenuItem)> {
     return [
         { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: false, accelerator: 'Option+Shift+D' },
 
@@ -553,7 +543,6 @@ ipcMain.handle('set-launch-at-login', (event: any, enabled: boolean) => {
 ipcMain.handle('get-version', () => app.getVersion());
 
 ipcMain.handle('open-donate', (event: any, url: any) => {
-    const { shell } = require('electron');
     shell.openExternal(url);
 });
 function parseZoomItText(input: string): ScriptAction[] {
@@ -669,24 +658,25 @@ function sanitizeInput(input: string): string {
 
 function typeTextWithSwift(text: any) {
     const child = exec(keyTyper);
+    if (child !== null && child.stdin && child.stdout && child.stderr) {
+        const safeText = sanitizeInput(text);
+        child.stdin.write(safeText);
+        child?.stdin.end();
 
-    const safeText = sanitizeInput(text);
-    child.stdin.write(safeText);
-    child.stdin.end();
+        child.stdout.on('data', (data: any) => {
+            console.log(`KeyTyper stdout: ${data}`);
+        });
 
-    child.stdout.on('data', (data: any) => {
-        console.log(`KeyTyper stdout: ${data}`);
-    });
+        child.stderr.on('data', (data: any) => {
+            console.error(`KeyTyper stderr: ${data}`);
+        });
 
-    child.stderr.on('data', (data: any) => {
-        console.error(`KeyTyper stderr: ${data}`);
-    });
-
-    child.on('close', (code: number) => {
-        if (code !== 0) {
-            console.error(`KeyTyper process exited with code ${code}`);
-        }
-    });
+        child.on('close', (code: number) => {
+            if (code !== 0) {
+                console.error(`KeyTyper process exited with code ${code}`);
+            }
+        });
+    }
 }
 
 function getKeyTyperPath() {
@@ -719,7 +709,7 @@ async function pickFile() {
     if (!canceled && filePaths.length > 0) {
 
         try {
-            const path = require('path');
+            
             const fileName = path.basename(filePaths[0]);
             const content = await fs.readFile(filePaths[0], 'utf-8');
 

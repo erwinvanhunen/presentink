@@ -1,11 +1,10 @@
-// settings.js
-import fs = require('fs');
-import path = require('path');
+import * as path from 'path'
+import fs from 'fs';
 
 const appName = 'PresentInk'; // Change as needed
 
 
-function getSettingsPath() {
+export function getSettingsPath() {
   let base;
   if (process.platform === 'darwin') {
     const home = process.env.HOME;
@@ -33,7 +32,7 @@ const defaultSettings: Settings = {
   launchOnStartup: false
 };
 
-function loadSettings(): Settings {
+export function loadSettings(): Settings {
   try {
     const raw = fs.readFileSync(settingsPath, 'utf8');
     return { ...defaultSettings, ...JSON.parse(raw) };
@@ -47,11 +46,9 @@ function loadSettings(): Settings {
   }
 }
 
-function saveSettings(newSettings: Partial<Settings>) {
+export function saveSettings(newSettings: Partial<Settings>) {
   const current = loadSettings();
   const merged = { ...current, ...newSettings };
   fs.writeFileSync(settingsPath, JSON.stringify(merged, null, 2), 'utf8');
   return merged;
 }
-
-module.exports = { loadSettings, saveSettings };

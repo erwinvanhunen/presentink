@@ -1,4 +1,4 @@
-const { contextBridge, ipcRenderer } = require('electron');
+import { contextBridge, ipcRenderer } from 'electron';
 contextBridge.exposeInMainWorld('electronAPI', {
     getVersion: () => ipcRenderer.invoke('get-version'),
     openDonate: (url: string) => ipcRenderer.invoke('open-donate', url),

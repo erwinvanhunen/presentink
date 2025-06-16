@@ -1,5 +1,3 @@
-import { ipcRenderer } from "electron";
-
 let undoStack: any[] = [];
 const MAX_UNDO = 30; // Adjust for memory usage, if you want
 
