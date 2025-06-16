@@ -18,4 +18,5 @@ contextBridge.exposeInMainWorld('electronAPI', {
   onWindowFocused: (callback: (event: Electron.IpcRendererEvent) => void) => ipcRenderer.on('window-focused', (event) => callback(event)),
   onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => ipcRenderer.on('window-shown', (event) => callback(event)),
   setLaunchAtLogin: (enabled: boolean): Promise<void> => ipcRenderer.invoke('set-launch-at-login', enabled),
+  setShowExperimentalFeatures: (enabled: boolean): Promise<void> => ipcRenderer.invoke('set-show-experimental-features', enabled),
 });

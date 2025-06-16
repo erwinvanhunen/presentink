@@ -29,7 +29,8 @@ const defaultSettings: Settings = {
   breakTime: 10,
   penWidth: 3,
   arrowHead: 20,
-  launchOnStartup: false
+  launchOnStartup: false,
+  showExperimentalFeatures: false,
 };
 
 export function loadSettings(): Settings {

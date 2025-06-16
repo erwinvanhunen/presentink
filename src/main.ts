@@ -2,7 +2,7 @@ import { app, globalShortcut, screen, Display, dialog, ipcMain, systemPreference
 import { exec } from 'child_process';
 import * as path from 'path'
 import { promises as fs } from 'fs';
-import { loadSettings, saveSettings }from './settings';
+import { loadSettings, saveSettings } from './settings';
 let settingsWindow: BrowserWindow | null = null;
 let helpWindow: BrowserWindow | null = null;
 let aboutWindow: BrowserWindow | null = null;
@@ -481,6 +481,7 @@ function getMenuTemplate(): Array<(Electron.MenuItemConstructorOptions) | (Elect
         { type: 'separator' },
         {
             label: 'Text Typer (EXPERIMENTAL)',
+            visible: settings.showExperimentalFeatures,
             submenu: [
                 {
                     id: 'select-script-file',
@@ -503,7 +504,7 @@ function getMenuTemplate(): Array<(Electron.MenuItemConstructorOptions) | (Elect
 
             ]
         },
-        { type: 'separator' },
+        { type: 'separator', visible: settings.showExperimentalFeatures },
         { label: 'Quit PresentInk', click: () => app.quit(), accelerator: 'CommandOrControl+Q' },
     ];
 }
@@ -540,11 +541,18 @@ ipcMain.handle('set-launch-at-login', (event: any, enabled: boolean) => {
     });
 });
 
+ipcMain.handle('set-show-experimental-features', (event: any, enabled: boolean) => {
+    settings = loadSettings();
+    const contextMenu = Menu.buildFromTemplate(getMenuTemplate());
+    if (tray) tray.setContextMenu(contextMenu);
+});
+
 ipcMain.handle('get-version', () => app.getVersion());
 
 ipcMain.handle('open-donate', (event: any, url: any) => {
     shell.openExternal(url);
 });
+
 function parseZoomItText(input: string): ScriptAction[] {
     input = input.replace(/\[([^\]\[]+)\]/g, '\n[$1]\n')
         // Remove accidental double newlines if tag is already on a line
@@ -709,7 +717,7 @@ async function pickFile() {
     if (!canceled && filePaths.length > 0) {
 
         try {
-            
+
             const fileName = path.basename(filePaths[0]);
             const content = await fs.readFile(filePaths[0], 'utf-8');
 

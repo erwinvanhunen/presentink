@@ -18,6 +18,7 @@ declare global {
             onWindowFocused: (callback: (event: Electron.IpcRendererEvent) => void) => void,
             onWindowShown: (callback: (event: Electron.IpcRendererEvent) => void) => void,
             setLaunchAtLogin: (enabled: boolean) => Promise<void>
+            setShowExperimentalFeatures: (enabled: boolean) => Promise<void>
         },
         aboutPreload: {
             getVersion: () => Promise<string>,
@@ -35,6 +36,7 @@ declare global {
         penWidth: number;
         arrowHead: number;
         launchOnStartup: boolean;
+        showExperimentalFeatures: boolean;
     }
 
     interface ScriptAction {
