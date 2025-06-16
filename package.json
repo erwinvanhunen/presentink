@@ -58,8 +58,8 @@
     "dmg": {
       "contents": [
         {
-          "x": 448,
-          "y": 175,
+          "x": 440,
+          "y": 170,
           "type": "link",
           "path": "/Applications"
         },

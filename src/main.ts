@@ -460,8 +460,6 @@ function createBaseWindow() {
 function getMenuTemplate(): Array<(Electron.MenuItemConstructorOptions) | (Electron.MenuItem)> {
     return [
         { label: 'Draw', id: 'drawing-toggle', click: () => toggleOverlay(), type: 'checkbox', checked: false, accelerator: 'Option+Shift+D' },
-
-        { type: 'separator' },
         {
             label: 'Color', submenu: [
                 { label: 'Red', click: () => changeColor('#ff0000', false), type: 'radio', checked: selectedColor === '#ff0000' },
@@ -473,7 +471,8 @@ function getMenuTemplate(): Array<(Electron.MenuItemConstructorOptions) | (Elect
             ]
         },
         { type: 'separator' },
-
+        { label: 'Break Timer', click: () => showBreakTimerWindow(), accelerator: 'Option+Shift+B' },
+        { type: 'separator' },
         { label: 'Settings…', click: () => createSettingsWindow() },
         { label: 'Help', click: () => createHelpWindow() },
         { type: 'separator' },
