@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>PresentInk Help</title>
+    <script type="module" src="/src/help.ts" defer></script>
+    <style>
+        body {
+            font-family: system-ui, sans-serif;
+            margin: 0;
+            padding: 28px 28px 18px 28px;
+            background: #f7f7fa;
+            color: #222;
+        }
+
+        h2 {
+            margin-top: 0;
+        }
+
+        ul{
+            margin-bottom: 18px;
+        }
+
+        .keylist-table {
+            border-collapse: collapse;
+            width: 100%;
+            /* max-width: 460px; */
+            margin: 16px 0;
+        }
+
+        .keylist-table td {
+            padding: 8px 10px;
+            vertical-align: middle;
+            font-size: 1.08em;
+        }
+
+        .keylist-table td:first-child {
+            width: 230px;
+            text-align: right;
+            font-family: system-ui, Menlo, Monaco, monospace;
+            color: #3a3a40;
+        }
+
+        .kbd {
+            background: #eee;
+            border-radius: 5px;
+            padding: 2px 8px;
+            border: 1px solid #ddd;
+            font-family: inherit;
+            font-weight: 500;
+            font-size: 1em;
+            margin: 0 2px;
+            display: inline-block;
+        }
+
+        .section {
+            margin-bottom: 20px;
+        }
+
+        .footer {
+            font-size: 0.92em;
+            color: #888;
+            margin-top: 22px;
+        }
+
+           .donate-btn {
+            display: inline-block;
+            padding: 11px 30px;
+            font-size: 1.18em;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(90deg, #fd7e14, #f76707 60%, #f48f2c 100%);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px #fae2c2bb;
+            margin: 32px auto 0 auto;
+            cursor: pointer;
+            text-align: center;
+            transition: box-shadow 0.15s, background 0.2s;
+            outline: none;
+        }
+
+        .donate-btn:hover {
+            background: linear-gradient(90deg, #fb8500, #f9b53e 80%);
+            box-shadow: 0 2px 16px #f7b26788;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="section">
+        <strong>What is PresentInk?</strong>
+        <p>
+            PresentInk is a macOS menu bar tool for drawing over your screen during presentations or screen sharing.<br>
+            Use it to highlight, annotate, and focus attention live.
+        </p>
+    </div>
+
+    <div class="section">
+        <strong>Keyboard</strong>
+        <table class="keylist-table">
+                <tr>
+                <td><span class="kbd">Command</span> + <span class="kbd">1</span></td>
+                <td>Zoom in (using built-in MacOS zoom functionality. You must first enable use of Keyboard shortcuts in System Preferences > Accessibility > Zoom)</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Option</span> + <span class="kbd">Shift</span> + <span class="kbd">D</span></td>
+                <td>Toggle draw mode on or off</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Shift</span></td>
+                <td>Draw perfectly straight lines</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">Shift</span></td>
+                <td>Draw arrows</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span></td>
+                <td>Draw boxes (rectangles)</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Option</span></td>
+                <td>Draw ellipses</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">E</span></td>
+                <td>Clear all drawings but stay in draw mode</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">Z</span></td>
+                <td>Undo last drawing</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Cmd</span> + <span class="kbd">Shift</span> + <span class="kbd">B</span></td>
+                <td>Break mode. Set the time in the settings</td>
+            </tr>
+             <tr>
+                <td><span class="kbd">Up</span>
+                <td>Increase line width</td>
+            </tr>
+               <tr>
+                <td><span class="kbd">Down</span>
+                <td>Decrease line width</td>
+            </tr>
+        </table>
+    </div>
+    <div class="section">
+        <strong>Colors</strong>
+        <table class="keylist-table">
+            <tr>
+                <td><span class="kbd">R</span></td>
+                <td>Draw in red</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">G</span></td>
+                <td>Draw in green</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">B</span></td>
+                <td>Draw in blue</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">Y</span></td>
+                <td>Draw in yellow</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">P</span></td>
+                <td>Draw in pink</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">O</span></td>
+                <td>Draw in orange</td>
+            </tr>
+            <tr>
+                <td><span class="kbd">W</span></td>
+                <td>Draw in white</td>
+            </tr>
+        </table>
+    </div>
+    <div class="section">
+        <strong>Mouse Actions</strong>
+        <ul>
+            <li>Click and drag to draw (in the active mode)</li>
+            <li>In Arrow/Box mode: click and drag for start/end or corners</li>
+            <li>In Ellipse mode: click and drag for an ellipse</li>
+            <li>Right click, <span class="kbd">ESC</span> or <span class="kbd">Option</span> + <span class="kbd">Shift</span> + <span class="kbd">D</span>: end drawing mode</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <strong>Status Bar Icon</strong>
+        <ul>
+            <li>Use the PresentInk icon in your menu bar to open settings, show this help, or quit.
+            </li>
+            <li>When drawing is active, the icon displays background changes to the color selected.</li>
+        </ul>
+    </div>
+    <div class="section">
+       <div><button class="donate-btn" id="donateBtn">Donate ❤️</button></div>
+    </div>
+    <div class="footer">
+        &copy; 2025 Erwin van Hunen
+    </div>
+</body>
+
+</html>

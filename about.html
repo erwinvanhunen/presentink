@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>About PresentInk</title>
+    <script type="module" src="/src/about.ts" defer></script>
+    <style>
+        body {
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #fff;
+        }
+
+        .about-window {
+            width: 100%;
+            height: 100%;
+            box-sizing: border-box;
+            /* padding: 32px 24px 20px 24px; */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            background: #fff;
+            border-radius: 18px;
+            /* box-shadow: 0 6px 28px #0002; */
+            margin: 0 auto;
+        }
+
+        .logo {
+            width: 128px;
+            height: 128px;
+            border-radius: 24px;
+            margin-bottom: 18px;
+            margin-top: 10px;
+            background: #f4f6ff;
+            box-shadow: 0 2px 12px #0001;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .logo img {
+            width: 128px;
+            height: 128px;
+            display: block;
+        }
+
+        .name {
+            font-size: 1.65em;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            margin-bottom: 5px;
+            color: #34417a;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .version {
+            font-size: 1.06em;
+            color: #999;
+            margin-bottom: 18px;
+        }
+
+        .copyright {
+            color: #aaa;
+            font-size: 1em;
+            margin-top: 35px;
+            text-align: center;
+            letter-spacing: 0.02em;
+        }
+
+        .website {
+            font-size: 1.09em;
+            margin-top: 10px;
+            color: #3173e0;
+            text-decoration: none;
+            text-align: center;
+            display: block;
+        }
+
+        .donate-btn {
+            display: inline-block;
+            padding: 11px 30px;
+            font-size: 1.18em;
+            font-weight: 600;
+            color: #fff;
+            background: linear-gradient(90deg, #fd7e14, #f76707 60%, #f48f2c 100%);
+            border: none;
+            border-radius: 16px;
+            box-shadow: 0 2px 10px #fae2c2bb;
+            margin: 32px auto 0 auto;
+            cursor: pointer;
+            text-align: center;
+            transition: box-shadow 0.15s, background 0.2s;
+            outline: none;
+        }
+
+        .donate-btn:hover {
+            background: linear-gradient(90deg, #fb8500, #f9b53e 80%);
+            box-shadow: 0 2px 16px #f7b26788;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="about-window">
+        <div class="logo">
+            <img src="/images/icon_256x256.png" alt="PresentInk logo">
+        </div>
+        <div class="name">PresentInk</div>
+        <div class="version" id="version">Version ...</div>
+        <div><button class="donate-btn" id="donateBtn">Donate ❤️</button></div>
+        <div class="copyright">&copy; 2025 Erwin van Hunen</div>
+    </div>
+</body>
+
+</html>
