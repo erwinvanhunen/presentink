@@ -1,79 +1,29 @@
 {
-  "name": "presentink",
-  "version": "0.9.10",
-  "main": "dist/main.js",
-  "icon": "icon.icns",
+  "name": "tauri-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
   "scripts": {
-    "clean": "rm -rf dist",
-    "start": "webpack && electron .",
-    "pack": "electron-builder --dir",
-    "predist": "pwsh -ExecutionPolicy Bypass -File ./copyversion.ps1",
-    "dist": "rm -rf dist && webpack && electron-builder --mac --arm64",
-    "build": "webpack"
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tauri": "tauri",
+    "clean": "rm -rf dist && rm -rf src-tauri/target",
+    "clean:all": "rm -rf node_modules && rm -rf src-tauri/target && rm -rf dist && rm -f package-lock.json",
+    "fresh": "npm run clean:all && npm install"
   },
-  "keywords": [],
-  "author": "Erwin van Hunen",
-  "license": "ISC",
-  "description": "",
+  "dependencies": {
+    "@tauri-apps/api": "^2.5.0",
+    "@tauri-apps/plugin-autostart": "^2.4.0",
+    "@tauri-apps/plugin-dialog": "^2.2.2",
+    "@tauri-apps/plugin-fs": "^2.3.0",
+    "@tauri-apps/plugin-global-shortcut": "^2.2.1",
+    "@tauri-apps/plugin-opener": "^2",
+    "@tauri-apps/plugin-store": "^2.2.1"
+  },
   "devDependencies": {
-    "copy-webpack-plugin": "^13.0.0",
-    "electron": "^36.3.2",
-    "electron-builder": "^26.0.12",
-    "source-map-loader": "^5.0.0",
-    "ts-loader": "^9.5.2",
-    "typescript": "^5.8.3",
-    "webpack": "^5.99.9",
-    "webpack-cli": "^6.0.1"
-  },
-  "build": {
-    "appId": "com.erwinmcm.presentink",
-    "productName": "PresentInk",
-    "directories": {
-      "output": "built",
-      "app": "dist"
-    },
-    "extraFiles": [
-      "KeyTyper"
-    ],
-    "asar": true,
-    "mac": {
-      "compression": "normal",
-      "category": "public.app-category.utilities",
-      "hardenedRuntime": true,
-      "entitlements": "entitlements.plist",
-      "entitlementsInherit": "entitlements.plist",
-      "notarize": true,
-      "target": {
-        "target": "default",
-        "arch": [
-          "arm64"
-        ]
-      },
-      "type": "distribution",
-      "extendInfo": {
-        "LSUIElement": true
-      },
-      "gatekeeperAssess": true
-    },
-    "dmg": {
-      "contents": [
-        {
-          "x": 440,
-          "y": 170,
-          "type": "link",
-          "path": "/Applications"
-        },
-        {
-          "x": 102,
-          "y": 175,
-          "type": "file"
-        }
-      ],
-      "window": {
-        "width": 540,
-        "height": 380
-      },
-      "background": "dmgbackground.png"
-    }
+    "@tauri-apps/cli": "^2",
+    "typescript": "~5.6.2",
+    "vite": "^6.0.3"
   }
 }

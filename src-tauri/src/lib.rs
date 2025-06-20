@@ -1,0 +1,688 @@
+// Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
+
+use enigo::{
+    Direction::{Press, Release},
+    Enigo, Keyboard, Settings,
+};
+use std::path::PathBuf;
+use std::{error::Error, sync::Mutex, thread, time::Duration};
+use tauri::{
+    image::Image,
+    menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
+    tray::TrayIconBuilder,
+    Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder,
+};
+use tauri_plugin_opener::OpenerExt;
+
+mod settings;
+use settings::AppSettings;
+
+#[derive(Default)]
+struct ScriptData {
+    original: String,
+}
+
+pub fn run() {
+    // Load the tray icon
+    let icon = Image::from_bytes(include_bytes!("../icons/iconTemplate.png"))
+        .expect("failed to load embedded tray icon");
+
+    tauri::Builder::default()
+        .enable_macos_default_menu(false)
+        .plugin(tauri_plugin_fs::init())
+        .plugin(tauri_plugin_dialog::init())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            Some(vec![]),
+        ))
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_store::Builder::default().build())
+        .setup(|app| {
+            setup_shortcuts(app)?;
+            setup_menus(icon, app)?;
+
+            create_splash_window(&app.handle());
+            create_overlay_windows(&app.handle());
+
+            app.manage(Mutex::new(ScriptData::default()));
+
+            Ok(())
+        })
+        .invoke_handler(tauri::generate_handler![
+            broadcast_to_all_windows,
+            print_output,
+            start_draw,
+            stop_draw,
+            change_color,
+            open_settings,
+            update_settings,
+            close_breaktimer,
+            show_break_time,
+            store_script,
+            type_text,
+            open_url,
+            get_version,
+            change_tray_icon
+        ])
+        .plugin(tauri_plugin_opener::init())
+        .run(tauri::generate_context!())
+        .expect("error while running tauri application");
+}
+
+fn setup_menus(icon: Image<'_>, app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>> {
+    let settings: AppSettings = settings::get_settings(&app.handle());
+    let draw_i = MenuItem::with_id(app, "draw", "Draw", true, Some("Alt+Shift+D"))?;
+    let breaktimer_i =
+        MenuItem::with_id(app, "breaktimer", "Break Timer", true, Some("Cmd+Alt+B"))?;
+    let quit_i = MenuItem::with_id(app, "quit", "Quit", true, Some("Cmd+Q"))?;
+    let separator = PredefinedMenuItem::separator(app)?;
+    let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, Some(""))?;
+    let about_i = MenuItem::with_id(app, "about", "About", true, Some(""))?;
+    let help_i = MenuItem::with_id(app, "help", "Help", true, Some(""))?;
+
+    let mut items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![
+        &draw_i,
+        &breaktimer_i,
+        &separator,
+        &settings_i,
+        &help_i,
+        &separator,
+        &about_i,
+        &separator,
+    ];
+    let select_text_i = MenuItem::with_id(app, "select-text", "Select Text", true, Some(""))?;
+    let type_text_i = MenuItem::with_id(app, "edit-text", "Type Text", true, Some("Alt+Shift+T"))?;
+    let text_submenu = Submenu::with_id_and_items(
+        app,
+        "text-submenu",
+        "Type Text",
+        true,
+        &[&select_text_i, &separator, &type_text_i],
+    )?;
+    if settings.show_experimental_features {
+        items.push(&text_submenu);
+        items.push(&separator);
+    }
+    items.push(&quit_i);
+    let menu = Menu::with_items(app, &items)?;
+
+    let _tray = TrayIconBuilder::new()
+        .menu(&menu)
+        .show_menu_on_left_click(true)
+        .icon(icon)
+        .icon_as_template(true)
+        .on_menu_event(|app, event| match event.id.as_ref() {
+            "draw" => {
+                toggle_draw(&app);
+            }
+            "breaktimer" => {
+                // Handle the break timer action
+                create_breaktimer_window(&app.app_handle());
+            }
+            "quit" => {
+                app.exit(0);
+            }
+            "settings" => {
+                // Handle the settings action
+                if let Err(e) = open_settings(app.app_handle().clone()) {
+                    println!("Failed to open settings: {}", e);
+                }
+            }
+            "about" => {
+                // Handle the about action
+                if let Err(e) = open_about(app.app_handle().clone()) {
+                    println!("Failed to open settings: {}", e);
+                }
+            }
+            "help" => {
+                // Handle the help action
+                if let Err(e) = open_help(app.app_handle().clone()) {
+                    println!("Failed to open help: {}", e);
+                }
+            }
+            "select-text" => {
+                // Handle the select text action
+                app.webview_windows().get("main").map(|window| {
+                    let _ = window.emit("select-text", ());
+                });
+            }
+            _ => {
+                println!("menu item {:?} not handled", event.id);
+            }
+        })
+        .build(app)?;
+
+    // println!("[DEBUG] Tray icon created with ID {}", _tray.id().to_string());
+    let app_handle = app.handle().clone();
+    thread::spawn(move || {
+        thread::sleep(Duration::from_millis(2000));
+
+        // Try to refresh the tray
+        if let Some(tray) = app_handle.tray_by_id("main-tray") {
+            // Force visibility
+            let _ = tray.set_visible(true);
+
+            // Try recreating the icon
+            if let Ok(new_icon) = Image::from_path("icons/iconTemplate.png") {
+                let _ = tray.set_icon(Some(new_icon));
+            }
+        }
+    });
+
+    Ok(())
+}
+
+fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>> {
+    use tauri_plugin_global_shortcut::{
+        Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
+    };
+
+    let d_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyD);
+    let t_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyT);
+    let b_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyB);
+    let s_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyS);
+
+    let app_handle = app.handle().clone();
+    app.handle().plugin(
+        tauri_plugin_global_shortcut::Builder::new()
+            .with_handler(move |_app, shortcut, event| {
+                if shortcut == &d_shortcut {
+                    match event.state() {
+                        ShortcutState::Pressed => {
+                            toggle_draw(&app_handle);
+                        }
+                        ShortcutState::Released => {}
+                    }
+                }
+
+                if shortcut == &s_shortcut {
+                    match event.state() {
+                        ShortcutState::Pressed => {
+                            // Show the break timer window
+                            // start_text_display(app, text)
+                            app_handle.webview_windows().get("main").map(|window| {
+                                let _ = window.emit("select-text", ());
+                            });
+                        }
+                        ShortcutState::Released => {}
+                    }
+                }
+                if shortcut == &t_shortcut {
+                    match event.state() {
+                        ShortcutState::Pressed => {
+                            send_script(app_handle.clone());
+                        }
+                        ShortcutState::Released => {}
+                    }
+                }
+                if shortcut == &b_shortcut {
+                    match event.state() {
+                        ShortcutState::Pressed => {
+                            show_break_time(app_handle.clone());
+                        }
+                        ShortcutState::Released => {}
+                    }
+                }
+            })
+            .build(),
+    )?;
+    app.global_shortcut().register(d_shortcut)?;
+    app.global_shortcut().register(t_shortcut)?;
+    app.global_shortcut().register(b_shortcut)?;
+    app.global_shortcut().register(s_shortcut)?;
+    Ok(())
+}
+
+fn toggle_draw(app_handle: &tauri::AppHandle) {
+    let mut visible = false;
+    for (label, window) in app_handle.webview_windows().iter() {
+        // Emit an event to the window to toggle the draw action
+        if label.starts_with("draw-window-") {
+            if window.is_visible().unwrap_or(false) {
+                visible = true;
+                break;
+            }
+        }
+    }
+    if visible {
+        // If the draw window is visible, stop drawing
+        stop_draw(app_handle.clone());
+    } else {
+        // If the draw window is not visible, start drawing
+        start_draw(app_handle.clone());
+    }
+}
+
+fn send_script(app_handle: tauri::AppHandle) {
+    let binding = app_handle.state::<Mutex<ScriptData>>();
+    let state = binding.lock().unwrap();
+    let script = state.original.clone();
+    // Emit to a specific window (e.g., "main")
+    if let Some(window) = app_handle.get_webview_window("main") {
+        let _ = window.emit("run-script", &script);
+    }
+}
+
+fn create_breaktimer_window(app: &tauri::AppHandle) {
+    if let Ok(monitors) = app.available_monitors() {
+        println!(
+            "[DEBUG] Creating break timer window on {} monitors",
+            monitors.len()
+        );
+        for (index, monitor) in monitors.iter().enumerate() {
+            let window_label = format!("break-window-{}", index);
+            let position = monitor.position();
+            let size = monitor.size();
+
+            let break_window = WebviewWindowBuilder::new(
+                app,
+                &window_label,
+                WebviewUrl::App("breaktimer.html".into()),
+            )
+            .title(&format!("PresentInk Break {}", index + 1))
+            .position(position.x as f64, position.y as f64)
+            .inner_size(size.width as f64, size.height as f64)
+            .center()
+            .resizable(false)
+            .visible_on_all_workspaces(true)
+            .decorations(true)
+            .title_bar_style(tauri::TitleBarStyle::Transparent)
+            .always_on_top(true)
+            .build();
+
+            match break_window {
+                Ok(window) => {
+                    let _ =
+                        window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                            x: position.x,
+                            y: position.y,
+                        }));
+                    let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                        width: size.width,
+                        height: size.height,
+                    }));
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                }
+                Err(e) => {
+                    println!("Failed to create break timer window: {:?}", e);
+                }
+            }
+        }
+    }
+}
+
+fn create_splash_window(app: &tauri::AppHandle) {
+    if let Ok(monitors) = app.available_monitors() {
+        for (index, monitor) in monitors.iter().enumerate() {
+            let window_label = format!("splash-window-{}", index);
+            let position = monitor.position();
+            let size = monitor.size();
+
+            let splash_window = WebviewWindowBuilder::new(
+                app,
+                &window_label,
+                WebviewUrl::App("splash.html".into()),
+            )
+            .title(&format!("PresentInk Splash {}", index + 1))
+            .position(position.x as f64, position.y as f64)
+            .inner_size(size.width as f64, size.height as f64)
+            .center()
+            .resizable(false)
+            .transparent(true)
+            .visible_on_all_workspaces(true)
+            .decorations(false)
+            .always_on_top(true)
+            .build();
+
+            match splash_window {
+                Ok(window) => {
+                    let _ =
+                        window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                            x: position.x,
+                            y: position.y,
+                        }));
+                    let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                        width: size.width,
+                        height: size.height,
+                    }));
+                    let _ = window.show();
+                    let window_clone = window.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(3200));
+                        let _ = window_clone.close();
+                        // Or if you want to close it completely:
+                        // let _ = window_clone.close();
+                    });
+                }
+                Err(e) => {
+                    println!("Failed to create splash window: {:?}", e);
+                }
+            }
+        }
+    }
+}
+
+fn create_overlay_windows(app: &tauri::AppHandle) {
+    if let Ok(monitors) = app.available_monitors() {
+        for (index, monitor) in monitors.iter().enumerate() {
+            let window_label = format!("draw-window-{}", index);
+
+            // Close existing window if it exists
+            if let Some(existing_window) = app.webview_windows().get(&window_label) {
+                let _ = existing_window.close();
+            }
+            let position = monitor.position();
+            let size = monitor.size();
+
+            match WebviewWindowBuilder::new(
+                app,
+                &window_label,
+                WebviewUrl::App("overlay.html".into()),
+            )
+            .title(&format!("PresentInk Draw Monitor {}", index + 1))
+            .position(position.x as f64, position.y as f64)
+            .inner_size(size.width as f64, size.height as f64)
+            .fullscreen(false)
+            .center()
+            .transparent(true)
+            .decorations(false)
+            .always_on_top(true)
+            .visible_on_all_workspaces(true)
+            .accept_first_mouse(true)
+            .skip_taskbar(true)
+            .build()
+            {
+                Ok(window) => {
+                    let _ =
+                        window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                            x: position.x,
+                            y: position.y,
+                        }));
+
+                    let _ = window.hide();
+                    let _ = window.set_focus();
+                    let _ = window.set_always_on_top(true);
+
+                    let window_clone = window.clone();
+                    std::thread::spawn(move || {
+                        std::thread::sleep(std::time::Duration::from_millis(100));
+                        let _ = window_clone.set_focus();
+                    });
+                }
+                Err(e) => {
+                    println!("Failed to create window {}: {:?}", index, e);
+                }
+            }
+        }
+    }
+}
+
+// #[tauri::command]
+// fn type_text(app: tauri::AppHandle, text: &str) {
+//     let mut enigo = Enigo::new(&Settings::default()).unwrap();
+//     enigo.text(text).unwrap();
+// }
+
+#[tauri::command]
+fn type_text(text: &str) {
+    let mut enigo = Enigo::new(&Settings::default()).unwrap();
+
+    // Replace [left], [up], [right], [down] with corresponding key events
+    let mut remaining = text;
+    while !remaining.is_empty() {
+        if let Some(start) = remaining.find('[') {
+            // Type any text before the [
+            if start > 0 {
+                let before = &remaining[..start];
+                if !before.is_empty() {
+                    enigo.text(before).unwrap();
+                }
+            }
+            // Check for a recognized key command
+            if let Some(end) = remaining[start..].find(']') {
+                let command = &remaining[start + 1..start + end].to_lowercase();
+                if command == "left" {
+                    let _ = enigo.key(enigo::Key::LeftArrow, Press);
+                    let _ = enigo.key(enigo::Key::LeftArrow, Release);
+                } else if command == "right" {
+                    let _ = enigo.key(enigo::Key::RightArrow, Press);
+                    let _ = enigo.key(enigo::Key::RightArrow, Release);
+                } else if command == "up" {
+                    let _ = enigo.key(enigo::Key::UpArrow, Press);
+                    let _ = enigo.key(enigo::Key::UpArrow, Release);
+                } else if command == "down" {
+                    let _ = enigo.key(enigo::Key::DownArrow, Press);
+                    let _ = enigo.key(enigo::Key::DownArrow, Release);
+                } else if command.starts_with("pause:") {
+                    // Parse the pause duration in seconds
+                    if let Some(secs) = command.strip_prefix("pause:") {
+                        if let Ok(secs) = secs.parse::<u64>() {
+                            std::thread::sleep(std::time::Duration::from_secs(secs));
+                        }
+                    }
+                } else {
+                    // If not recognized, type as normal text
+                    enigo.text(&remaining[start..start + end + 1]).unwrap();
+                }
+                remaining = &remaining[start + end + 1..];
+            } else {
+                // No closing ], type the rest as normal text
+                enigo.text(&remaining[start..]).unwrap();
+                break;
+            }
+        } else {
+            // No more [, type the rest as normal text
+            enigo.text(remaining).unwrap();
+            break;
+        }
+    }
+}
+
+#[tauri::command]
+fn store_script(state: State<'_, Mutex<ScriptData>>, script: &str) {
+    //println!("[DEBUG] Storing script: {}", script.to_string());
+    let mut state = state.lock().unwrap();
+    state.original = script.to_string();
+    //println!("[DEBUG] Stored script: {}", state.original);
+}
+
+#[tauri::command]
+fn start_draw(app: tauri::AppHandle) {
+    // println!("[DEBUG] Start draw action backend");
+    // This function can be used to toggle the draw window visibility
+    for (label, window) in app.webview_windows().iter() {
+        // Emit an event to the window to toggle the draw action
+        if label.starts_with("draw-window-") {
+            let _ = window.emit("start-drawing", ());
+        }
+    }
+}
+
+#[tauri::command]
+fn stop_draw(app: tauri::AppHandle) {
+    // println!("[DEBUG] Stop draw action backend");
+    // This function can be used to toggle the draw window visibility
+    for (label, window) in app.webview_windows().iter() {
+        // Emit an event to the window to toggle the draw action
+        if label.starts_with("draw-window-") {
+            let _ = window.emit("stop-drawing", ());
+        }
+    }
+    let _ = change_tray_icon(app.clone(), "#ffffff".to_string(), false);
+}
+
+#[tauri::command]
+fn update_settings(app: tauri::AppHandle) {
+    // This function can be used to toggle the draw window visibility
+    for (label, window) in app.webview_windows().iter() {
+        // Emit an event to the window to toggle the draw action
+        if label.starts_with("draw-window-") {
+            let _ = window.emit("settings-updated", ());
+        }
+    }
+}
+
+#[tauri::command]
+fn close_breaktimer(app: tauri::AppHandle) {
+    for (label, window) in app.webview_windows().iter() {
+        if label.starts_with("break-window-") {
+            let _ = window.close();
+        }
+    }
+}
+
+#[tauri::command]
+fn show_break_time(app: tauri::AppHandle) {
+    // This function can be used to toggle the draw window visibility
+    create_breaktimer_window(&app);
+}
+
+#[tauri::command]
+fn change_color(app: tauri::AppHandle, color: String) {
+    // This function can be used to change the color of the draw window
+    for (label, window) in app.webview_windows().iter() {
+        if label.starts_with("draw-window-") {
+            // Emit an event to the window to change the color
+            let _ = window.emit("change-color", &color);
+        }
+    }
+    let _ = change_tray_icon(app, color, true);
+}
+
+#[tauri::command]
+fn broadcast_to_all_windows(app: tauri::AppHandle, name: String, payload: serde_json::Value) {
+    for (_label, window) in app.webview_windows().iter() {
+        let _ = window.emit(&name, &payload);
+    }
+}
+
+#[tauri::command]
+fn print_output(text: &str) {
+    println!("[DEBUG]: {}", text);
+}
+
+#[tauri::command]
+fn open_settings(app: tauri::AppHandle) -> Result<(), String> {
+    // Close existing settings window if it exists
+    if let Some(existing_window) = app.get_webview_window("settings") {
+        let _ = existing_window.close();
+    }
+
+    let _window =
+        WebviewWindowBuilder::new(&app, "settings", WebviewUrl::App("preferences.html".into()))
+            .title("PresentInk Settings")
+            .inner_size(640.0, 470.0)
+            .center()
+            .resizable(false)
+            .decorations(false)
+            .accept_first_mouse(true)
+            .transparent(true)
+            .always_on_top(false)
+            .build()
+            .map_err(|e| format!("Failed to create settings window: {}", e))?;
+
+    Ok(())
+}
+
+#[tauri::command]
+fn open_about(app: tauri::AppHandle) -> Result<(), String> {
+    // Close existing settings window if it exists
+    if let Some(existing_window) = app.get_webview_window("about") {
+        let _ = existing_window.close();
+    }
+
+    let _window = WebviewWindowBuilder::new(&app, "about", WebviewUrl::App("about.html".into()))
+        .title("About PresentInk")
+        .inner_size(340.0, 410.0)
+        .center()
+        .resizable(false)
+        .decorations(true)
+        .always_on_top(true)
+        .build()
+        .map_err(|e| format!("Failed to create about window: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+fn get_version(app: tauri::AppHandle) -> String {
+    app.package_info().version.to_string()
+}
+
+#[tauri::command]
+fn open_help(app: tauri::AppHandle) -> Result<(), String> {
+    // Close existing settings window if it exists
+    if let Some(existing_window) = app.get_webview_window("about") {
+        let _ = existing_window.close();
+    }
+
+    let _window = WebviewWindowBuilder::new(&app, "help", WebviewUrl::App("help.html".into()))
+        .title("PresentInk Help")
+        .inner_size(640.0, 670.0)
+        .center()
+        .resizable(true)
+        .decorations(true)
+        .always_on_top(false)
+        .build()
+        .map_err(|e| format!("Failed to create help window: {}", e))?;
+    Ok(())
+}
+
+#[tauri::command]
+async fn open_url(app: tauri::AppHandle, url: String) -> Result<(), String> {
+    app.opener()
+        .open_url(&url, None::<&str>)
+        .map_err(|e| format!("Failed to open URL: {}", e))?;
+
+    println!("Opened URL: {}", url);
+    Ok(())
+}
+
+#[tauri::command]
+fn change_tray_icon(app: tauri::AppHandle, color: String, is_drawing: bool) -> Result<(), String> {
+    let icon_path = if is_drawing {
+        match color.as_str() {
+            "#ff0000" | "red" => "icons/icon-red.png",
+            "#0000ff" | "blue" => "icons/icon-blue.png",
+            "#00ff00" | "green" => "icons/icon-green.png",
+            "#ffff00" | "yellow" => "icons/icon-yellow.png",
+            "#ff00ff" | "black" => "icons/icon-pink.png",
+            "#ffa500" | "orange" => "icons/icon-orange.png",
+            _ => "icons/iconTemplate.png", // Default for unknown colors
+        }
+    } else {
+        "icons/iconTemplate.png" // Default icon when not drawing
+    };
+
+    // Load the icon
+    let icon_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(icon_path);
+
+    match Image::from_path(&icon_path) {
+        Ok(icon) => {
+            // Get the tray handle and update icon
+            if let Some(tray) = app.tray_by_id("1") {
+                tray.set_icon(Some(icon))
+                    .map_err(|e| format!("Failed to set tray icon: {}", e))?;
+                let _ = tray.set_icon_as_template(!is_drawing);
+            } else {
+                return Err("Tray not found".to_string());
+            }
+        }
+        Err(e) => {
+            println!("Failed to load icon {}: {}", icon_path.display(), e);
+            // Fallback to default icon
+            let default_path =
+                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/iconTemplate.png");
+            if let Ok(default_icon) = Image::from_path(&default_path) {
+                // Set the default icon if the specific color icon fails to load
+                if let Some(tray) = app.tray_by_id("1") {
+                    let _ = tray.set_icon(Some(default_icon));
+                }
+            }
+            return Err(format!("Failed to load icon: {}", e));
+        }
+    }
+
+    Ok(())
+}
+

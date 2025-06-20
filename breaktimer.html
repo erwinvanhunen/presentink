@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Break Timer</title>
+    <script type="module" src="/src/breaktimer.ts" defer></script>
+    <style>
+        html,
+        body {
+            margin: 0;
+            padding: 0;
+            background: #fff;
+            overflow: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        #timer {
+            color: #d32f2f;
+            font-size: 10vw;
+            font-weight: bold;
+            font-family: system-ui, sans-serif;
+            margin-bottom: 2vw;
+            visibility: hidden; /* Initially hidden, will be shown when settings are loaded */
+        }
+
+        #text {
+            color: #d32f2f;
+            font-size: 4vw;
+            font-family: system-ui, sans-serif;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="timer">__:__</div>
+    <div id="text">Break time!</div>
+</body>
+
+</html>

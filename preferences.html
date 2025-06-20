@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>PresentInk Settings</title>
+  <script type="module" src="/src/preferences.ts" defer></script>
+  <style>
+    body {
+      background: transparent; /* Make body transparent */
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 8px; /* Add padding for window shadow */
+      font-size: 13px;
+      color: #ffffff;
+      overflow: hidden;
+    }
+
+    .preferences-window {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 16px); /* Account for body padding */
+      background: #2c2c2e;
+      border-radius: 12px; /* Rounded corners */
+      overflow: hidden;
+      /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); */
+      border: 1px solid #48484a; /* Subtle border */
+    }
+
+    .toolbar {
+      background: linear-gradient(to bottom, #3a3a3c, #2c2c2e);
+      border-bottom: 1px solid #1c1c1e;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 13px;
+      color: #ffffff;
+      position: relative;
+      border-radius: 12px 12px 0 0; /* Rounded top corners only */
+      /* Add drag region for moving window */
+      -webkit-app-region: drag;
+        cursor: move; /* Optional: show move cursor */
+    }
+
+    .close-button {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #ff5f57;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 8px;
+      color: transparent;
+      transition: all 0.2s ease;
+      -webkit-app-region: no-drag; /* Allow clicking on close button */
+    }
+
+    .close-button:hover {
+      color: #8b0000;
+    }
+
+    .close-button:hover::after {
+      content: '×';
+      font-size: 10px;
+      font-weight: bold;
+    }
+
+    .content {
+      padding: 20px;
+      background: #2c2c2e;
+      flex: 1;
+      overflow-y: auto;
+      border-radius: 0 0 12px 12px; /* Rounded bottom corners */
+    }
+
+    .preference-group {
+      background: #1c1c1e;
+      border: 1px solid #48484a;
+      border-radius: 8px; /* Slightly more rounded for groups */
+      margin-bottom: 20px;
+      overflow: hidden;
+    }
+
+    .preference-row {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid #48484a;
+      min-height: 20px;
+    }
+
+    .preference-row:last-child {
+      border-bottom: none;
+    }
+
+    .preference-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .preference-label {
+      flex: 1;
+      font-size: 13px;
+      color: #ffffff;
+      font-weight: 400;
+    }
+
+    .preference-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 200px;
+      justify-content: flex-end;
+    }
+
+    /* Dark macOS slider */
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 6px;
+      background: #48484a;
+      border-radius: 3px;
+      outline: none;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 20px;
+      height: 20px;
+      background: linear-gradient(to bottom, #ffffff, #f0f0f0);
+      border: 1px solid #666;
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+    }
+
+    input[type=range]::-webkit-slider-thumb:hover {
+      background: linear-gradient(to bottom, #f8f8f8, #e8e8e8);
+    }
+
+    input[type=range]::-webkit-slider-thumb:active {
+      background: linear-gradient(to bottom, #e0e0e0, #d0d0d0);
+    }
+
+    /* Dark macOS checkbox */
+    input[type=checkbox] {
+      -webkit-appearance: none;
+      width: 14px;
+      height: 14px;
+      background: linear-gradient(to bottom, #3a3a3c, #2c2c2e);
+      border: 1px solid #666;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+      position: relative;
+    }
+
+    input[type=checkbox]:hover {
+      background: linear-gradient(to bottom, #48484a, #3a3a3c);
+    }
+
+    input[type=checkbox]:checked {
+      background: linear-gradient(to bottom, #0a84ff, #0066cc);
+      border-color: #0066cc;
+    }
+
+    input[type=checkbox]:checked::after {
+      content: '✓';
+      position: absolute;
+      top: -2px;
+      left: 1px;
+      font-size: 11px;
+      color: white;
+      font-weight: bold;
+    }
+
+    input[type=checkbox]:checked:hover {
+      background: linear-gradient(to bottom, #1a8cff, #0066cc);
+    }
+
+    input[type=checkbox]:active {
+      background: linear-gradient(to bottom, #2c2c2e, #1c1c1e);
+    }
+
+    .value-label {
+      font-size: 11px;
+      color: #a1a1a6;
+      min-width: 35px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .secondary-text {
+      font-size: 11px;
+      color: #8e8e93;
+      margin-left: 8px;
+    }
+
+    /* Preview canvases */
+    canvas.dot-preview,
+    canvas.arrow-preview {
+      background: #1c1c1e;
+      border: 1px solid #48484a;
+      border-radius: 4px; /* Slightly rounded canvas corners */
+    }
+
+    /* Group headers */
+    .group-header {
+      font-size: 11px;
+      color: #a1a1a6;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin: 20px 0 8px 0;
+      padding-left: 4px;
+    }
+
+    .group-header:first-child {
+      margin-top: 0;
+    }
+
+    /* Scrollbar styling for dark mode */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #48484a;
+      border-radius: 4px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #636366;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="preferences-window">
+    <div class="toolbar" data-tauri-drag-region>
+      <button class="close-button" id="closeBtn"></button>
+      PresentInk
+    </div>
+    
+    <div class="content">
+      <div class="group-header">Drawing</div>
+      <div class="preference-group">
+        <div class="preference-row">
+          <div class="preference-label">Pen width</div>
+          <div class="preference-control">
+            <input id="penWidth" type="range" min="1" max="24" value="6">
+            <span class="value-label" id="penWidthValue">3 px</span>
+            <canvas class="dot-preview" id="dotPreview" width="60" height="28"></canvas>
+          </div>
+        </div>
+        
+        <div class="preference-row">
+          <div class="preference-label">Arrowhead length</div>
+          <div class="preference-control">
+            <input id="arrowHead" type="range" min="8" max="40" value="20">
+            <span class="value-label" id="arrowHeadValue">20 px</span>
+            <canvas class="arrow-preview" id="arrowPreview" width="60" height="28"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-header">Break Timer</div>
+      <div class="preference-group">
+        <div class="preference-row">
+          <div class="preference-label">Break timer length</div>
+          <div class="preference-control">
+            <input id="breakTime" type="range" min="1" max="60" value="10">
+            <span class="value-label" id="breakTimeValue">10 min</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="group-header">General</div>
+      <div class="preference-group">
+        <div class="preference-row">
+          <div class="preference-label">Launch at login</div>
+          <div class="preference-control">
+            <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
+          </div>
+        </div>
+        
+        <div class="preference-row">
+          <div class="preference-label">Show experimental features</div>
+          <div class="preference-control">
+            <input type="checkbox" id="showExperimental" name="showExperimental">
+            <span class="secondary-text">Restart required</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

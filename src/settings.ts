@@ -1,55 +1,49 @@
-import * as path from 'path'
-import fs from 'fs';
+import { Store } from '@tauri-apps/plugin-store';
 
-const appName = 'PresentInk'; // Change as needed
-
-
-export function getSettingsPath() {
-  let base;
-  if (process.platform === 'darwin') {
-    const home = process.env.HOME;
-    if (!home) throw new Error('HOME environment variable is not set');
-    base = path.join(home, 'Library', 'Application Support', appName);
-  } else if (process.platform === 'win32') {
-    const appData = process.env.APPDATA;
-    if (!appData) throw new Error('APPDATA environment variable is not set');
-    base = path.join(appData, appName);
-  } else {
-    const home = process.env.HOME;
-    if (!home) throw new Error('HOME environment variable is not set');
-    base = path.join(home, `.${appName.toLowerCase()}`);
-  }
-  if (!fs.existsSync(base)) fs.mkdirSync(base, { recursive: true });
-  return path.join(base, 'settings.json');
+export interface AppSettings {
+  penWidth: number;
+  arrowHeadLength: number;
+  launchOnStartup: boolean;
+  showExperimentalFeatures: boolean;
+  breakTime: number;
 }
 
-const settingsPath = getSettingsPath();
-
-const defaultSettings: Settings = {
-  breakTime: 10,
+const defaultSettings: AppSettings = {
   penWidth: 3,
-  arrowHead: 20,
+  arrowHeadLength: 20,
   launchOnStartup: false,
   showExperimentalFeatures: false,
+  breakTime: 10 // default to 10 minutes
 };
 
-export function loadSettings(): Settings {
-  try {
-    const raw = fs.readFileSync(settingsPath, 'utf8');
-    return { ...defaultSettings, ...JSON.parse(raw) };
-  } catch (err) {
-    if (err instanceof Error) {
-      console.log(err.message);
-    } else {
-      console.log(String(err));
-    }
-    return { ...defaultSettings };
-  }
+let store: Store;
+
+export async function initSettings(): Promise<AppSettings> {
+  store = await Store.load('.settings.dat');
+  // Load existing settings or create with defaults
+  const settings = await store.get<AppSettings>('settings') || defaultSettings;
+  await store.set('settings', settings);
+  await store.save();
+
+  return settings;
 }
 
-export function saveSettings(newSettings: Partial<Settings>) {
-  const current = loadSettings();
-  const merged = { ...current, ...newSettings };
-  fs.writeFileSync(settingsPath, JSON.stringify(merged, null, 2), 'utf8');
-  return merged;
+export async function getSettings(): Promise<AppSettings> {
+  if (!store) {
+    return await initSettings();
+  }
+  return await store.get<AppSettings>('settings') || defaultSettings;
+}
+
+export async function updateSetting<K extends keyof AppSettings>( key: K, value: AppSettings[K]): Promise<void> {
+  const settings = await getSettings();
+  settings[key] = value;
+  await store.set('settings', settings);
+  await store.save();
+}
+
+export async function resetSettings(): Promise<AppSettings> {
+  await store.set('settings', defaultSettings);
+  await store.save();
+  return defaultSettings;
 }
