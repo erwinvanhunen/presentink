@@ -6,6 +6,7 @@ export interface AppSettings {
   launchOnStartup: boolean;
   showExperimentalFeatures: boolean;
   breakTime: number;
+  penColor?: string; // Optional, can be added later
 }
 
 const defaultSettings: AppSettings = {
@@ -13,7 +14,8 @@ const defaultSettings: AppSettings = {
   arrowHeadLength: 20,
   launchOnStartup: false,
   showExperimentalFeatures: false,
-  breakTime: 10 // default to 10 minutes
+  breakTime: 10, // default to 10 minutes
+  penColor: '#ff0000', // Default pen color (red)
 };
 
 let store: Store;

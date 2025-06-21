@@ -12,7 +12,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     if (appSettings.breakTime) {
         timerElem = document.getElementById('timer') as HTMLSpanElement;
         timeLeft = appSettings.breakTime * 60;
-        invoke("print_output", { text: `Break timer started for ${appSettings.breakTime} minutes.` });
         timerElem.style.visibility = 'visible';
         updateDisplay();
         interval = setInterval(() => {

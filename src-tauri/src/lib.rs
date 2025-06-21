@@ -1,16 +1,16 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 use enigo::{
-    Direction::{Press, Release},
+    Direction::{Click, Press, Release},
     Enigo, Keyboard, Settings,
 };
 use std::path::PathBuf;
 use std::{error::Error, sync::Mutex, thread, time::Duration};
 use tauri::{
+    Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder,
     image::Image,
     menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
-    Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder,
 };
 use tauri_plugin_opener::OpenerExt;
 
@@ -26,7 +26,7 @@ pub fn run() {
     // Load the tray icon
     let icon = Image::from_bytes(include_bytes!("../icons/iconTemplate.png"))
         .expect("failed to load embedded tray icon");
-
+   
     tauri::Builder::default()
         .enable_macos_default_menu(false)
         .plugin(tauri_plugin_fs::init())
@@ -152,7 +152,7 @@ fn setup_menus(icon: Image<'_>, app: &mut tauri::App) -> Result<(), Box<dyn Erro
         })
         .build(app)?;
 
-    // println!("[DEBUG] Tray icon created with ID {}", _tray.id().to_string());
+   
     let app_handle = app.handle().clone();
     thread::spawn(move || {
         thread::sleep(Duration::from_millis(2000));
@@ -160,6 +160,7 @@ fn setup_menus(icon: Image<'_>, app: &mut tauri::App) -> Result<(), Box<dyn Erro
         // Try to refresh the tray
         if let Some(tray) = app_handle.tray_by_id("main-tray") {
             // Force visibility
+            println!("[DEBUG] Refreshing tray icon visibility");
             let _ = tray.set_visible(true);
 
             // Try recreating the icon
@@ -181,7 +182,7 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
     let t_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyT);
     let b_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyB);
     let s_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyS);
-
+    let zoom_shortcut = Shortcut::new(Some(Modifiers::META), Code::Digit1);
     let app_handle = app.handle().clone();
     app.handle().plugin(
         tauri_plugin_global_shortcut::Builder::new()
@@ -223,6 +224,20 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
                         ShortcutState::Released => {}
                     }
                 }
+                if shortcut == &zoom_shortcut {
+                    match event.state() {
+                        ShortcutState::Pressed => {
+                            println!("[DEBUG] Zoom shortcut pressed, simulating Ctrl+Alt+8");
+                            let mut enigo = Enigo::new(&Settings::default()).unwrap();
+                            enigo.key(enigo::Key::Meta, Press).unwrap();
+                            enigo.key(enigo::Key::Option, Press).unwrap();
+                            enigo.key(enigo::Key::Unicode('8'), Click).unwrap();
+                            enigo.key(enigo::Key::Option, Release).unwrap();
+                            enigo.key(enigo::Key::Meta, Release).unwrap();
+                        }
+                        ShortcutState::Released => {}
+                    }
+                }
             })
             .build(),
     )?;
@@ -230,6 +245,7 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
     app.global_shortcut().register(t_shortcut)?;
     app.global_shortcut().register(b_shortcut)?;
     app.global_shortcut().register(s_shortcut)?;
+    app.global_shortcut().register(zoom_shortcut)?;
     Ok(())
 }
 
@@ -265,10 +281,6 @@ fn send_script(app_handle: tauri::AppHandle) {
 
 fn create_breaktimer_window(app: &tauri::AppHandle) {
     if let Ok(monitors) = app.available_monitors() {
-        println!(
-            "[DEBUG] Creating break timer window on {} monitors",
-            monitors.len()
-        );
         for (index, monitor) in monitors.iter().enumerate() {
             let window_label = format!("break-window-{}", index);
             let position = monitor.position();
@@ -285,7 +297,7 @@ fn create_breaktimer_window(app: &tauri::AppHandle) {
             .center()
             .resizable(false)
             .visible_on_all_workspaces(true)
-            .decorations(true)
+            .decorations(false)
             .title_bar_style(tauri::TitleBarStyle::Transparent)
             .always_on_top(true)
             .build();
@@ -685,4 +697,3 @@ fn change_tray_icon(app: tauri::AppHandle, color: String, is_drawing: bool) -> R
 
     Ok(())
 }
-
