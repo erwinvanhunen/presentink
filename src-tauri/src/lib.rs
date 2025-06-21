@@ -466,6 +466,9 @@ fn type_text(text: &str) {
                 } else if command == "down" {
                     let _ = enigo.key(enigo::Key::DownArrow, Press);
                     let _ = enigo.key(enigo::Key::DownArrow, Release);
+                } else if command == "enter" {
+                    let _ = enigo.key(enigo::Key::Return, Press);
+                    let _ = enigo.key(enigo::Key::Return, Release);
                 } else if command.starts_with("pause:") {
                     // Parse the pause duration in seconds
                     if let Some(secs) = command.strip_prefix("pause:") {
