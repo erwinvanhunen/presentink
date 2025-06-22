@@ -5,7 +5,7 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api/core";
 import { getSettings, updateSetting, AppSettings } from './settings';
 
-let undoStack: any[] = [];
+let undoStack: string[] = [];
 const MAX_UNDO = 30; // Adjust for memory usage, if you want
 const drawCanvas = document.getElementById('draw-canvas') as HTMLCanvasElement;
 const ctx = drawCanvas.getContext('2d');

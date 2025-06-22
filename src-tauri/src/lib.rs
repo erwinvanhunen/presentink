@@ -5,11 +5,11 @@ use enigo::{
     Enigo, Keyboard, Settings,
 };
 use std::path::PathBuf;
-use std::{error::Error, sync::Mutex, thread, time::Duration};
+use std::{error::Error, thread, time::Duration};
 use tauri::{
-    Emitter, Manager, State, WebviewUrl, WebviewWindowBuilder,
+    Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
     image::Image,
-    menu::{Menu, MenuItem, PredefinedMenuItem, Submenu},
+    menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
 };
 use tauri_plugin_opener::OpenerExt;
@@ -17,17 +17,17 @@ use tauri_plugin_opener::OpenerExt;
 mod settings;
 use settings::AppSettings;
 
-#[derive(Default)]
-struct ScriptData {
-    original: String,
-}
+use std::sync::Mutex;
 
+pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
+pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 pub fn run() {
     // Load the tray icon
-    let icon = Image::from_bytes(include_bytes!("../icons/iconTemplate.png"))
-        .expect("failed to load embedded tray icon");
-   
+
     tauri::Builder::default()
+        .manage(DrawMenuState(Mutex::new(None)))
+        .manage(FileNameMenuState(Mutex::new(None)))
+        .plugin(tauri_plugin_notification::init())
         .enable_macos_default_menu(false)
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
@@ -39,12 +39,12 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
             setup_shortcuts(app)?;
-            setup_menus(icon, app)?;
+            setup_menus(&app.handle())?;
 
             create_splash_window(&app.handle());
             create_overlay_windows(&app.handle());
 
-            app.manage(Mutex::new(ScriptData::default()));
+            // app.manage(Mutex::new(ScriptData::default()));
 
             Ok(())
         })
@@ -58,20 +58,28 @@ pub fn run() {
             update_settings,
             close_breaktimer,
             show_break_time,
-            store_script,
             type_text,
             open_url,
             get_version,
-            change_tray_icon
+            change_tray_icon,
+            set_file_name,
         ])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
 
-fn setup_menus(icon: Image<'_>, app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>> {
-    let settings: AppSettings = settings::get_settings(&app.handle());
-    let draw_i = MenuItem::with_id(app, "draw", "Draw", true, Some("Alt+Shift+D"))?;
+fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
+    let settings: AppSettings = settings::get_settings(&app);
+
+    let icon = Image::from_bytes(include_bytes!("../icons/iconTemplate.png"))
+        .expect("failed to load embedded tray icon");
+
+    let draw_i = CheckMenuItem::with_id(app, "draw", "Draw", true, false, Some("Alt+Shift+D"))?;
+    {
+        let draw_state = app.state::<DrawMenuState>();
+        *draw_state.0.lock().unwrap() = Some(draw_i.clone());
+    }
     let breaktimer_i =
         MenuItem::with_id(app, "breaktimer", "Break Timer", true, Some("Cmd+Alt+B"))?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, Some("Cmd+Q"))?;
@@ -92,15 +100,22 @@ fn setup_menus(icon: Image<'_>, app: &mut tauri::App) -> Result<(), Box<dyn Erro
     ];
     let select_text_i = MenuItem::with_id(app, "select-text", "Select Text", true, Some(""))?;
     let type_text_i = MenuItem::with_id(app, "edit-text", "Type Text", true, Some("Alt+Shift+T"))?;
+    let filename_i = MenuItem::with_id(app, "file-name", "No file selected", false, Some(""))?;
+    {
+        let file_name_state = app.state::<FileNameMenuState>();
+        *file_name_state.0.lock().unwrap() = Some(filename_i.clone());
+    }
     let text_submenu = Submenu::with_id_and_items(
         app,
         "text-submenu",
         "Type Text",
         true,
-        &[&select_text_i, &separator, &type_text_i],
+        &[&select_text_i, &separator, &type_text_i, &filename_i],
     )?;
+
     if settings.show_experimental_features {
         items.push(&text_submenu);
+
         items.push(&separator);
     }
     items.push(&quit_i);
@@ -152,13 +167,12 @@ fn setup_menus(icon: Image<'_>, app: &mut tauri::App) -> Result<(), Box<dyn Erro
         })
         .build(app)?;
 
-   
-    let app_handle = app.handle().clone();
+    let app_handle = app.clone();
     thread::spawn(move || {
         thread::sleep(Duration::from_millis(2000));
 
         // Try to refresh the tray
-        if let Some(tray) = app_handle.tray_by_id("main-tray") {
+        if let Some(tray) = app_handle.tray_by_id("1") {
             // Force visibility
             println!("[DEBUG] Refreshing tray icon visibility");
             let _ = tray.set_visible(true);
@@ -169,7 +183,7 @@ fn setup_menus(icon: Image<'_>, app: &mut tauri::App) -> Result<(), Box<dyn Erro
             }
         }
     });
-
+    // Register the tray with the app
     Ok(())
 }
 
@@ -260,22 +274,34 @@ fn toggle_draw(app_handle: &tauri::AppHandle) {
             }
         }
     }
+
     if visible {
         // If the draw window is visible, stop drawing
         stop_draw(app_handle.clone());
+        set_draw_menu_checked(app_handle, false);
     } else {
         // If the draw window is not visible, start drawing
         start_draw(app_handle.clone());
+        set_draw_menu_checked(app_handle, true);
+        // Change the tray icon to indicate drawing mode
     }
 }
 
 fn send_script(app_handle: tauri::AppHandle) {
-    let binding = app_handle.state::<Mutex<ScriptData>>();
-    let state = binding.lock().unwrap();
-    let script = state.original.clone();
+    // let binding = app_handle.state::<Mutex<ScriptData>>();
+    // let state = binding.lock().unwrap();
+    // let script = state.original.clone();
     // Emit to a specific window (e.g., "main")
     if let Some(window) = app_handle.get_webview_window("main") {
-        let _ = window.emit("run-script", &script);
+        // let _ = window.emit("run-script", &script);
+        let _ = window.emit("run-script", ());
+    }
+}
+
+fn set_draw_menu_checked(app: &tauri::AppHandle, checked: bool) {
+    let state = app.state::<DrawMenuState>();
+    if let Some(draw_item) = &*state.0.lock().unwrap() {
+        let _ = draw_item.set_checked(checked);
     }
 }
 
@@ -494,13 +520,22 @@ fn type_text(text: &str) {
     }
 }
 
+// #[tauri::command]
+// fn store_script(state: State<'_, Mutex<ScriptData>>, script: &str) {
+//     //println!("[DEBUG] Storing script: {}", script.to_string());
+//     let mut state = state.lock().unwrap();
+//     state.original = script.to_string();
+//     //println!("[DEBUG] Stored script: {}", state.original);
+// }
+
 #[tauri::command]
-fn store_script(state: State<'_, Mutex<ScriptData>>, script: &str) {
-    //println!("[DEBUG] Storing script: {}", script.to_string());
-    let mut state = state.lock().unwrap();
-    state.original = script.to_string();
-    //println!("[DEBUG] Stored script: {}", state.original);
-}
+fn set_file_name(app: tauri::AppHandle, name: String) {
+    // println!("[DEBUG] Setting file name: {}", file_name);
+    // Update the file name in the menu
+    if let Some(file_name_item) = app.state::<FileNameMenuState>().0.lock().unwrap().as_mut() {
+        let _ = file_name_item.set_text(&name);
+    }
+}   
 
 #[tauri::command]
 fn start_draw(app: tauri::AppHandle) {

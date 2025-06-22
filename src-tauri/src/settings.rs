@@ -1,6 +1,6 @@
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle};
-use tauri_plugin_store::{StoreBuilder};
+use tauri::AppHandle;
+use tauri_plugin_store::StoreBuilder;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
@@ -9,7 +9,7 @@ pub struct AppSettings {
     #[serde(rename = "arrowHeadLength")]
     pub arrow_head_length: u32,
     #[serde(rename = "launchOnStartup")]
-    pub launch_on_startup: bool,    
+    pub launch_on_startup: bool,
     #[serde(rename = "showExperimentalFeatures")]
     pub show_experimental_features: bool,
     #[serde(rename = "breakTime")]

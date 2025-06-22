@@ -36,6 +36,7 @@
     "core:window:allow-close",
     "dialog:default",
     "fs:default",
-    "opener:allow-open-url"
+    "opener:allow-open-url",
+    "notification:default"
   ]
 }
