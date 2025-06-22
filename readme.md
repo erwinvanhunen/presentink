@@ -38,14 +38,13 @@ Lightweight, always accessible, and fully optimized for Mac.
 
 | Key Combo                          | Action                        |
 |-------------------------------------|-------------------------------|
-| <kbd>Cmd</kbd> + 1 | Toggle Zoom mode. This effectively executes Cmd + Option + 8, which is the built-in zoom functionality of MacOS |
 | <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>D</kdb>     | Toggle drawing mode         |
  <kbd>Esc</kdb>     | Leave drawing mode         |
 | <kbd>Shift</kbd>     | Draw straight lines            |
 | <kbd>Cmd</kbd> + <kbd>Shift</kbd>      | Draw arrows mode              |
 | <kbd>Cmd</kbd>     | Draw rectangles          |
 | <kbd>Option</kbd>  | Draw ellipses |
-| <kbd>Cmd</kbd> + <kbd>E</kdb> | Clear all drawings but stay in draw mode |
+| <kbd>E</kdb> | Clear all drawings but stay in draw mode |
 | <kbd>Cmd</kbd> + <kbd>Z</kbd>      | Undo last action              |
 | <kbd>Right-click</kbd>              | Exit drawing mode             |
 | <kbd>Option</kbd> + <kbd>Shift</kdb> + <kdb>B</kdb>                     | Start break timer     |
