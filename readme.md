@@ -39,7 +39,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 | Key Combo                          | Action                        |
 |-------------------------------------|-------------------------------|
 | <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>D</kdb>     | Toggle drawing mode         |
- <kbd>Esc</kdb>     | Leave drawing mode         |
+ <kbd>Esc</kdb>     | Leave drawing mode or breaktimer if active        |
 | <kbd>Shift</kbd>     | Draw straight lines            |
 | <kbd>Cmd</kbd> + <kbd>Shift</kbd>      | Draw arrows mode              |
 | <kbd>Cmd</kbd>     | Draw rectangles          |
@@ -50,7 +50,6 @@ Lightweight, always accessible, and fully optimized for Mac.
 | <kbd>Option</kbd> + <kbd>Shift</kdb> + <kdb>B</kdb>                     | Start break timer     |
 | <kbd>Up</kbd> | Increase line width    |
 | <kbd>Down</kbd> | Decrease line width    |
-| <kdb>ESC</kdb> | Exit break timer |
 
 ## Auto Typing
 There is preliminary support for auto typing based upon a script, which uses the same format as the ZoomIt script format. E.g. it supports tags like [up],[down],[left],[right],[enter] and [end]. It uses a binary MacOS application to type, which is called PresentInkTyper, and you will be required to grant permissions to this application when using the auto typing functionality. You can load a script using the menu of PresentInk. Notice that this is an EARLY implementation and I've seen already some issues with cursor movement not working as correct. 

@@ -57,7 +57,7 @@ async function initializeOverlay() {
     undoStack = []; // Clear undo stack
     toggleCanvas(false); // Hide canvas
   });
-  
+
   await listen('change-color', (event) => {
     const color = event.payload as string;
     changeColor(color, false); // Change color without updating tray icon
@@ -128,31 +128,7 @@ function changeColor(color: string, setTrayIcon = false) {
     console.log(`Changing color to: ${color}`);
   }
   drawCursor();
-  //const anyVisible = overlayWindows.some(win => win.isVisible());
-  // if (tray && setTrayIcon) {
-  //   switch (selectedColor) {
-  //     case '#00ff00':
-  //       tray.setImage(trayIconGreen);
-  //       break;
-  //     case '#ff0000':
-  //       tray.setImage(trayIconRed);
-  //       break;
-  //     case '#0000ff':
-  //       tray.setImage(trayIconBlue);
-  //       break;
-  //     case '#ffff00':
-  //       tray.setImage(trayIconYellow);
-  //       break;
-  //     case '#ff00ff':
-  //       tray.setImage(trayIconPink);
-  //       break;
-  //     case '#ffa500':
-  //       tray.setImage(trayIconOrange);
-  //       break;
-  //     default:
-  //       tray.setImage(trayIconTemplate);
-  //   }
-  // }
+
 }
 
 function resize() {
@@ -264,7 +240,9 @@ document.onkeydown = async (e) => {
     clearCanvas();
   }
   if (e.key === 'Escape') {
-    invoke('toggle_draw_action', { show: false });
+    const currentWindow = Window.getCurrent();
+    await currentWindow.hide();
+    // invoke('toggle_draw_action', { show: false });
   }
   if (e.key === 'ArrowUp') {
     if (penWidth < 20) {
@@ -397,7 +375,7 @@ drawCanvas.oncontextmenu = (e) => {
   e.preventDefault();
 };
 
-drawCanvas.onmouseup = (e) => {
+drawCanvas.onmouseup = async (e) => {
   if (ctx && previewCtx) {
     if (e.button === 2) {
       // Right-click: do nothing
@@ -405,7 +383,8 @@ drawCanvas.onmouseup = (e) => {
       drawing = false;
       ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
       previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-      //window.electronAPI.exitDrawing();
+      const currentWindow = Window.getCurrent();
+      await currentWindow.hide();
       return;
     }
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
