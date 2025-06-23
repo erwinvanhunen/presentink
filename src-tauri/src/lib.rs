@@ -120,9 +120,10 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
         items.push(&separator);
     }
     items.push(&quit_i);
+
     let menu = Menu::with_items(app, &items)?;
 
-    let _tray = TrayIconBuilder::new()
+    let _tray = TrayIconBuilder::with_id("main-tray")
         .menu(&menu)
         .show_menu_on_left_click(true)
         .icon(icon)
@@ -132,32 +133,27 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
                 toggle_draw(&app);
             }
             "breaktimer" => {
-                // Handle the break timer action
                 create_breaktimer_window(&app.app_handle());
             }
             "quit" => {
                 app.exit(0);
             }
             "settings" => {
-                // Handle the settings action
                 if let Err(e) = open_settings(app.app_handle().clone()) {
                     println!("Failed to open settings: {}", e);
                 }
             }
             "about" => {
-                // Handle the about action
                 if let Err(e) = open_about(app.app_handle().clone()) {
                     println!("Failed to open settings: {}", e);
                 }
             }
             "help" => {
-                // Handle the help action
                 if let Err(e) = open_help(app.app_handle().clone()) {
                     println!("Failed to open help: {}", e);
                 }
             }
             "select-text" => {
-                // Handle the select text action
                 app.webview_windows().get("main").map(|window| {
                     let _ = window.emit("select-text", ());
                 });
@@ -167,24 +163,6 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
             }
         })
         .build(app)?;
-
-    let app_handle = app.clone();
-    thread::spawn(move || {
-        thread::sleep(Duration::from_millis(2000));
-
-        // Try to refresh the tray
-        if let Some(tray) = app_handle.tray_by_id("1") {
-            // Force visibility
-            println!("[DEBUG] Refreshing tray icon visibility");
-            let _ = tray.set_visible(true);
-
-            // Try recreating the icon
-            if let Ok(new_icon) = Image::from_path("icons/iconTemplate.png") {
-                let _ = tray.set_icon(Some(new_icon));
-            }
-        }
-    });
-    // Register the tray with the app
     Ok(())
 }
 
