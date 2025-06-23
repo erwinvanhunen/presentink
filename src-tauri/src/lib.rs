@@ -607,7 +607,7 @@ fn open_settings(app: tauri::AppHandle) -> Result<(), String> {
             .decorations(false)
             .accept_first_mouse(true)
             .transparent(true)
-            .always_on_top(false)
+            .always_on_top(true)
             .build()
             .map_err(|e| format!("Failed to create settings window: {}", e))?;
 
