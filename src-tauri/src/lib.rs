@@ -5,7 +5,7 @@ use enigo::{
     Enigo, Keyboard, Settings,
 };
 use std::path::PathBuf;
-use std::{error::Error, thread, time::Duration};
+use std::{error::Error};
 use tauri::{
     Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
     image::Image,
