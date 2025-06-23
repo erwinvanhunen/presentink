@@ -200,6 +200,28 @@
         </ul>
     </div>
     <div class="section">
+        <strong>Text Typing</strong>
+        <p>You can use PresentInk to type text for you during presentation. Make sure that you have an application in
+            focus where you can actually type text
+            before you start this functionality. You can use the following keys to type text:</p>
+        <table class="keylist-table">
+            <tr>
+                <td><span class="kbd">Option</span><span class="kbd">Shift</span><span class="kbd">T</span></td>
+                <td>Start typing text</td>
+            </tr>
+        </table>
+        <p>To use this functionality, you create text file, with a .txt extension. Enter the text as you want it typed.
+            You can break up the text with some keywords. See the example below</p>
+        <pre>
+            This is the first line of text[end]
+            This is the second line of text.[enter]And this ends up on a new line.[end]
+            [up[up]Now I went two lines up[end]
+            Now I wait 3 seconds [pause:3] and then I continue typing[end]
+        </pre>
+        <p>If you execute the example above, text typing will stop at every encounter of the [end] tag. Press the hotkey again to execute the next line.</p>
+        <p>We support these tags: [up],[down],[left],[right],[enter],[pause:X],[end]</p>
+    </div>
+    <div class="section">
         <div><button class="donate-btn" id="donateBtn">Donate ❤️</button></div>
     </div>
     <div class="footer">
