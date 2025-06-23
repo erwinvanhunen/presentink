@@ -1,7 +1,7 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
   "productName": "PresentInk",
-  "version": "0.9.11",
+  "version": "0.9.13",
   "identifier": "com.presentink",
   "build": {
     "beforeDevCommand": "npm run dev",
@@ -38,6 +38,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
+    "category": "public.app-category.productivity",
+    "shortDescription": "A tool to enhance your presentation experience with ink annotations.",
+    "longDescription": "PresentInk is a powerful tool designed to enhance your presentation experience by allowing you to annotate your slides with ink. Whether you're teaching, presenting, or collaborating, PresentInk provides a seamless way to interact with your content in real-time.",
     "icon": [
       "icons/presentink.icns"
     ],
