@@ -626,7 +626,8 @@ fn open_about(app: tauri::AppHandle) -> Result<(), String> {
         .inner_size(340.0, 410.0)
         .center()
         .resizable(false)
-        .decorations(true)
+        .decorations(false)
+        .transparent(true)
         .always_on_top(true)
         .build()
         .map_err(|e| format!("Failed to create about window: {}", e))?;

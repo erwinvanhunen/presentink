@@ -1,5 +1,3 @@
-// import { appWindow, availableMonitors } from "@tauri-apps/api/window";
-// import { setDockVisibility } from '@tauri-apps/api/app';
 import { Window } from '@tauri-apps/api/window';
 import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api/core";
@@ -60,7 +58,7 @@ async function initializeOverlay() {
 
   await listen('change-color', (event) => {
     const color = event.payload as string;
-    changeColor(color, false); // Change color without updating tray icon
+    changeColor(color); // Change color without updating tray icon
   });
   window.addEventListener('mousemove', async () => {
     if (!hasMouseMoved) {
@@ -86,11 +84,6 @@ async function initializeOverlay() {
     await currentWindow.setFocus();
     await currentWindow.setAlwaysOnTop(true);
   });
-  // await listen('settings-updated', async () => {
-  //   appSettings = await getSettings();
-  //   penWidth = appSettings.penWidth;
-  //   arrowHeadLength = appSettings.arrowHeadLength;
-  // });
 
 }
 function toggleCanvas(show: boolean): void {
@@ -98,11 +91,9 @@ function toggleCanvas(show: boolean): void {
   if (!show) {
     clearCanvas();
     window.hide();
-    // invoke('print_output', { text: `window ${window.label} hidden` });
   } else {
     clearCanvas();
     window.show().then(() => {
-      // invoke('print_output', { text: `window ${window.label} shown` });
       window.setFocus();
       window.setAlwaysOnTop(true);
     });
@@ -121,14 +112,9 @@ function saveState() {
   undoStack.push(drawCanvas.toDataURL());
 }
 
-function changeColor(color: string, setTrayIcon = false) {
+function changeColor(color: string) {
   strokeColor = color;
-  if (setTrayIcon) {
-    // Update the cursor color
-    console.log(`Changing color to: ${color}`);
-  }
   drawCursor();
-
 }
 
 function resize() {
@@ -141,10 +127,8 @@ function resize() {
   cursorCanvas.style.cursor = "none"; // Hide the default cursor
 }
 
-
 resize();
 window.addEventListener('resize', resize);
-
 
 let isPreviewingStraightLine = false;
 let isPreviewingArrow = false;
@@ -156,10 +140,7 @@ drawCanvas.onmousedown = (e) => {
   isPreviewingBox = false;
   isPreviewingStraightLine = false;
   isPreviewingCircle = false;
-  // window.electronAPI.getSettings().then(s => {
-  //     penWidth = s.penWidth || 3; // Use settings or default to 3
-  //     arrowHeadLength = s.arrowHead || 20; // Use settings or default to 20
-  // });
+  
   if (e.shiftKey && e.metaKey) {
     drawingMode = 'arrow';
   }
@@ -242,7 +223,6 @@ document.onkeydown = async (e) => {
   if (e.key === 'Escape') {
     const currentWindow = Window.getCurrent();
     await currentWindow.hide();
-    // invoke('toggle_draw_action', { show: false });
   }
   if (e.key === 'ArrowUp') {
     if (penWidth < 20) {
@@ -287,7 +267,6 @@ drawCanvas.onmousemove = (e) => {
       previewCtx.lineCap = 'round';
       // If shift is held either since mousedown or now
       if (isPreviewingStraightLine || e.shiftKey) {
-        // Optional: live preview by clearing and redrawing background/border
         previewCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
         previewCtx.beginPath();
         previewCtx.moveTo(lineStartX, lineStartY);
@@ -308,13 +287,12 @@ drawCanvas.onmousemove = (e) => {
     } else if (drawingMode === 'arrow' && drawing) {
       previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       if (isPreviewingArrow) {
-        // Draw a preview of the arrow
         drawArrow(previewCtx, startX, startY, e.offsetX, e.offsetY);
       }
     } else if (drawingMode === 'box' && drawing) {
       previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       if (isPreviewingBox) {
-        previewCtx.strokeStyle = strokeColor; // or any box color you want
+        previewCtx.strokeStyle = strokeColor;
         previewCtx.lineWidth = penWidth;
         previewCtx.strokeRect(
           startX,
@@ -355,19 +333,15 @@ drawCanvas.onmousemove = (e) => {
 
 
 function drawCursor() {
-  if (!cursorCtx) return; // Ensure cursorCtx is defined
-  // Clear previous preview
+  if (!cursorCtx) return; 
   cursorCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-  // Draw the dot at mouse position
   cursorCtx.beginPath();
   cursorCtx.strokeStyle = strokeColor;
   cursorCtx.arc(mousePos.x, mousePos.y, penWidth / 2, 0, 2 * Math.PI);
   cursorCtx.fillStyle = strokeColor;
-  // previewCtx.globalAlpha = 1; // full opacity, change if needed
   cursorCtx.shadowColor = 'rgba(0,0,0,0.18)';
   cursorCtx.shadowBlur = 2;
   cursorCtx.fill();
-  // Reset shadow so other drawings aren't affected
   cursorCtx.shadowBlur = 0;
 }
 
@@ -504,25 +478,6 @@ function drawArrow(ctx: CanvasRenderingContext2D, fromX: number, fromY: number, 
   ctx.fillStyle = strokeColor;
   ctx.fill();
 }
-
-// function rehideCursor() {
-//   document.body.classList.add('hide-cursor');
-//   // Or reapply `cursor: none` directly if needed
-//   const drawCanvas = document.getElementById('draw-canvas');
-//   if (drawCanvas) drawCanvas.style.cursor = 'none';
-// }
-
-
-// window.electronAPI.onWindowFocused(() => {
-//     console.log('Window focused');
-//     rehideCursor();
-// });
-
-// window.electronAPI.onWindowShown(() => {
-//     console.log('Window focused');
-//     rehideCursor();
-// });
-
 
 document.addEventListener('visibilitychange', () => {
   if (!document.hidden) {

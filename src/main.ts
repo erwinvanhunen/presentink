@@ -8,32 +8,12 @@ import {
   requestPermission,
   sendNotification,
 } from '@tauri-apps/plugin-notification';
-// let undoStack: any[] = [];
-// const MAX_UNDO = 30; // Adjust for memory usage, if you want
-// const drawCanvas = document.getElementById('draw-canvas') as HTMLCanvasElement;
-// const ctx = drawCanvas.getContext('2d');
-// const previewCanvas = document.getElementById('preview-canvas') as HTMLCanvasElement;
-// const pr1eviewCtx = previewCanvas.getContext('2d');
-// const cursorCanvas = document.getElementById('cursor-canvas') as HTMLCanvasElement;
-// const cursorCtx = cursorCanvas.getContext('2d');
 
-// let drawingMode = "freehand"; // Default drawing mode
-// let strokeColor = "#ff0000"; // Default stroke color
-// let showCanvas = false;
-// let drawing = false; // Flag to check if drawing is in progress
-// let startX = 0, startY = 0;
-// let prevX = 0, prevY = 0;
-// let lineStartX = 0, lineStartY = 0;
-// let mousePos = { x: 0, y: 0 };
-
-// let windowsVisible = false;
 let originalScript: ScriptAction[] = [];
 let currentScript: ScriptAction[] = [];
 let permissionGranted: boolean = false;
 
 window.addEventListener("DOMContentLoaded", async () => {
-  // setTrayIcon()
-  // setDockVisibility(false);
   const window = Window.getCurrent();
   window.hide();
 
@@ -45,17 +25,6 @@ window.addEventListener("DOMContentLoaded", async () => {
     permissionGranted = permission === 'granted';
   }
 
-  // Once permission has been granted we can send the notification
-  // if (permissionGranted) {
-  //   sendNotification({ title: 'Tauri', body: 'Tauri is awesome!' });
-  // }
-  // window.setVisibleOnAllWorkspaces(true);
-
-  // register('Alt+Shift+B', (event) => {
-  //   if (event.state === "Pressed") {
-  //     invoke('show_break_time');
-  //   }
-  // });
   listen('select-text', () => {
     openFileDialog();
   });
@@ -174,9 +143,4 @@ async function runScript() {
       }
     }
   }
-  // if (anyVisible) {
-  //     {
-  //         showOverlayWindows();
-  //     }
-  // }
 }
