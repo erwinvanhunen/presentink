@@ -38,6 +38,7 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
+            app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             setup_shortcuts(app)?;
             setup_menus(&app.handle())?;
 
@@ -535,7 +536,7 @@ fn set_file_name(app: tauri::AppHandle, name: String) {
     if let Some(file_name_item) = app.state::<FileNameMenuState>().0.lock().unwrap().as_mut() {
         let _ = file_name_item.set_text(&name);
     }
-}   
+}
 
 #[tauri::command]
 fn start_draw(app: tauri::AppHandle) {
