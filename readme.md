@@ -26,7 +26,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 
 ## 🚀 Installation
 
-1. [Download the latest release](https://github.com/yourusername/presentink/releases)  
+1. [Download the latest release](https://github.com/erwinvanhunen/presentink/releases)  
    *(or clone this repo and run locally; see “Development” below)*
 
 2. **Run the app.**  
@@ -102,4 +102,4 @@ MIT License
 
 ---
 
-<p align="center"><img src="icon_128x128.png" alt="PresentInk logo" width="64"></p>
+<p align="center"><img src="icons/presentink.iconset/icon_128x128.png" alt="PresentInk logo" width="64"></p>

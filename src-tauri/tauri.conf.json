@@ -45,7 +45,7 @@
       "icons/presentink.icns"
     ],
     "macOS": {
-      "signingIdentity": "ERWIN RAYMOND VAN HUNEN (5LR35AYAWP)",
+      "signingIdentity": "-",
       "entitlements": "./Entitlements.plist"
     }
   }
