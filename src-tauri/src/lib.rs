@@ -82,7 +82,7 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
         *draw_state.0.lock().unwrap() = Some(draw_i.clone());
     }
     let breaktimer_i =
-        MenuItem::with_id(app, "breaktimer", "Break Timer", true, Some("Cmd+Alt+B"))?;
+        MenuItem::with_id(app, "breaktimer", "Break Timer", true, Some("Alt+Shift+B"))?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, Some("Cmd+Q"))?;
     let separator = PredefinedMenuItem::separator(app)?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, Some(""))?;
