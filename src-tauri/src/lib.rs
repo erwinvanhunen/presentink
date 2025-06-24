@@ -623,7 +623,7 @@ fn open_about(app: tauri::AppHandle) -> Result<(), String> {
 
     let _window = WebviewWindowBuilder::new(&app, "about", WebviewUrl::App("about.html".into()))
         .title("About PresentInk")
-        .inner_size(340.0, 410.0)
+        .inner_size(340.0, 450.0)
         .center()
         .resizable(false)
         .decorations(false)
