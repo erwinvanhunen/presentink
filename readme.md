@@ -20,6 +20,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 - **Minimal Menu Bar Icon** — PresentInk stays out of your Dock, always available from your Mac’s menu bar.
 - **Multi-Screen Aware** — Works across all your displays.
 - **Available when you need it** - PresentInk can be set to launch on login, ready when you need it with a single keypress.
+- **Easily take screenshots** - Take rectangular screenshots with an easy to remember shortcut. 
 
 
 ---
@@ -39,6 +40,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 | Key Combo                          | Action                        |
 |-------------------------------------|-------------------------------|
 | <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>D</kdb>     | Toggle drawing mode         |
+| <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>S</kdb>     | Take a screenshot         |
  <kbd>Esc</kdb>     | Leave drawing mode or breaktimer if active        |
 | <kbd>Shift</kbd>     | Draw straight lines            |
 | <kbd>Cmd</kbd> + <kbd>Shift</kbd>      | Draw arrows mode              |
