@@ -70,10 +70,6 @@ There is preliminary support for auto typing based upon a script, which uses the
     ```bash
     npm start
     ```
-
-**Recommended:**  
-Use Node 18+ and Electron 24+.  
-
 ---
 
 ## 🤝 Contributing
