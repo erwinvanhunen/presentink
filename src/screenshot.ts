@@ -1,5 +1,4 @@
 import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
 
 declare global {
     interface Window {
@@ -11,6 +10,11 @@ let isSelecting = false;
 let startX = 0;
 let startY = 0;
 let selectionBox: HTMLElement;
+let topBox: HTMLElement;
+let bottomBox: HTMLElement;
+let leftBox: HTMLElement;
+let rightBox: HTMLElement;
+let coords: HTMLSpanElement;
 
 let selectedMonitor = window.monitor; // Default monitor
 let monitor = "";
@@ -18,7 +22,11 @@ let monitor = "";
 
 window.addEventListener('DOMContentLoaded', async () => {
     selectionBox = document.getElementById('selectionBox')!;
-
+    topBox = document.getElementById('topBox')!;
+    bottomBox = document.getElementById('bottomBox')!;
+    leftBox = document.getElementById('leftBox')!;
+    rightBox = document.getElementById('rightBox')!;
+    coords = document.getElementById('coords')! as HTMLSpanElement;
     document.addEventListener('mousedown', startSelection);
     document.addEventListener('mousemove', updateSelection);
     document.addEventListener('mouseup', endSelection);
@@ -36,6 +44,10 @@ function startSelection(event: MouseEvent) {
     startX = event.clientX;
     startY = event.clientY;
 
+    // topBox.style.left = '0px';
+    // topBox.style.top = startY -1 + 'px';
+    // topBox.style.width = '0px';
+    // topBox.style.height = '0px';
     selectionBox.style.left = startX + 'px';
     selectionBox.style.top = startY + 'px';
     selectionBox.style.width = '0px';
@@ -44,7 +56,6 @@ function startSelection(event: MouseEvent) {
 }
 
 function updateSelection(event: MouseEvent) {
-    if (!isSelecting) return;
 
     const currentX = event.clientX;
     const currentY = event.clientY;
@@ -54,10 +65,36 @@ function updateSelection(event: MouseEvent) {
     const width = Math.abs(currentX - startX);
     const height = Math.abs(currentY - startY);
 
+    coords.textContent = `(${Math.round(currentX)},${Math.round(currentY)}) - (${Math.round(width)},${Math.round(height)})`;
+
+    if (!isSelecting) return;
+
     selectionBox.style.left = left + 'px';
     selectionBox.style.top = top + 'px';
     selectionBox.style.width = width + 'px';
     selectionBox.style.height = height + 'px';
+
+    topBox.style.left = '0px';
+    topBox.style.top = '0px';
+    topBox.style.height = top + 'px';
+    topBox.style.width = '100%';
+    bottomBox.style.left = '0px';
+    bottomBox.style.top = top + height + 'px';
+    bottomBox.style.height =  window.innerHeight- top- height + 'px';
+    bottomBox.style.width = '100%';
+
+    leftBox.style.left = '0px';
+    leftBox.style.top = top + 'px';
+    leftBox.style.height = height + 'px';
+    leftBox.style.width = left + 'px';
+
+    rightBox.style.left = left + width + 'px';
+    rightBox.style.top = top + 'px';
+    rightBox.style.height = height + 'px';
+    rightBox.style.width = window.innerWidth - left - width + 'px';
+    // topBox.style.height = top + 'px';
+    // topBox.style.width = '100%';
+
 }
 
 function endSelection(event: MouseEvent) {
@@ -75,20 +112,19 @@ function endSelection(event: MouseEvent) {
 
     if (width > 10 && height > 10) { // Minimum selection size
         const area = {
-            x: Math.round(left * window.devicePixelRatio),
-            y: Math.round(top * window.devicePixelRatio),
-            width: Math.round(width * window.devicePixelRatio),
-            height: Math.round(height * window.devicePixelRatio)
+            x: Math.round(left),
+            y: Math.round(top),
+            width: Math.round(width),
+            height: Math.round(height)
         };
-        invoke("take_region_screenshot", { index: monitor, x: area.x, y: area.y, width: area.width, height: area.height });
-        // window.electronAPI.screenshotAreaSelected(area);
-    } else {
-        // window.electronAPI.screenshotCancelled();
+        selectionBox.style.visibility = 'hidden'; // Hide the selection box
+
+        invoke("take_region_screenshot", { index: monitor, x: area.x + 2, y: area.y + 2, width: area.width, height: area.height });
     }
 }
 
 function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
-        // window.electronAPI.screenshotCancelled();
+        invoke("close_screenshot_window");
     }
 }

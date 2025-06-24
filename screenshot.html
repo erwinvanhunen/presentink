@@ -9,18 +9,42 @@
         body {
             margin: 0;
             padding: 0;
-            background: rgba(0, 0, 0, 0.3);
-            cursor: crosshair;
+            background: rgba(0, 0, 0, 0.0);
+            cursor: crosshair !important;
             user-select: none;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
         }
         
+        .top-box {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }
+
+        .right-box {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }   
+
+        .left-box {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }   
+
+        .bottom-box {
+            position: absolute;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+        }   
+
         .selection-box {
             position: absolute;
             border: 2px solid #007acc;
-            background: rgba(0, 122, 204, 0.1);
+            background: rgba(0, 122, 204, 0.0);
             display: none;
         }
         
@@ -41,8 +65,12 @@
 </head>
 <body>
     <div class="instructions">
-        Click and drag to select screenshot area. Press ESC to cancel.
+        Click and drag to select screenshot area. Press ESC to cancel. <span id="coords">XXXXXXX</span>
     </div>
+    <div class="top-box" id="topBox"></div>
+    <div class="right-box" id="rightBox"></div>
+    <div class="left-box" id="leftBox"></div>
+    <div class="bottom-box" id="bottomBox"></div>
     <div class="selection-box" id="selectionBox"></div>
     asdfasdfasdfasd
 </body>

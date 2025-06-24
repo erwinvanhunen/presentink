@@ -8,30 +8,20 @@ use enigo::{
 use std::error::Error;
 use std::path::PathBuf;
 use tauri::{
-    Emitter, EventTarget, Manager, Runtime, WebviewUrl, WebviewWindowBuilder,
+    Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
     image::Image,
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
 };
 use tauri_plugin_opener::OpenerExt;
-use xcap::{image, Monitor};
+use xcap::{
+    image::{ImageBuffer, Rgba}, Monitor
+};
 mod settings;
-use serde::Serialize;
 use settings::AppSettings;
 
 use std::sync::Mutex;
 
-#[derive(Debug, Serialize)]
-pub struct ScreenshotableMonitor {
-    pub id: u32,
-    pub name: String,
-}
-
-#[derive(Clone, Serialize)]
-#[serde(rename_all = "camelCase")]
-struct MonitorName {
-    name: String,
-}
 
 pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
 pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
@@ -78,7 +68,8 @@ pub fn run() {
             get_version,
             change_tray_icon,
             set_file_name,
-            take_region_screenshot
+            take_region_screenshot,
+            close_screenshot_window
         ])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
@@ -730,6 +721,15 @@ fn change_tray_icon(app: tauri::AppHandle, color: String, is_drawing: bool) -> R
 
     Ok(())
 }
+
+fn imagebuffer_to_arboard(img: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> ImageData<'static> {
+    ImageData {
+        width: img.width() as usize,
+        height: img.height() as usize,
+        bytes: std::borrow::Cow::Owned(img.clone().into_raw()),
+    }
+}
+
 #[tauri::command]
 fn take_region_screenshot(
     app: tauri::AppHandle,
@@ -739,52 +739,45 @@ fn take_region_screenshot(
     width: u32,
     height: u32,
 ) -> Result<(), String> {
-    println!(
-        "[DEBUG] Taking screenshot for monitor ID: {}, region: ({}, {}, {}, {})\n",
-        index, x, y, width, height
-    );
+   
 
     let monitors = Monitor::all().map_err(|err| err.to_string())?;
 
     // Find the monitor by name
     if let Some(monitor) = monitors.get(index as usize) {
-        println!("[DEBUG] 1 Found monitor: {:?}", monitor.name());
+        
+        close_screenshot_window(app.clone());
+
         let image = monitor
             .capture_region(x, y, width, height)
             .map_err(|e| e.to_string())?;
-        println!("[DEBUG] 2 Found monitor: {:?}", monitor.name());
-        let img_data = ImageData {
-            width: width.try_into().unwrap(),
-            height: height.try_into().unwrap(),
-            bytes: std::borrow::Cow::Owned(image.into_raw()),
-        };
-        // let img_data = ImageData {
-        //     width: width.try_into().unwrap(),
-        //     height: height.try_into().unwrap(),
-        //     bytes: std::borrow::Cow::Borrowed(&image.as_raw()),
-        // };
-        // println!("[DEBUG] 3 Found monitor: {:?}", monitor.name());
-        // let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-        // clipboard.set_image(img_data).map_err(|e| e.to_string())?;
-        // println!(
-        //     "Screenshot taken and copied to clipboard for monitor {:?}",
-        //     monitor.id()
-        // );
-        for (label, window) in app.webview_windows().iter() {
-            if label.starts_with("screenshot-window-") {
-                // Emit an event to the window to change the color
-                let _ = window.close();
-            }
-        }
-    }
 
-    for (label, window) in app.webview_windows().iter() {
+        let img_data = imagebuffer_to_arboard(&image);
+
+        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        clipboard.set_image(img_data).map_err(|e| e.to_string())?;
+
+        use tauri_plugin_notification::NotificationExt;
+        app.notification()
+            .builder()
+            .title("PresetInk")
+            .body("Screenshot taken and copied to clipboard")
+            .show()
+            .unwrap();
+       
+    }
+    Ok(())
+}
+
+#[tauri::command]
+fn close_screenshot_window(app: tauri::AppHandle) 
+{
+      for (label, window) in app.webview_windows().iter() {
         if label.starts_with("screenshot-window-") {
             // Emit an event to the window to change the color
             let _ = window.close();
         }
     }
-    Ok(())
 }
 
 fn create_screenshot_windows(app: &tauri::AppHandle) {
@@ -809,14 +802,12 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             // .title(&format!("PresentInk Draw Monitor {}", index + 1))
             .position(position.x as f64, position.y as f64)
             .inner_size(size.width as f64, size.height as f64)
-            .fullscreen(false)
             .center()
+            .resizable(false)
             .transparent(true)
+            .visible_on_all_workspaces(true)
             .decorations(false)
             .always_on_top(true)
-            .visible_on_all_workspaces(true)
-            .accept_first_mouse(true)
-            .skip_taskbar(true)
             .initialization_script(init_script)
             .build()
             {
@@ -826,35 +817,10 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
                             x: position.x,
                             y: position.y,
                         }));
-
-                    let monitor_name = monitor.name().clone();
-                    let _ = window.show();
-                    let _ = window.set_focus();
-                    let _ = window.set_always_on_top(true);
-                    // let _ = window.emit(
-                    //     "set-monitor",
-                    //     MonitorName {
-                    //         name: "test".into()
-                    //     },
-                    // );
-
-                    // let _ = window.emit("set-monitor", "...");
-                    // let _ = app.emit_to(
-                    //     EventTarget::webview_window(&window_label),
-                    //     "set-monitor",
-                    //     "test",
-                    // );
-                    println!(
-                        "[DEBUG] Created screenshot window for monitor {}: {:?}",
-                        index,
-                        monitor.name().clone()
-                    );
-                    // let _ = window.emit("set-monitor", monitor.name().clone());
-                    // let window_clone = window.clone();
-                    // std::thread::spawn(move || {
-                    //     std::thread::sleep(std::time::Duration::from_millis(100));
-                    //     let _ = window_clone.set_focus();
-                    // });
+                    let _ = window.set_size(tauri::Size::Physical(tauri::PhysicalSize {
+                        width: size.width,
+                        height: size.height,
+                    }));
                 }
                 Err(e) => {
                     println!("Failed to create window {}: {:?}", index, e);
