@@ -9,7 +9,8 @@
     "settings",
     "break-window-*",
     "about",
-    "help"
+    "help",
+    "screenshot-window-*"
   ],
   "permissions": [
     "global-shortcut:allow-register",
