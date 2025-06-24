@@ -65,10 +65,11 @@ function updateSelection(event: MouseEvent) {
     const width = Math.abs(currentX - startX);
     const height = Math.abs(currentY - startY);
 
-    coords.textContent = `(${Math.round(currentX)},${Math.round(currentY)}) - (${Math.round(width)},${Math.round(height)})`;
+    coords.textContent = `(${Math.round(currentX)},${Math.round(currentY)})`;
 
     if (!isSelecting) return;
 
+    coords.textContent = coords.textContent + `- (${Math.round(width)},${Math.round(height)})`;
     selectionBox.style.left = left + 'px';
     selectionBox.style.top = top + 'px';
     selectionBox.style.width = width + 'px';
@@ -79,22 +80,19 @@ function updateSelection(event: MouseEvent) {
     topBox.style.height = top + 'px';
     topBox.style.width = '100%';
     bottomBox.style.left = '0px';
-    bottomBox.style.top = top + height + 'px';
-    bottomBox.style.height =  window.innerHeight- top- height + 'px';
+    bottomBox.style.top = top + height + 2 + 'px';
+    bottomBox.style.height = window.innerHeight - top - height - 2 + 'px';
     bottomBox.style.width = '100%';
 
     leftBox.style.left = '0px';
     leftBox.style.top = top + 'px';
-    leftBox.style.height = height + 'px';
+    leftBox.style.height = height + 2 + 'px';
     leftBox.style.width = left + 'px';
 
-    rightBox.style.left = left + width + 'px';
+    rightBox.style.left = left + width + 2 + 'px';
     rightBox.style.top = top + 'px';
-    rightBox.style.height = height + 'px';
+    rightBox.style.height = height + 2 + 'px';
     rightBox.style.width = window.innerWidth - left - width + 'px';
-    // topBox.style.height = top + 'px';
-    // topBox.style.width = '100%';
-
 }
 
 function endSelection(event: MouseEvent) {
