@@ -38,6 +38,7 @@ export default defineConfig(async () => ({
         splash: 'splash.html',
         help: 'help.html',
         about: 'about.html',
+        screenshot: 'screenshot.html'
       }
     },
     outDir: 'dist'

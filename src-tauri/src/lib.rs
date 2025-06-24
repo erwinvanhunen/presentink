@@ -1,23 +1,37 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
+use arboard::{Clipboard, ImageData};
 use enigo::{
     Direction::{Click, Press, Release},
     Enigo, Keyboard, Settings,
 };
+use std::error::Error;
 use std::path::PathBuf;
-use std::{error::Error};
 use tauri::{
-    Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
+    Emitter, EventTarget, Manager, Runtime, WebviewUrl, WebviewWindowBuilder,
     image::Image,
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
 };
 use tauri_plugin_opener::OpenerExt;
-
+use xcap::{image, Monitor};
 mod settings;
+use serde::Serialize;
 use settings::AppSettings;
 
 use std::sync::Mutex;
+
+#[derive(Debug, Serialize)]
+pub struct ScreenshotableMonitor {
+    pub id: u32,
+    pub name: String,
+}
+
+#[derive(Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+struct MonitorName {
+    name: String,
+}
 
 pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
 pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
@@ -64,6 +78,7 @@ pub fn run() {
             get_version,
             change_tray_icon,
             set_file_name,
+            take_region_screenshot
         ])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
@@ -192,11 +207,12 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
                 if shortcut == &s_shortcut {
                     match event.state() {
                         ShortcutState::Pressed => {
+                            create_screenshot_windows(&app_handle);
                             // Show the break timer window
                             // start_text_display(app, text)
-                            app_handle.webview_windows().get("main").map(|window| {
-                                let _ = window.emit("select-text", ());
-                            });
+                            // app_handle.webview_windows().get("main").map(|window| {
+                            //     let _ = window.emit("select-text", ());
+                            // });
                         }
                         ShortcutState::Released => {}
                     }
@@ -391,7 +407,6 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             }
             let position = monitor.position();
             let size = monitor.size();
-
             match WebviewWindowBuilder::new(
                 app,
                 &window_label,
@@ -400,14 +415,14 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             .title(&format!("PresentInk Draw Monitor {}", index + 1))
             .position(position.x as f64, position.y as f64)
             .inner_size(size.width as f64, size.height as f64)
-            .fullscreen(false)
+            .position(position.x as f64, position.y as f64)
+            .inner_size(size.width as f64, size.height as f64)
             .center()
+            .resizable(false)
             .transparent(true)
+            .visible_on_all_workspaces(true)
             .decorations(false)
             .always_on_top(true)
-            .visible_on_all_workspaces(true)
-            .accept_first_mouse(true)
-            .skip_taskbar(true)
             .build()
             {
                 Ok(window) => {
@@ -714,4 +729,137 @@ fn change_tray_icon(app: tauri::AppHandle, color: String, is_drawing: bool) -> R
     }
 
     Ok(())
+}
+#[tauri::command]
+fn take_region_screenshot(
+    app: tauri::AppHandle,
+    index: u32,
+    x: u32,
+    y: u32,
+    width: u32,
+    height: u32,
+) -> Result<(), String> {
+    println!(
+        "[DEBUG] Taking screenshot for monitor ID: {}, region: ({}, {}, {}, {})\n",
+        index, x, y, width, height
+    );
+
+    let monitors = Monitor::all().map_err(|err| err.to_string())?;
+
+    // Find the monitor by name
+    if let Some(monitor) = monitors.get(index as usize) {
+        println!("[DEBUG] 1 Found monitor: {:?}", monitor.name());
+        let image = monitor
+            .capture_region(x, y, width, height)
+            .map_err(|e| e.to_string())?;
+        println!("[DEBUG] 2 Found monitor: {:?}", monitor.name());
+        let img_data = ImageData {
+            width: width.try_into().unwrap(),
+            height: height.try_into().unwrap(),
+            bytes: std::borrow::Cow::Owned(image.into_raw()),
+        };
+        // let img_data = ImageData {
+        //     width: width.try_into().unwrap(),
+        //     height: height.try_into().unwrap(),
+        //     bytes: std::borrow::Cow::Borrowed(&image.as_raw()),
+        // };
+        // println!("[DEBUG] 3 Found monitor: {:?}", monitor.name());
+        // let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+        // clipboard.set_image(img_data).map_err(|e| e.to_string())?;
+        // println!(
+        //     "Screenshot taken and copied to clipboard for monitor {:?}",
+        //     monitor.id()
+        // );
+        for (label, window) in app.webview_windows().iter() {
+            if label.starts_with("screenshot-window-") {
+                // Emit an event to the window to change the color
+                let _ = window.close();
+            }
+        }
+    }
+
+    for (label, window) in app.webview_windows().iter() {
+        if label.starts_with("screenshot-window-") {
+            // Emit an event to the window to change the color
+            let _ = window.close();
+        }
+    }
+    Ok(())
+}
+
+fn create_screenshot_windows(app: &tauri::AppHandle) {
+    if let Ok(monitors) = app.available_monitors() {
+        for (index, monitor) in monitors.iter().enumerate() {
+            let window_label = format!("screenshot-window-{}", index);
+
+            // Close existing window if it exists
+            if let Some(existing_window) = app.webview_windows().get(&window_label) {
+                let _ = existing_window.close();
+            }
+            let position = monitor.position();
+            let size = monitor.size();
+
+            let init_script = format!(r#"window.monitor = {{ index: {} }};"#, index);
+
+            match WebviewWindowBuilder::new(
+                app,
+                &window_label,
+                WebviewUrl::App("screenshot.html".into()),
+            )
+            // .title(&format!("PresentInk Draw Monitor {}", index + 1))
+            .position(position.x as f64, position.y as f64)
+            .inner_size(size.width as f64, size.height as f64)
+            .fullscreen(false)
+            .center()
+            .transparent(true)
+            .decorations(false)
+            .always_on_top(true)
+            .visible_on_all_workspaces(true)
+            .accept_first_mouse(true)
+            .skip_taskbar(true)
+            .initialization_script(init_script)
+            .build()
+            {
+                Ok(window) => {
+                    let _ =
+                        window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
+                            x: position.x,
+                            y: position.y,
+                        }));
+
+                    let monitor_name = monitor.name().clone();
+                    let _ = window.show();
+                    let _ = window.set_focus();
+                    let _ = window.set_always_on_top(true);
+                    // let _ = window.emit(
+                    //     "set-monitor",
+                    //     MonitorName {
+                    //         name: "test".into()
+                    //     },
+                    // );
+
+                    // let _ = window.emit("set-monitor", "...");
+                    // let _ = app.emit_to(
+                    //     EventTarget::webview_window(&window_label),
+                    //     "set-monitor",
+                    //     "test",
+                    // );
+                    println!(
+                        "[DEBUG] Created screenshot window for monitor {}: {:?}",
+                        index,
+                        monitor.name().clone()
+                    );
+                    // let _ = window.emit("set-monitor", monitor.name().clone());
+                    // let window_clone = window.clone();
+                    // std::thread::spawn(move || {
+                    //     std::thread::sleep(std::time::Duration::from_millis(100));
+                    //     let _ = window_clone.set_focus();
+                    // });
+                }
+                Err(e) => {
+                    println!("Failed to create window {}: {:?}", index, e);
+                }
+            }
+        }
+    }
 }

@@ -45,6 +45,7 @@
       "icons/presentink.icns"
     ],
     "macOS": {
+      "minimumSystemVersion": "10.13",
       "signingIdentity": "-",
       "entitlements": "./Entitlements.plist"
     }
