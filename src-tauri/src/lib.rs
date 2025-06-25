@@ -5,8 +5,8 @@ use enigo::{
     Direction::{Click, Press, Release},
     Enigo, Keyboard, Settings,
 };
+use std::error::Error;
 use std::path::PathBuf;
-use std::{error::Error};
 use tauri::{
     Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
     image::Image,
@@ -751,6 +751,7 @@ fn take_region_screenshot(
     width: u32,
     height: u32,
     path: String,
+    save: bool,
 ) -> Result<(), String> {
     let monitors = Monitor::all().map_err(|err| err.to_string())?;
 
@@ -762,8 +763,10 @@ fn take_region_screenshot(
             .capture_region(x, y, width, height)
             .map_err(|e| e.to_string())?;
 
-        if !path.is_empty() {
-            let _ = &image.save(&path);
+        if save {
+            if !path.is_empty() {
+                let _ = &image.save(&path);
+            }
         } else {
             let img_data = imagebuffer_to_arboard(&image);
 
