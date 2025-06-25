@@ -91,6 +91,8 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
     }
     let breaktimer_i =
         MenuItem::with_id(app, "breaktimer", "Break Timer", true, Some("Alt+Shift+B"))?;
+            let screenshot_i =
+        MenuItem::with_id(app, "screenshot", "Screenshot", true, Some("Alt+Shift+S"))?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, Some("Cmd+Q"))?;
     let separator = PredefinedMenuItem::separator(app)?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, Some(""))?;
@@ -100,6 +102,7 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
     let mut items: Vec<&dyn tauri::menu::IsMenuItem<tauri::Wry>> = vec![
         &draw_i,
         &breaktimer_i,
+        &screenshot_i,
         &separator,
         &settings_i,
         &help_i,
@@ -142,6 +145,13 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
             }
             "breaktimer" => {
                 create_breaktimer_window(&app.app_handle());
+            }
+            "screenshot" => {
+                if !preflight_access() {
+                    request_access();
+                } else {
+                    create_screenshot_windows(&app.app_handle());
+                }
             }
             "quit" => {
                 app.exit(0);
@@ -756,12 +766,11 @@ fn take_region_screenshot(
         clipboard.set_image(img_data).map_err(|e| e.to_string())?;
 
         use tauri_plugin_notification::NotificationExt;
-        app.notification()
+        let _ = app.notification()
             .builder()
-            .title("PresetInk")
+            .title("PresentInk")
             .body("Screenshot taken and copied to clipboard")
-            .show()
-            .unwrap();
+            .show();
     }
     Ok(())
 }
@@ -812,6 +821,7 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             .always_on_top(true)
             .initialization_script(init_script)
             .skip_taskbar(true)
+            .accept_first_mouse(true)
             .build()
             {
                 Ok(window) => {
