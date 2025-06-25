@@ -6,7 +6,7 @@ use enigo::{
     Enigo, Keyboard, Settings,
 };
 use std::path::PathBuf;
-use std::{error::Error, path};
+use std::{error::Error};
 use tauri::{
     Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
     image::Image,
@@ -22,8 +22,6 @@ mod settings;
 use settings::AppSettings;
 
 use std::sync::Mutex;
-
-use tauri_plugin_dialog::DialogExt;
 
 mod screen_capture_permissions;
 use screen_capture_permissions::{preflight_access, request_access};
