@@ -5,6 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
   <link rel="icon" type="image/png" href="icon_128x128.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <meta name="description" content="PresentInk lets you draw anywhere during your presentations. Annotate live, highlight key points, and enhance your screen sharing experience with a simple overlay.">
   <meta name="keywords" content="PresentInk, presentation tool, screen annotation, macOS, live drawing, screen sharing, video calls, productivity, presentation software">
   <meta name="author" content="Erwin van Hunen">
@@ -19,9 +22,9 @@
   <style>
     body {
       margin: 0;
-      font-family: 'Montserrat', Arial, sans-serif;
-      background: #e8f2fb;
-      color: #1a2634;
+      font-family: 'Inter', 'Montserrat', Arial, sans-serif;
+      background: linear-gradient(135deg, #0f1419 0%, #1a1f2e 50%, #2a2d3a 100%);
+      color: #e2e8f0;
       min-height: 100vh;
       display: flex;
       flex-direction: column;
@@ -31,85 +34,126 @@
 
     .container {
       width: 100%;
-      max-width: 500px;
+      max-width: 520px;
       margin-top: 60px;
-      padding: 32px;
-      background: rgba(255, 255, 255, 0.93);
-      border-radius: 24px;
-      box-shadow: 0 4px 32px 0 rgba(58, 120, 180, 0.08);
+      padding: 40px;
+      background: rgba(30, 35, 45, 0.95);
+      border-radius: 32px;
+      box-shadow: 
+        0 20px 40px rgba(0, 0, 0, 0.4),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
+      backdrop-filter: blur(20px);
       display: flex;
       flex-direction: column;
       align-items: center;
     }
 
     .logo {
-      margin-bottom: 24px;
+      margin-bottom: 32px;
+      position: relative;
+    }
+
+    .logo img {
+      filter: drop-shadow(0 4px 20px rgba(78, 161, 239, 0.3));
+      transition: transform 0.3s ease;
+    }
+
+    .logo:hover img {
+      transform: scale(1.05);
     }
 
     .title {
-      font-size: 2.3rem;
-      font-weight: 600;
-      letter-spacing: 1.5px;
-      margin-bottom: 12px;
-      color: #2a4e83;
+      font-size: 2.8rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      margin-bottom: 16px;
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 50%, #1d4ed8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
       text-align: center;
     }
 
     .tagline {
-      font-size: 1.1rem;
-      color: #4774a5;
-      margin-bottom: 32px;
+      font-size: 1.2rem;
+      color: #94a3b8;
+      margin-bottom: 40px;
       text-align: center;
+      line-height: 1.6;
+      font-weight: 400;
     }
 
     .features {
       width: 100%;
-      margin-bottom: 32px;
+      margin-bottom: 40px;
       list-style: none;
       padding: 0;
-      color: #34577a;
+      color: #cbd5e1;
     }
 
     .features li {
-      margin-bottom: 16px;
+      margin-bottom: 20px;
       display: flex;
       align-items: flex-start;
-      font-size: 1rem;
+      font-size: 1.05rem;
+      line-height: 1.5;
+      padding: 16px 20px;
+      background: rgba(51, 65, 85, 0.3);
+      border-radius: 16px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+      transition: all 0.3s ease;
+    }
+
+    .features li:hover {
+      background: rgba(51, 65, 85, 0.5);
+      border-color: rgba(96, 165, 250, 0.3);
+      transform: translateY(-2px);
     }
 
     .features svg {
-      margin-right: 12px;
+      margin-right: 16px;
       flex-shrink: 0;
-      margin-top: 3px;
+      margin-top: 2px;
     }
 
     .cta {
-      margin-top: 16px;
-      padding: 12px 30px;
-      font-size: 1rem;
-      background: #4ea1ef;
+      margin-top: 20px;
+      padding: 16px 36px;
+      font-size: 1.05rem;
+      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
       color: #fff;
       border: none;
-      border-radius: 30px;
-      box-shadow: 0 2px 8px 0 rgba(78, 161, 239, 0.10);
+      border-radius: 50px;
+      box-shadow: 
+        0 8px 25px rgba(59, 130, 246, 0.25),
+        0 0 0 1px rgba(255, 255, 255, 0.05);
       cursor: pointer;
       font-weight: 600;
-      letter-spacing: 0.5px;
-      transition: background 0.2s;
+      letter-spacing: 0.3px;
+      transition: all 0.3s ease;
     }
 
     .cta:hover {
-      background: #3085ce;
+      background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+      transform: translateY(-2px);
+      box-shadow: 
+        0 12px 35px rgba(59, 130, 246, 0.35),
+        0 0 0 1px rgba(255, 255, 255, 0.1);
     }
 
     @media (max-width: 600px) {
       .container {
-        margin-top: 28px;
-        padding: 12px;
+        margin-top: 32px;
+        padding: 24px;
       }
 
       .title {
-        font-size: 1.4rem;
+        font-size: 2.2rem;
+      }
+
+      .features li {
+        padding: 12px 16px;
+        font-size: 1rem;
       }
     }
   </style>
@@ -126,57 +170,59 @@
 
     <ul class="features">
       <li>
-        <svg width="20" height="20" viewBox="0 0 20 20">
-          <circle cx="10" cy="10" r="9" fill="#b7e0fa" />
-          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round" />
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="11" fill="rgba(59, 130, 246, 0.2)" stroke="rgba(96, 165, 250, 0.4)" stroke-width="1" />
+          <path d="M7 12.5l3 3 6-6" stroke="#60a5fa" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Draw directly on your screen over any application – annotate live!
       </li>
       <li>
-        <svg width="20" height="20" viewBox="0 0 20 20">
-          <circle cx="10" cy="10" r="9" fill="#b7e0fa" />
-          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round" />
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="11" fill="rgba(59, 130, 246, 0.2)" stroke="rgba(96, 165, 250, 0.4)" stroke-width="1" />
+          <path d="M7 12.5l3 3 6-6" stroke="#60a5fa" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Use arrows and freehand tools for instant highlights and emphasis.
       </li>
       <li>
-        <svg width="20" height="20" viewBox="0 0 20 20">
-          <circle cx="10" cy="10" r="9" fill="#b7e0fa" />
-          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round" />
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="11" fill="rgba(59, 130, 246, 0.2)" stroke="rgba(96, 165, 250, 0.4)" stroke-width="1" />
+          <path d="M7 12.5l3 3 6-6" stroke="#60a5fa" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Activate overlay with a hotkey – works seamlessly with video calls and screen sharing.
       </li>
       <li>
-        <svg width="20" height="20" viewBox="0 0 20 20">
-          <circle cx="10" cy="10" r="9" fill="#b7e0fa" />
-          <path d="M6 10.5l2.5 2.5 5-5" stroke="#33a7e8" stroke-width="2" fill="none" stroke-linecap="round" />
+        <svg width="24" height="24" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="11" fill="rgba(59, 130, 246, 0.2)" stroke="rgba(96, 165, 250, 0.4)" stroke-width="1" />
+          <path d="M7 12.5l3 3 6-6" stroke="#60a5fa" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" />
         </svg>
         Minimal, distraction-free interface designed for macOS.
       </li>
     </ul>
     <a href="https://github.com/erwinvanhunen/presentink/releases/latest" download style="
   display: inline-block;
-  margin-top: 16px;
-  padding: 12px 30px;
-  font-size: 1rem;
-  background: #4ea1ef;
+  margin-top: 20px;
+  padding: 16px 36px;
+  font-size: 1.05rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
   color: #fff;
   border: none;
-  border-radius: 30px;
-  box-shadow: 0 2px 8px 0 rgba(78,161,239,0.10);
+  border-radius: 50px;
+  box-shadow: 
+    0 8px 25px rgba(59, 130, 246, 0.25),
+    0 0 0 1px rgba(255, 255, 255, 0.05);
   font-weight: 600;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.3px;
   text-decoration: none;
-  transition: background 0.2s;">
+  transition: all 0.3s ease;">
       Download for macOS
     </a>
     <!-- <button class="cta" onclick="window.open('mailto:info@presentink.app', '_blank')">
       Get Notified When It's Ready
     </button> -->
-    <div style="margin-top:36px; font-size:0.93rem; color:#9ab4ce; text-align:center;">
+    <div style="margin-top:48px; font-size:0.95rem; color:#64748b; text-align:center;">
       &copy; 2025 PresentInk
-      <a href="https://github.com/erwinvanhunen/presentink" target="_blank" style="margin-left:12px; vertical-align:middle;">
-        <svg height="20" width="20" viewBox="0 0 16 16" fill="#9ab4ce" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle;">
+      <a href="https://github.com/erwinvanhunen/presentink" target="_blank" style="margin-left:16px; vertical-align:middle;">
+        <svg height="20" width="20" viewBox="0 0 16 16" fill="#64748b" xmlns="http://www.w3.org/2000/svg" style="vertical-align:middle; transition: fill 0.2s ease;" onmouseover="this.setAttribute('fill', '#94a3b8')" onmouseout="this.setAttribute('fill', '#64748b')">
           <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38
             0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52
             -.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2
