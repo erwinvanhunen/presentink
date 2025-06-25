@@ -1,22 +1,26 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <meta charset="UTF-8">
     <title>Screenshot Overlay</title>
     <script type="module" src="/src/screenshot.ts" defer></script>
-      
+
     <style>
         body {
             margin: 0;
             padding: 0;
-            background: rgba(0, 0, 0, 0.0);
+            background: rgba(50, 0, 0, 0.0);
             cursor: crosshair !important;
             user-select: none;
             overflow: hidden;
             height: 100vh;
             width: 100vw;
+            position: absolute;
+            top: 0;
+            left: 0;
         }
-        
+
         .top-box {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
@@ -27,19 +31,19 @@
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
             z-index: 9999;
-        }   
+        }
 
         .left-box {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
             z-index: 9999;
-        }   
+        }
 
         .bottom-box {
             position: absolute;
             background: rgba(0, 0, 0, 0.5);
             z-index: 9999;
-        }   
+        }
 
         .selection-box {
             position: absolute;
@@ -47,35 +51,41 @@
             background: rgba(0, 122, 204, 0.0);
             display: none;
         }
-        
+
         .instructions {
             position: fixed;
-            top: 20px;
+            top: 0px;
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            background: rgba(0, 0, 0, 0.7);
+            /* background: rgba(0, 0, 0, 0.7); */
+            background: #9ccc00cc;
+            margin-top: 5px;
             padding: 10px 20px;
-            border-radius: 5px;
+            /* border-radius: 5px; */
             font-family: system-ui;
             font-size: 14px;
             z-index: 1000;
         }
 
         .coords {
-            font-weight: bold;
+            position: fixed;
+            font-size: small;
             color: #9ccc00;
         }
     </style>
 </head>
+
 <body>
-    <div class="instructions">
-        Click and drag to select screenshot area. Press ESC to cancel. <span id="coords" class="coords"></span>
+    <div class="instructions" id="instructions">
+        Click and drag to select screenshot area. Press ESC to cancel.</span>
     </div>
+    <div class="coords" id="coords"></div>
     <div class="top-box" id="topBox"></div>
     <div class="right-box" id="rightBox"></div>
     <div class="left-box" id="leftBox"></div>
     <div class="bottom-box" id="bottomBox"></div>
     <div class="selection-box" id="selectionBox"></div>
 </body>
+
 </html>

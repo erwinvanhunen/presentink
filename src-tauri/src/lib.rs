@@ -15,14 +15,16 @@ use tauri::{
 };
 use tauri_plugin_opener::OpenerExt;
 use xcap::{
-    image::{ImageBuffer, Rgba}, Monitor
+    Monitor,
+    image::{ImageBuffer, Rgba},
 };
 mod settings;
 use settings::AppSettings;
 
 use std::sync::Mutex;
 
-
+mod screen_capture_permissions;
+use screen_capture_permissions::{preflight_access, request_access};
 pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
 pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 pub fn run() {
@@ -198,12 +200,11 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
                 if shortcut == &s_shortcut {
                     match event.state() {
                         ShortcutState::Pressed => {
-                            create_screenshot_windows(&app_handle);
-                            // Show the break timer window
-                            // start_text_display(app, text)
-                            // app_handle.webview_windows().get("main").map(|window| {
-                            //     let _ = window.emit("select-text", ());
-                            // });
+                            if !preflight_access() {
+                                request_access();
+                            } else {
+                                create_screenshot_windows(&app_handle);
+                            }
                         }
                         ShortcutState::Released => {}
                     }
@@ -739,13 +740,10 @@ fn take_region_screenshot(
     width: u32,
     height: u32,
 ) -> Result<(), String> {
-   
-
     let monitors = Monitor::all().map_err(|err| err.to_string())?;
 
     // Find the monitor by name
     if let Some(monitor) = monitors.get(index as usize) {
-        
         close_screenshot_window(app.clone());
 
         let image = monitor
@@ -764,23 +762,23 @@ fn take_region_screenshot(
             .body("Screenshot taken and copied to clipboard")
             .show()
             .unwrap();
-       
     }
     Ok(())
 }
 
 #[tauri::command]
-fn close_screenshot_window(app: tauri::AppHandle) 
-{
-      for (label, window) in app.webview_windows().iter() {
+fn close_screenshot_window(app: tauri::AppHandle) {
+    for (label, window) in app.webview_windows().iter() {
         if label.starts_with("screenshot-window-") {
             // Emit an event to the window to change the color
-            let _ = window.close();
+            let _ = window.destroy();
         }
     }
 }
 
 fn create_screenshot_windows(app: &tauri::AppHandle) {
+    // Close existing screenshot windows if they exist
+    close_screenshot_window(app.clone());
     if let Ok(monitors) = app.available_monitors() {
         for (index, monitor) in monitors.iter().enumerate() {
             let window_label = format!("screenshot-window-{}", index);
@@ -792,7 +790,11 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             let position = monitor.position();
             let size = monitor.size();
 
-            let init_script = format!(r#"window.monitor = {{ index: {} }};"#, index);
+            let init_script = format!(
+                r#"window.monitor = {{ index: {}, factor:{} }};"#,
+                index,
+                monitor.scale_factor()
+            );
 
             match WebviewWindowBuilder::new(
                 app,
@@ -809,6 +811,7 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             .decorations(false)
             .always_on_top(true)
             .initialization_script(init_script)
+            .skip_taskbar(true)
             .build()
             {
                 Ok(window) => {
@@ -821,7 +824,10 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
                         width: size.width,
                         height: size.height,
                     }));
+                    let _ = window.show();
+                    let _ = window.set_focus();
                 }
+
                 Err(e) => {
                     println!("Failed to create window {}: {:?}", index, e);
                 }
