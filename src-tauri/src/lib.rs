@@ -16,7 +16,7 @@ use tauri::{
 use tauri_plugin_opener::OpenerExt;
 use xcap::{
     Monitor,
-    image::{ImageBuffer, Rgba},
+    image::{self, ImageBuffer, Rgba},
 };
 mod settings;
 use settings::AppSettings;
@@ -759,10 +759,23 @@ fn take_region_screenshot(
     if let Some(monitor) = monitors.get(index as usize) {
         close_screenshot_window(app.clone());
 
-        let image = monitor
+        let mut image = monitor
             .capture_region(x, y, width, height)
             .map_err(|e| e.to_string())?;
 
+        // println!("{},{}", image.width(), image.height());
+        let scale = monitor.scale_factor().unwrap_or(1.0);
+        if scale != 1.0 {
+            // println!("SCALE: {}", scale);
+            let logical_width = (image.width() as f32 / scale) as u32;
+            let logical_height = (image.height() as f32 / scale) as u32;
+            image = image::imageops::resize(
+                &image,
+                logical_width,
+                logical_height,
+                image::imageops::FilterType::Lanczos3,
+            );
+        }
         if save {
             if !path.is_empty() {
                 let _ = &image.save(&path);
