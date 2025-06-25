@@ -5,8 +5,8 @@ use enigo::{
     Direction::{Click, Press, Release},
     Enigo, Keyboard, Settings,
 };
-use std::error::Error;
 use std::path::PathBuf;
+use std::{error::Error, path};
 use tauri::{
     Emitter, Manager, WebviewUrl, WebviewWindowBuilder,
     image::Image,
@@ -23,13 +23,13 @@ use settings::AppSettings;
 
 use std::sync::Mutex;
 
+use tauri_plugin_dialog::DialogExt;
+
 mod screen_capture_permissions;
 use screen_capture_permissions::{preflight_access, request_access};
 pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
 pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 pub fn run() {
-    // Load the tray icon
-
     tauri::Builder::default()
         .manage(DrawMenuState(Mutex::new(None)))
         .manage(FileNameMenuState(Mutex::new(None)))
@@ -91,7 +91,7 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
     }
     let breaktimer_i =
         MenuItem::with_id(app, "breaktimer", "Break Timer", true, Some("Alt+Shift+B"))?;
-            let screenshot_i =
+    let screenshot_i =
         MenuItem::with_id(app, "screenshot", "Screenshot", true, Some("Alt+Shift+S"))?;
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, Some("Cmd+Q"))?;
     let separator = PredefinedMenuItem::separator(app)?;
@@ -147,11 +147,7 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
                 create_breaktimer_window(&app.app_handle());
             }
             "screenshot" => {
-                if !preflight_access() {
-                    request_access();
-                } else {
-                    create_screenshot_windows(&app.app_handle());
-                }
+                start_screenshot(app.app_handle());
             }
             "quit" => {
                 app.exit(0);
@@ -210,11 +206,7 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
                 if shortcut == &s_shortcut {
                     match event.state() {
                         ShortcutState::Pressed => {
-                            if !preflight_access() {
-                                request_access();
-                            } else {
-                                create_screenshot_windows(&app_handle);
-                            }
+                            start_screenshot(&app_handle);
                         }
                         ShortcutState::Released => {}
                     }
@@ -281,6 +273,18 @@ fn toggle_draw(app_handle: &tauri::AppHandle) {
         start_draw(app_handle.clone());
         set_draw_menu_checked(app_handle, true);
         // Change the tray icon to indicate drawing mode
+    }
+}
+
+fn start_screenshot(app_handle: &tauri::AppHandle) {
+    if cfg!(dev) {
+        create_screenshot_windows(&app_handle);
+    } else {
+        if !preflight_access() {
+            request_access();
+        } else {
+            create_screenshot_windows(&app_handle);
+        }
     }
 }
 
@@ -627,7 +631,6 @@ fn open_settings(app: tauri::AppHandle) -> Result<(), String> {
             .always_on_top(true)
             .build()
             .map_err(|e| format!("Failed to create settings window: {}", e))?;
-
     Ok(())
 }
 
@@ -749,6 +752,7 @@ fn take_region_screenshot(
     y: u32,
     width: u32,
     height: u32,
+    path: String,
 ) -> Result<(), String> {
     let monitors = Monitor::all().map_err(|err| err.to_string())?;
 
@@ -760,17 +764,22 @@ fn take_region_screenshot(
             .capture_region(x, y, width, height)
             .map_err(|e| e.to_string())?;
 
-        let img_data = imagebuffer_to_arboard(&image);
+        if !path.is_empty() {
+            let _ = &image.save(&path);
+        } else {
+            let img_data = imagebuffer_to_arboard(&image);
 
-        let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-        clipboard.set_image(img_data).map_err(|e| e.to_string())?;
+            let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
+            clipboard.set_image(img_data).map_err(|e| e.to_string())?;
 
-        use tauri_plugin_notification::NotificationExt;
-        let _ = app.notification()
-            .builder()
-            .title("PresentInk")
-            .body("Screenshot taken and copied to clipboard")
-            .show();
+            use tauri_plugin_notification::NotificationExt;
+            let _ = app
+                .notification()
+                .builder()
+                .title("PresentInk")
+                .body("Screenshot taken and copied to clipboard")
+                .show();
+        }
     }
     Ok(())
 }

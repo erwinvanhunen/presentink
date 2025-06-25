@@ -1,4 +1,5 @@
 import { invoke } from "@tauri-apps/api/core";
+import { save } from "@tauri-apps/plugin-dialog";
 
 declare global {
     interface Window {
@@ -10,7 +11,6 @@ declare global {
         factor: number;
     }
 }
-
 let isSelecting = false;
 let startX = 0;
 let startY = 0;
@@ -23,7 +23,7 @@ let coords: HTMLElement;
 let instructions: HTMLElement;
 // let selectedMonitor = window.monitor; // Default monitor
 let monitor = "";
-let factor : number;
+let factor: number;
 
 window.addEventListener('DOMContentLoaded', async () => {
     selectionBox = document.getElementById('selectionBox')!;
@@ -36,7 +36,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('mousedown', startSelection);
     document.addEventListener('mousemove', updateSelection);
     document.addEventListener('mouseup', endSelection);
-    document.addEventListener('keydown', handleKeydown)
+    document.addEventListener('keydown', handleKeydown);
     monitor = window.monitor.index;
     factor = window.monitor.factor;
     instructions.style.top = 20 * factor + 'px';
@@ -66,10 +66,11 @@ function updateSelection(event: MouseEvent) {
 
     coords.style.top = currentY + 5 + 'px';
     coords.style.left = currentX + 5 + 'px';
+
     if (!isSelecting) {
-        coords.textContent = `(${Math.round(currentX)},${Math.round(currentY)})`;
+        coords.textContent = `(${Math.round(currentX)},${Math.round(currentY)}) ${window.innerWidth}`;
     } else {
-        coords.textContent = `(${Math.round(width)},${Math.round(height)})`;
+        coords.textContent = `(${Math.round(width)},${Math.round(height)}) ${window.innerWidth}`;
         selectionBox.style.left = left + 'px';
         selectionBox.style.top = top + 'px';
         selectionBox.style.width = width + 'px';
@@ -79,27 +80,29 @@ function updateSelection(event: MouseEvent) {
         topBox.style.top = '0px';
         topBox.style.height = top + 'px';
         topBox.style.width = '100%';
+
         bottomBox.style.left = '0px';
-        bottomBox.style.top = top + height + 2 + 'px';
-        bottomBox.style.height = window.innerHeight - top - height - 2 + 'px';
+        bottomBox.style.top = top + height + 4 + 'px';
+        bottomBox.style.height = window.innerHeight - top - height + 'px';
         bottomBox.style.width = '100%';
 
         leftBox.style.left = '0px';
         leftBox.style.top = top + 'px';
-        leftBox.style.height = height + 2 + 'px';
+        leftBox.style.height = height + 4 + 'px';
         leftBox.style.width = left + 'px';
 
-        rightBox.style.left = left + width + 2 + 'px';
+        rightBox.style.left = left + width + 4 + 'px';
         rightBox.style.top = top + 'px';
-        rightBox.style.height = height + 2 + 'px';
-        rightBox.style.width = window.innerWidth - left - width + 'px';
+        rightBox.style.height = height + 4 + 'px';
+        rightBox.style.width = window.innerWidth - left - width - 4 + 'px';
     }
 }
 
-function endSelection(event: MouseEvent) {
+async function endSelection(event: MouseEvent) {
     if (!isSelecting) return;
 
     isSelecting = false;
+    const shiftPressed = event.shiftKey;
 
     const currentX = event.clientX;
     const currentY = event.clientY;
@@ -118,8 +121,21 @@ function endSelection(event: MouseEvent) {
             height: Math.round(height)
         };
         // selectionBox.style.visibility = 'hidden'; // Hide the selection box
-
-        invoke("take_region_screenshot", { index: monitor, x: area.x + 2, y: area.y + 2, width: area.width, height: area.height });
+        let selectedPath: string = "";
+        if (shiftPressed) {
+            const path = await save({
+                title: "Save Screenshot",
+                defaultPath: `screenshot-${monitor}-${Date.now()}.png`,
+                filters: [
+                    {
+                        name: 'PNG image}',
+                        extensions: ['png'],
+                    },
+                ],
+            });
+            selectedPath = path || "";
+        }
+        invoke("take_region_screenshot", { index: monitor, x: area.x + 2, y: area.y + 2, width: area.width, height: area.height, path: selectedPath });
     }
 }
 
