@@ -1,4 +1,6 @@
+import { hide } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { save } from "@tauri-apps/plugin-dialog";
 
 declare global {
@@ -27,12 +29,16 @@ let clipboardButton: HTMLElement;
 let toolbar: HTMLElement;
 let monitor = "";
 let factor: number;
-let lastX = 0, lastY = 0;
 let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
 let selectionStartX = 0;
 let selectionStartY = 0;
+let isResizing = false;
+let resizeHandle = '';
+let resizeStartX = 0;
+let resizeStartY = 0;
+let originalRect = { left: 0, top: 0, width: 0, height: 0 };
 
 window.addEventListener('DOMContentLoaded', async () => {
     selectionBox = document.getElementById('selectionBox')!;
@@ -58,10 +64,12 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('mousemove', updateSelection);
     document.addEventListener('mouseup', endSelection);
     document.addEventListener('keydown', handleKeydown);
-      selectionBox.addEventListener('mousedown', startDrag);
+    selectionBox.addEventListener('mousedown', startDrag);
     monitor = window.monitor.index;
     factor = window.monitor.factor;
     instructions.style.top = 20 * factor + 'px';
+
+    createResizeHandles();
 });
 
 function preventSelection(event: MouseEvent) {
@@ -70,7 +78,7 @@ function preventSelection(event: MouseEvent) {
 }
 
 function startSelection(event: MouseEvent) {
- // Don't start new selection if clicking on selection box or toolbar
+    // Don't start new selection if clicking on selection box or toolbar
     const target = event.target as HTMLElement;
     if (target.closest('#selectionBox') || target.closest('#toolbar')) {
         return;
@@ -96,63 +104,76 @@ function startSelection(event: MouseEvent) {
 function startDrag(event: MouseEvent) {
     event.preventDefault();
     event.stopPropagation();
-    
+
     isDragging = true;
     dragStartX = event.clientX;
     dragStartY = event.clientY;
-    
+
     // Store current selection position
     const rect = selectionBox.getBoundingClientRect();
     selectionStartX = rect.left;
     selectionStartY = rect.top;
-    
+
     // Change cursor to indicate dragging
     document.body.style.cursor = 'move';
     selectionBox.style.cursor = 'move';
-    
+
     // Hide toolbar while dragging
     toolbar.style.display = 'none';
 }
 
 function updateSelection(event: MouseEvent) {
 
-     if (isDragging) {
+    if (isResizing) {
+        handleResize(event);
+        return;
+    }
+
+
+    if (isDragging) {
         // Handle dragging
         const deltaX = event.clientX - dragStartX;
         const deltaY = event.clientY - dragStartY;
-        
+
         let newLeft = selectionStartX + deltaX;
         let newTop = selectionStartY + deltaY;
-        
+
         const rect = selectionBox.getBoundingClientRect();
         const width = rect.width;
         const height = rect.height;
-        
+
         // Keep selection within screen bounds
         newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - width));
         newTop = Math.max(0, Math.min(newTop, window.innerHeight - height));
-        
+
         // Update selection box position
         selectionBox.style.left = newLeft + 'px';
         selectionBox.style.top = newTop + 'px';
-        
+
         // Update overlay boxes
         updateOverlayBoxes(newLeft, newTop, width - 2, height - 2);
-        
+
         return;
     }
 
     const currentX = event.clientX;
     const currentY = event.clientY;
-    lastX = event.clientX;
-    lastY = event.clientY;
+
     const left = Math.min(startX, currentX);
     const top = Math.min(startY, currentY);
     const width = Math.abs(currentX - startX);
     const height = Math.abs(currentY - startY);
 
     const toolbarRect = toolbar.getBoundingClientRect();
-    if (currentX < toolbarRect.left || currentX > toolbarRect.right || currentY < toolbarRect.top || currentY > toolbarRect.bottom) {
+    const selectionRect = selectionBox.getBoundingClientRect();
+
+    const isOverToolbar = currentX >= toolbarRect.left && currentX <= toolbarRect.right &&
+        currentY >= toolbarRect.top && currentY <= toolbarRect.bottom;
+    const isOverSelection = currentX >= selectionRect.left && currentX <= selectionRect.right &&
+        currentY >= selectionRect.top && currentY <= selectionRect.bottom;
+
+    // Only show coordinates if not over toolbar or selection box
+    if (!isOverToolbar && !isOverSelection) {
         coords.style.display = 'block';
         let coordX = currentX;
         let coordY = currentY;
@@ -171,6 +192,7 @@ function updateSelection(event: MouseEvent) {
     } else {
         coords.style.display = 'none';
     }
+
     var rect = instructions.getBoundingClientRect();
 
     if (currentX > rect.left && currentX < rect.right && currentY > rect.top && currentY < rect.bottom) {
@@ -207,6 +229,84 @@ function updateSelection(event: MouseEvent) {
     }
 }
 
+function handleResize(event: MouseEvent) {
+    const deltaX = event.clientX - resizeStartX;
+    const deltaY = event.clientY - resizeStartY;
+
+    let newLeft = originalRect.left;
+    let newTop = originalRect.top;
+    let newWidth = originalRect.width;
+    let newHeight = originalRect.height;
+
+    // Calculate new dimensions based on resize handle
+    switch (resizeHandle) {
+        case 'nw':
+            newLeft += deltaX;
+            newTop += deltaY;
+            newWidth -= deltaX;
+            newHeight -= deltaY;
+            break;
+        case 'n':
+            newTop += deltaY;
+            newHeight -= deltaY;
+            break;
+        case 'ne':
+            newTop += deltaY;
+            newWidth += deltaX;
+            newHeight -= deltaY;
+            break;
+        case 'e':
+            newWidth += deltaX;
+            break;
+        case 'se':
+            newWidth += deltaX;
+            newHeight += deltaY;
+            break;
+        case 's':
+            newHeight += deltaY;
+            break;
+        case 'sw':
+            newLeft += deltaX;
+            newWidth -= deltaX;
+            newHeight += deltaY;
+            break;
+        case 'w':
+            newLeft += deltaX;
+            newWidth -= deltaX;
+            break;
+    }
+
+    // Enforce minimum size
+    const minSize = 20;
+    if (newWidth < minSize) {
+        if (resizeHandle.includes('w')) {
+            newLeft = originalRect.left + originalRect.width - minSize;
+        }
+        newWidth = minSize;
+    }
+    if (newHeight < minSize) {
+        if (resizeHandle.includes('n')) {
+            newTop = originalRect.top + originalRect.height - minSize;
+        }
+        newHeight = minSize;
+    }
+
+    // Keep within screen bounds
+    newLeft = Math.max(0, newLeft);
+    newTop = Math.max(0, newTop);
+    newWidth = Math.min(newWidth, window.innerWidth - newLeft);
+    newHeight = Math.min(newHeight, window.innerHeight - newTop);
+
+    // Apply new dimensions
+    selectionBox.style.left = newLeft + 'px';
+    selectionBox.style.top = newTop + 'px';
+    selectionBox.style.width = newWidth - 2 + 'px';
+    selectionBox.style.height = newHeight - 2 + 'px';
+
+    // Update overlay boxes
+    updateOverlayBoxes(newLeft, newTop, newWidth - 2, newHeight - 2);
+}
+
 function updateOverlayBoxes(left: number, top: number, width: number, height: number) {
     topBox.style.display = 'block';
     topBox.style.left = '0px';
@@ -235,12 +335,23 @@ function updateOverlayBoxes(left: number, top: number, width: number, height: nu
 
 async function endSelection(event: MouseEvent) {
 
-     if (isDragging) {
+    if (isResizing) {
+        // End resizing
+        isResizing = false;
+        document.body.style.cursor = 'crosshair';
+
+        // Show toolbar again
+        positionToolbar();
+        toolbar.style.display = 'block';
+        return;
+    }
+
+    if (isDragging) {
         // End dragging
         isDragging = false;
         document.body.style.cursor = 'crosshair';
         selectionBox.style.cursor = 'move';
-        
+
         // Show toolbar again
         positionToolbar();
         toolbar.style.display = 'block';
@@ -315,6 +426,7 @@ function positionToolbar() {
 // Prevent default context me
 async function copyScreenshot() {
     const area = selectionBox.getBoundingClientRect();
+    hideHandles();
     invoke("take_region_screenshot", { index: monitor, x: area.x + 2, y: area.y + 2, width: area.width - 4, height: area.height - 4, save: false, path: "" });
 }
 
@@ -351,4 +463,63 @@ function handleKeydown(event: KeyboardEvent) {
     if (event.key === 'Escape') {
         invoke("close_screenshot_window");
     }
+}
+
+function createResizeHandles() {
+    const handles = ['nw', 'n', 'ne', 'e', 'se', 's', 'sw', 'w'];
+
+    handles.forEach(direction => {
+        const handle = document.createElement('div');
+        handle.className = `resize-handle resize-${direction}`;
+        handle.dataset.direction = direction;
+        handle.addEventListener('mousedown', startResize);
+        selectionBox.appendChild(handle);
+    });
+}
+
+function hideHandles() {
+    const handles = document.getElementsByClassName('resize-handle');
+    for (let i = 0; i < handles.length; i++) {
+        const handle = handles[i] as HTMLElement;
+        handle.style.display = 'none';
+        invoke("print_output", { text: "hide handles" });
+    }
+}
+
+function startResize(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+
+    isResizing = true;
+    resizeHandle = (event.target as HTMLElement).dataset.direction || '';
+    resizeStartX = event.clientX;
+    resizeStartY = event.clientY;
+
+    const rect = selectionBox.getBoundingClientRect();
+    originalRect = {
+        left: rect.left,
+        top: rect.top,
+        width: rect.width,
+        height: rect.height
+    };
+
+    // Hide toolbar while resizing
+    toolbar.style.display = 'none';
+
+    // Change cursor based on resize direction
+    document.body.style.cursor = getResizeCursor(resizeHandle);
+}
+
+function getResizeCursor(direction: string): string {
+    const cursors: { [key: string]: string } = {
+        'nw': 'nw-resize',
+        'n': 'n-resize',
+        'ne': 'ne-resize',
+        'e': 'e-resize',
+        'se': 'se-resize',
+        's': 's-resize',
+        'sw': 'sw-resize',
+        'w': 'w-resize'
+    };
+    return cursors[direction] || 'default';
 }

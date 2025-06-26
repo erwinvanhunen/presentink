@@ -743,7 +743,7 @@ fn imagebuffer_to_arboard(img: &ImageBuffer<Rgba<u8>, Vec<u8>>) -> ImageData<'st
 }
 
 #[tauri::command]
-fn take_region_screenshot(
+async fn take_region_screenshot(
     app: tauri::AppHandle,
     index: u32,
     x: u32,
@@ -757,16 +757,14 @@ fn take_region_screenshot(
 
     // Find the monitor by name
     if let Some(monitor) = monitors.get(index as usize) {
-        close_screenshot_window(app.clone());
+        close_screenshot_windows_async(&app).await;
 
         let mut image = monitor
             .capture_region(x, y, width, height)
             .map_err(|e| e.to_string())?;
 
-        // println!("{},{}", image.width(), image.height());
         let scale = monitor.scale_factor().unwrap_or(1.0);
         if scale != 1.0 {
-            // println!("SCALE: {}", scale);
             let logical_width = (image.width() as f32 / scale) as u32;
             let logical_height = (image.height() as f32 / scale) as u32;
             image = image::imageops::resize(
@@ -784,7 +782,7 @@ fn take_region_screenshot(
             let img_data = imagebuffer_to_arboard(&image);
 
             let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-            clipboard.set_image(img_data).map_err(|e| e.to_string())?;
+            clipboard.set_image(img_data).map_err(|e| e.to_string())?;ß
 
             use tauri_plugin_notification::NotificationExt;
             let _ = app
@@ -798,11 +796,34 @@ fn take_region_screenshot(
     Ok(())
 }
 
+async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
+    let windows_to_close: Vec<_> = app.webview_windows()
+        .iter()
+        .filter_map(|(label, window)| {
+            if label.starts_with("screenshot-window-") {
+                Some((label.clone(), window.clone()))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    for (label, window) in windows_to_close {
+        println!("[DEBUG] Destroying screenshot window: {}", label);
+        let _ = window.destroy();
+    }
+    
+    // Wait for destruction to complete
+    std::thread::sleep(std::time::Duration::from_millis(200));
+}
+
+
 #[tauri::command]
 fn close_screenshot_window(app: tauri::AppHandle) {
     for (label, window) in app.webview_windows().iter() {
         if label.starts_with("screenshot-window-") {
-            // Emit an event to the window to change the color
+            println!("[DEBUG] Closing screenshot window: {}", label);
+            // Emit an event to the window to close it
             let _ = window.destroy();
         }
     }
@@ -848,6 +869,7 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             .build()
             {
                 Ok(window) => {
+                    let _ = window.hide_menu();
                     let _ =
                         window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
                             x: position.x,

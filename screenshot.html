@@ -53,9 +53,108 @@
             cursor: move;
         }
 
-        .selection-box:hover {
+        /* .selection-box:hover {
             border-color: #0099ff;
-            /* Slightly lighter blue on hover */
+        } */
+
+
+        .resize-handle {
+            position: absolute;
+            background: #007acc;
+            border: 1px solid #fff;
+            width: 8px;
+            height: 8px;
+            z-index: 1000;
+        }
+
+        .resize-nw {
+            top: -4px;
+            left: -4px;
+            cursor: nw-resize;
+        }
+
+        .resize-n {
+            top: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: n-resize;
+        }
+
+        .resize-ne {
+            top: -4px;
+            right: -4px;
+            cursor: ne-resize;
+        }
+
+        .resize-e {
+            top: 50%;
+            right: -4px;
+            transform: translateY(-50%);
+            cursor: e-resize;
+        }
+
+        .resize-se {
+            bottom: -4px;
+            right: -4px;
+            cursor: se-resize;
+        }
+
+        .resize-s {
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            cursor: s-resize;
+        }
+
+        .resize-sw {
+            bottom: -4px;
+            left: -4px;
+            cursor: sw-resize;
+        }
+
+        .resize-w {
+            top: 50%;
+            left: -4px;
+            transform: translateY(-50%);
+            cursor: w-resize;
+        }
+
+        .resize-handle:hover {
+            background: #0099ff;
+            transform: scale(1.2);
+        }
+
+
+        .resize-nw:hover {
+            transform: scale(1.2) translate(10%, 10%);
+        }
+
+        .resize-n:hover {
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        .resize-ne:hover {
+            transform: scale(1.2) translate(-10%, 10%);
+        }
+
+        .resize-e:hover {
+            transform: translateY(-50%) scale(1.2);
+        }
+
+        .resize-se:hover {
+            transform: scale(1.2) translate(-10%, -10%);
+        }
+
+        .resize-s:hover {
+            transform: translateX(-50%) scale(1.2);
+        }
+
+        .resize-sw:hover {
+            transform: scale(1.2) translate(10%, -10%);
+        }
+
+        .resize-w:hover {
+            transform: translateY(-50%) scale(1.2);
         }
 
         .instructions {
