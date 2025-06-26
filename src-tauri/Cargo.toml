@@ -33,9 +33,11 @@ tauri-plugin-notification = "2"
 xcap = "0.6.1"
 arboard = "3.5.0"
 objc = "0.2.7"
+auto-launch = { git = "https://github.com/zzzgydi/auto-launch", rev="0c55233173233b222f3f3f1bb727aa7c8000f5c5"}
 [target.'cfg(not(any(target_os = "android", target_os = "ios")))'.dependencies]
 tauri-plugin-autostart = "2"
 tauri-plugin-global-shortcut = "2"
+
 
 [profile.dev]
 incremental = true

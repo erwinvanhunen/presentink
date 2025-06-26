@@ -1,5 +1,4 @@
 import { getSettings, updateSetting, AppSettings } from './settings';
-import { enable, disable } from '@tauri-apps/plugin-autostart';
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 
@@ -73,9 +72,10 @@ function setupEventListeners() {
         launchAtLogin.onchange = async () => {
             updateSetting('launchOnStartup', launchAtLogin.checked);
             if (launchAtLogin.checked) {
-                await enable();
+                invoke('enable_autolaunch');
+                // await enable(); 
             } else {
-                await disable();
+                invoke('disable_autolaunch');
             }
         };
     }

@@ -284,6 +284,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "auto-launch"
+version = "0.5.0"
+source = "git+https://github.com/zzzgydi/auto-launch?rev=0c55233173233b222f3f3f1bb727aa7c8000f5c5#0c55233173233b222f3f3f1bb727aa7c8000f5c5"
+dependencies = [
+ "dirs 6.0.0",
+ "thiserror 2.0.12",
+ "windows-registry",
+ "windows-result",
+]
+
+[[package]]
 name = "autocfg"
 version = "1.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3388,6 +3399,7 @@ name = "presentink"
 version = "0.9.13"
 dependencies = [
  "arboard",
+ "auto-launch 0.5.0 (git+https://github.com/zzzgydi/auto-launch?rev=0c55233173233b222f3f3f1bb727aa7c8000f5c5)",
  "base64 0.22.1",
  "enigo",
  "fs_extra",
@@ -4476,7 +4488,7 @@ version = "2.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8a9641831518c56775a364a8750e0eed8852adee87e0f11006d043b9ebba0bf5"
 dependencies = [
- "auto-launch",
+ "auto-launch 0.5.0 (registry+https://github.com/rust-lang/crates.io-index)",
  "serde",
  "serde_json",
  "tauri",
@@ -5641,6 +5653,17 @@ checksum = "9150af68066c4c5c07ddc0ce30421554771e528bde427614c61038bc2c92c2b1"
 dependencies = [
  "windows-core",
  "windows-link",
+]
+
+[[package]]
+name = "windows-registry"
+version = "0.5.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5b8a9ed28765efc97bbc954883f4e6796c33a06546ebafacbabee9696967499e"
+dependencies = [
+ "windows-link",
+ "windows-result",
+ "windows-strings",
 ]
 
 [[package]]

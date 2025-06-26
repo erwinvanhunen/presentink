@@ -1,6 +1,4 @@
-import { hide } from "@tauri-apps/api/app";
 import { invoke } from "@tauri-apps/api/core";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { save } from "@tauri-apps/plugin-dialog";
 
 declare global {

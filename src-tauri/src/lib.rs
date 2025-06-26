@@ -1,6 +1,8 @@
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 
 use arboard::{Clipboard, ImageData};
+
+use auto_launch::AutoLaunch;
 use enigo::{
     Direction::{Click, Press, Release},
     Enigo, Keyboard, Settings,
@@ -35,10 +37,16 @@ pub fn run() {
         .enable_macos_default_menu(false)
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_autostart::init(
-            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            Some(vec![]),
-        ))
+        // .plugin(
+        //     tauri_plugin_autostart::Builder::new()
+        //         .app_name("PresentInk")
+        //         .bundle_identifiers("com.presentink")
+        //         .build(),
+        // )
+        // .plugin(tauri_plugin_autostart::init(
+        //     tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+        //     Some(vec![]),
+        // ))
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
@@ -69,11 +77,16 @@ pub fn run() {
             change_tray_icon,
             set_file_name,
             take_region_screenshot,
-            close_screenshot_window
+            close_screenshot_windows,
+            enable_autolaunch,
+            disable_autolaunch,
+            auto_launch_enabled
         ])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
+
+    // This is where the Tauri application starts running
 }
 
 fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
@@ -518,18 +531,8 @@ fn type_text(text: &str) {
     }
 }
 
-// #[tauri::command]
-// fn store_script(state: State<'_, Mutex<ScriptData>>, script: &str) {
-//     //println!("[DEBUG] Storing script: {}", script.to_string());
-//     let mut state = state.lock().unwrap();
-//     state.original = script.to_string();
-//     //println!("[DEBUG] Stored script: {}", state.original);
-// }
-
 #[tauri::command]
 fn set_file_name(app: tauri::AppHandle, name: String) {
-    // println!("[DEBUG] Setting file name: {}", file_name);
-    // Update the file name in the menu
     if let Some(file_name_item) = app.state::<FileNameMenuState>().0.lock().unwrap().as_mut() {
         let _ = file_name_item.set_text(&name);
     }
@@ -537,10 +540,7 @@ fn set_file_name(app: tauri::AppHandle, name: String) {
 
 #[tauri::command]
 fn start_draw(app: tauri::AppHandle) {
-    // println!("[DEBUG] Start draw action backend");
-    // This function can be used to toggle the draw window visibility
     for (label, window) in app.webview_windows().iter() {
-        // Emit an event to the window to toggle the draw action
         if label.starts_with("draw-window-") {
             let _ = window.emit("start-drawing", ());
         }
@@ -549,10 +549,7 @@ fn start_draw(app: tauri::AppHandle) {
 
 #[tauri::command]
 fn stop_draw(app: tauri::AppHandle) {
-    // println!("[DEBUG] Stop draw action backend");
-    // This function can be used to toggle the draw window visibility
     for (label, window) in app.webview_windows().iter() {
-        // Emit an event to the window to toggle the draw action
         if label.starts_with("draw-window-") {
             let _ = window.emit("stop-drawing", ());
         }
@@ -562,9 +559,7 @@ fn stop_draw(app: tauri::AppHandle) {
 
 #[tauri::command]
 fn update_settings(app: tauri::AppHandle) {
-    // This function can be used to toggle the draw window visibility
     for (label, window) in app.webview_windows().iter() {
-        // Emit an event to the window to toggle the draw action
         if label.starts_with("draw-window-") {
             let _ = window.emit("settings-updated", ());
         }
@@ -582,16 +577,13 @@ fn close_breaktimer(app: tauri::AppHandle) {
 
 #[tauri::command]
 fn show_break_time(app: tauri::AppHandle) {
-    // This function can be used to toggle the draw window visibility
     create_breaktimer_window(&app);
 }
 
 #[tauri::command]
 fn change_color(app: tauri::AppHandle, color: String) {
-    // This function can be used to change the color of the draw window
     for (label, window) in app.webview_windows().iter() {
         if label.starts_with("draw-window-") {
-            // Emit an event to the window to change the color
             let _ = window.emit("change-color", &color);
         }
     }
@@ -612,7 +604,6 @@ fn print_output(text: &str) {
 
 #[tauri::command]
 fn open_settings(app: tauri::AppHandle) -> Result<(), String> {
-    // Close existing settings window if it exists
     if let Some(existing_window) = app.get_webview_window("settings") {
         let _ = existing_window.close();
     }
@@ -634,7 +625,6 @@ fn open_settings(app: tauri::AppHandle) -> Result<(), String> {
 
 #[tauri::command]
 fn open_about(app: tauri::AppHandle) -> Result<(), String> {
-    // Close existing settings window if it exists
     if let Some(existing_window) = app.get_webview_window("about") {
         let _ = existing_window.close();
     }
@@ -659,7 +649,6 @@ fn get_version(app: tauri::AppHandle) -> String {
 
 #[tauri::command]
 fn open_help(app: tauri::AppHandle) -> Result<(), String> {
-    // Close existing settings window if it exists
     if let Some(existing_window) = app.get_webview_window("about") {
         let _ = existing_window.close();
     }
@@ -702,13 +691,12 @@ fn change_tray_icon(app: tauri::AppHandle, color: String, is_drawing: bool) -> R
         "icons/iconTemplate.png" // Default icon when not drawing
     };
 
-    // Load the icon
     let icon_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(icon_path);
 
     match Image::from_path(&icon_path) {
         Ok(icon) => {
             // Get the tray handle and update icon
-            if let Some(tray) = app.tray_by_id("1") {
+            if let Some(tray) = app.tray_by_id("main-tray") {
                 tray.set_icon(Some(icon))
                     .map_err(|e| format!("Failed to set tray icon: {}", e))?;
                 let _ = tray.set_icon_as_template(!is_drawing);
@@ -723,7 +711,7 @@ fn change_tray_icon(app: tauri::AppHandle, color: String, is_drawing: bool) -> R
                 PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/iconTemplate.png");
             if let Ok(default_icon) = Image::from_path(&default_path) {
                 // Set the default icon if the specific color icon fails to load
-                if let Some(tray) = app.tray_by_id("1") {
+                if let Some(tray) = app.tray_by_id("main-tray") {
                     let _ = tray.set_icon(Some(default_icon));
                 }
             }
@@ -782,7 +770,7 @@ async fn take_region_screenshot(
             let img_data = imagebuffer_to_arboard(&image);
 
             let mut clipboard = Clipboard::new().map_err(|e| e.to_string())?;
-            clipboard.set_image(img_data).map_err(|e| e.to_string())?;ß
+            clipboard.set_image(img_data).map_err(|e| e.to_string())?;
 
             use tauri_plugin_notification::NotificationExt;
             let _ = app
@@ -797,7 +785,8 @@ async fn take_region_screenshot(
 }
 
 async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
-    let windows_to_close: Vec<_> = app.webview_windows()
+    let windows_to_close: Vec<_> = app
+        .webview_windows()
         .iter()
         .filter_map(|(label, window)| {
             if label.starts_with("screenshot-window-") {
@@ -812,14 +801,13 @@ async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
         println!("[DEBUG] Destroying screenshot window: {}", label);
         let _ = window.destroy();
     }
-    
+
     // Wait for destruction to complete
     std::thread::sleep(std::time::Duration::from_millis(200));
 }
 
-
 #[tauri::command]
-fn close_screenshot_window(app: tauri::AppHandle) {
+fn close_screenshot_windows(app: tauri::AppHandle) {
     for (label, window) in app.webview_windows().iter() {
         if label.starts_with("screenshot-window-") {
             println!("[DEBUG] Closing screenshot window: {}", label);
@@ -829,9 +817,64 @@ fn close_screenshot_window(app: tauri::AppHandle) {
     }
 }
 
+#[tauri::command]
+fn enable_autolaunch() {
+    let app_name = "PresentInk";
+    let app_path = "/Applications/PresentInk.app";
+    let auto = AutoLaunch::new(
+        app_name,
+        app_path,
+        true,
+        &[] as &[&str],
+        &["com.presentink"],
+        "",
+    );
+
+    // enable the auto launch
+    auto.enable()
+        .map_err(|e| format!("Failed to enable auto launch: {}", e))
+        .expect("Failed to enable auto launch");
+
+}
+
+#[tauri::command]
+fn disable_autolaunch() {
+    let app_name = "PresentInk";
+    let app_path = "/Applications/PresentInk.app";
+    let auto = AutoLaunch::new(
+        app_name,
+        app_path,
+        true,
+        &[] as &[&str],
+        &["com.presentink"],
+        "",
+    );
+
+    // enable the auto launch
+    auto.disable()
+        .map_err(|e| format!("Failed to enable auto launch: {}", e))
+        .expect("Failed to enable auto launch");
+}
+
+#[tauri::command]
+async fn auto_launch_enabled() -> bool {
+    let app_name = "PresentInk";
+    let app_path = "/Applications/PresentInk.app";
+    let auto = AutoLaunch::new(
+        app_name,
+        app_path,
+        true,
+        &[] as &[&str],
+        &["com.presentink"],
+        "",
+    );
+
+    auto.is_enabled().unwrap()
+}
+
 fn create_screenshot_windows(app: &tauri::AppHandle) {
     // Close existing screenshot windows if they exist
-    close_screenshot_window(app.clone());
+    close_screenshot_windows(app.clone());
     if let Ok(monitors) = app.available_monitors() {
         for (index, monitor) in monitors.iter().enumerate() {
             let window_label = format!("screenshot-window-{}", index);
