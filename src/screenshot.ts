@@ -53,7 +53,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     saveButton.addEventListener('click', saveScreenshot);
     clipboardButton.addEventListener('click', copyScreenshot);
     closeButton.addEventListener('click', () => {
-        invoke("close_screenshot_window");
+        invoke("close_screenshot_windows");
     });
     saveButton.addEventListener('mousedown', preventSelection);
     clipboardButton.addEventListener('mousedown', preventSelection);
@@ -459,7 +459,7 @@ async function saveScreenshot() {
 function handleKeydown(event: KeyboardEvent) {
 
     if (event.key === 'Escape') {
-        invoke("close_screenshot_window");
+        invoke("close_screenshot_windows");
     }
 }
 
@@ -480,7 +480,6 @@ function hideHandles() {
     for (let i = 0; i < handles.length; i++) {
         const handle = handles[i] as HTMLElement;
         handle.style.display = 'none';
-        invoke("print_output", { text: "hide handles" });
     }
 }
 
