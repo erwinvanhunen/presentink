@@ -28,6 +28,11 @@ let toolbar: HTMLElement;
 let monitor = "";
 let factor: number;
 let lastX = 0, lastY = 0;
+let isDragging = false;
+let dragStartX = 0;
+let dragStartY = 0;
+let selectionStartX = 0;
+let selectionStartY = 0;
 
 window.addEventListener('DOMContentLoaded', async () => {
     selectionBox = document.getElementById('selectionBox')!;
@@ -53,6 +58,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('mousemove', updateSelection);
     document.addEventListener('mouseup', endSelection);
     document.addEventListener('keydown', handleKeydown);
+      selectionBox.addEventListener('mousedown', startDrag);
     monitor = window.monitor.index;
     factor = window.monitor.factor;
     instructions.style.top = 20 * factor + 'px';
@@ -64,6 +70,12 @@ function preventSelection(event: MouseEvent) {
 }
 
 function startSelection(event: MouseEvent) {
+ // Don't start new selection if clicking on selection box or toolbar
+    const target = event.target as HTMLElement;
+    if (target.closest('#selectionBox') || target.closest('#toolbar')) {
+        return;
+    }
+
     isSelecting = true;
     startX = event.clientX;
     startY = event.clientY;
@@ -80,7 +92,55 @@ function startSelection(event: MouseEvent) {
     rightBox.style.display = 'none';
 }
 
+
+function startDrag(event: MouseEvent) {
+    event.preventDefault();
+    event.stopPropagation();
+    
+    isDragging = true;
+    dragStartX = event.clientX;
+    dragStartY = event.clientY;
+    
+    // Store current selection position
+    const rect = selectionBox.getBoundingClientRect();
+    selectionStartX = rect.left;
+    selectionStartY = rect.top;
+    
+    // Change cursor to indicate dragging
+    document.body.style.cursor = 'move';
+    selectionBox.style.cursor = 'move';
+    
+    // Hide toolbar while dragging
+    toolbar.style.display = 'none';
+}
+
 function updateSelection(event: MouseEvent) {
+
+     if (isDragging) {
+        // Handle dragging
+        const deltaX = event.clientX - dragStartX;
+        const deltaY = event.clientY - dragStartY;
+        
+        let newLeft = selectionStartX + deltaX;
+        let newTop = selectionStartY + deltaY;
+        
+        const rect = selectionBox.getBoundingClientRect();
+        const width = rect.width;
+        const height = rect.height;
+        
+        // Keep selection within screen bounds
+        newLeft = Math.max(0, Math.min(newLeft, window.innerWidth - width));
+        newTop = Math.max(0, Math.min(newTop, window.innerHeight - height));
+        
+        // Update selection box position
+        selectionBox.style.left = newLeft + 'px';
+        selectionBox.style.top = newTop + 'px';
+        
+        // Update overlay boxes
+        updateOverlayBoxes(newLeft, newTop, width - 2, height - 2);
+        
+        return;
+    }
 
     const currentX = event.clientX;
     const currentY = event.clientY;
@@ -143,33 +203,50 @@ function updateSelection(event: MouseEvent) {
         selectionBox.style.width = width + 'px';
         selectionBox.style.height = height + 'px';
 
-        topBox.style.display = 'block';
-        topBox.style.left = '0px';
-        topBox.style.top = '0px';
-        topBox.style.height = top + 'px';
-        topBox.style.width = '100%';
-
-        bottomBox.style.display = 'block';
-        bottomBox.style.left = '0px';
-        bottomBox.style.top = top + height + 4 + 'px';
-        bottomBox.style.height = window.innerHeight - top - height + 'px';
-        bottomBox.style.width = '100%';
-
-        leftBox.style.display = 'block';
-        leftBox.style.left = '0px';
-        leftBox.style.top = top + 'px';
-        leftBox.style.height = height + 4 + 'px';
-        leftBox.style.width = left + 'px';
-
-        rightBox.style.display = 'block';
-        rightBox.style.left = left + width + 4 + 'px';
-        rightBox.style.top = top + 'px';
-        rightBox.style.height = height + 4 + 'px';
-        rightBox.style.width = window.innerWidth - left - width - 4 + 'px';
+        updateOverlayBoxes(left, top, width, height);
     }
 }
 
+function updateOverlayBoxes(left: number, top: number, width: number, height: number) {
+    topBox.style.display = 'block';
+    topBox.style.left = '0px';
+    topBox.style.top = '0px';
+    topBox.style.height = top + 'px';
+    topBox.style.width = '100%';
+
+    bottomBox.style.display = 'block';
+    bottomBox.style.left = '0px';
+    bottomBox.style.top = top + height + 4 + 'px';
+    bottomBox.style.height = window.innerHeight - top - height + 'px';
+    bottomBox.style.width = '100%';
+
+    leftBox.style.display = 'block';
+    leftBox.style.left = '0px';
+    leftBox.style.top = top + 'px';
+    leftBox.style.height = height + 4 + 'px';
+    leftBox.style.width = left + 'px';
+
+    rightBox.style.display = 'block';
+    rightBox.style.left = left + width + 4 + 'px';
+    rightBox.style.top = top + 'px';
+    rightBox.style.height = height + 4 + 'px';
+    rightBox.style.width = window.innerWidth - left - width - 4 + 'px';
+}
+
 async function endSelection(event: MouseEvent) {
+
+     if (isDragging) {
+        // End dragging
+        isDragging = false;
+        document.body.style.cursor = 'crosshair';
+        selectionBox.style.cursor = 'move';
+        
+        // Show toolbar again
+        positionToolbar();
+        toolbar.style.display = 'block';
+        return;
+    }
+
     if (!isSelecting) return;
 
     const currentX = event.clientX;
