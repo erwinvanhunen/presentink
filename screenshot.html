@@ -23,25 +23,25 @@
 
         .top-box {
             position: absolute;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 19999;
         }
 
         .right-box {
             position: absolute;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 19999;
         }
 
         .left-box {
             position: absolute;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 19999;
         }
 
         .bottom-box {
             position: absolute;
-            background: rgba(0, 0, 0, 0.5);
+            background: rgba(0, 0, 0, 0.7);
             z-index: 19999;
         }
 
@@ -74,7 +74,50 @@
             position: fixed;
             font-size: small;
             color: #9ccc00;
-            background: transparent
+            background: transparent;
+            z-index: 25000;
+        }
+
+       
+        .toolbar {
+            display: none;
+            position: fixed;
+            /* Remove these centering styles:
+    left: 50%;
+    transform: translateX(-50%);
+    */
+            background: rgba(0, 0, 0, 0.8);
+            border-radius: 12px;
+            padding: 6px;
+            z-index: 25000;
+            backdrop-filter: blur(10px);
+            /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); */
+        }
+
+        .toolbar-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 30px;
+            height: 30px;
+            margin: 0 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            /* border: 1px solid rgba(255, 255, 255, 0.2); */
+            /* border-radius: 8px; */
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .toolbar-button:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+            /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
+        }
+
+        .toolbar-button:active {
+            transform: translateY(0);
+            background: rgba(255, 255, 255, 0.15);
         }
     </style>
 </head>
@@ -89,6 +132,34 @@
     <div class="left-box" id="leftBox"></div>
     <div class="bottom-box" id="bottomBox"></div>
     <div class="selection-box" id="selectionBox"></div>
+    <div class="toolbar" id="toolbar">
+        <button class="toolbar-button" id="saveButton">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M3 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H3zm7 1v3H6V3h4zM6 8h4v5H6V8z" />
+            </svg>
+        </button>
+        <button class="toolbar-button" id="clipboardButton">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M4 2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h2V2zm2-1a1 1 0 0 0-1 1v1h6V2a1 1 0 0 0-1-1H6z" />
+                <path d="M3 5v9h10V5H3zm2 2h6v1H5V7zm0 2h6v1H5V9zm0 2h4v1H5v-1z" />
+            </svg>
+        </button>
+        <button class="toolbar-button" id="closeButton">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
+                <path
+                    d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854z" />
+            </svg>
+        </button>
+    </div>
+    <!-- <button class="action-button" id="saveButton">Save</button>
+    <button class="action-button" id="clipboardButton">Clipboard</button>
+    <button class="action-button" id="closeButton"><svg width="16" height="16" viewBox="0 0 16 16" style="vertical-align:middle;margin-right:4px" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="8" cy="8" r="7" fill="#f44336" stroke="#d32f2f" stroke-width="1"/>
+        <line x1="5" y1="5" x2="11" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+        <line x1="11" y1="5" x2="5" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
+      </svg></button> -->
 </body>
 
 </html>
