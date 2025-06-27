@@ -1,6 +1,6 @@
 [package]
 name = "presentink"
-version = "0.9.13"
+version = "0.9.16"
 description = "Desktop Annotation"
 authors = ["Erwin van Hunen"]
 edition = "2024"

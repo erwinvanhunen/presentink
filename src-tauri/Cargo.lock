@@ -3396,7 +3396,7 @@ checksum = "925383efa346730478fb4838dbe9137d2a47675ad789c546d150a6e1dd4ab31c"
 
 [[package]]
 name = "presentink"
-version = "0.9.13"
+version = "0.9.16"
 dependencies = [
  "arboard",
  "auto-launch 0.5.0 (git+https://github.com/zzzgydi/auto-launch?rev=0c55233173233b222f3f3f1bb727aa7c8000f5c5)",
