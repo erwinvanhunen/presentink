@@ -251,8 +251,9 @@ document.onkeydown = async (e) => {
   }
   if (e.key === 'Escape') {
     if (!placingText) {
-      const currentWindow = Window.getCurrent();
-      await currentWindow.hide();
+      // const currentWindow = Window.getCurrent();
+      invoke("stop_draw");
+      // await currentWindow.hide();
     }
   }
   if (e.key === 'ArrowUp') {
