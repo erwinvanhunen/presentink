@@ -834,7 +834,6 @@ fn enable_autolaunch() {
     auto.enable()
         .map_err(|e| format!("Failed to enable auto launch: {}", e))
         .expect("Failed to enable auto launch");
-
 }
 
 #[tauri::command]
@@ -897,7 +896,8 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
                 &window_label,
                 WebviewUrl::App("screenshot.html".into()),
             )
-            // .title(&format!("PresentInk Draw Monitor {}", index + 1))
+            .title(&format!("Screenshot Handler {}", index + 1))
+            .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
             .position(position.x as f64, position.y as f64)
             .inner_size(size.width as f64, size.height as f64)
             .center()
