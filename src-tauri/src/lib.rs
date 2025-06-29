@@ -4,7 +4,7 @@ use arboard::{Clipboard, ImageData};
 
 use auto_launch::AutoLaunch;
 use enigo::{
-    Direction::{Click, Press, Release},
+    Direction::{Press, Release},
     Enigo, Keyboard, Settings,
 };
 use std::error::Error;
@@ -15,6 +15,7 @@ use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
 };
+
 use tauri_plugin_opener::OpenerExt;
 use xcap::{
     Monitor,
@@ -37,16 +38,7 @@ pub fn run() {
         .enable_macos_default_menu(false)
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-        // .plugin(
-        //     tauri_plugin_autostart::Builder::new()
-        //         .app_name("PresentInk")
-        //         .bundle_identifiers("com.presentink")
-        //         .build(),
-        // )
-        // .plugin(tauri_plugin_autostart::init(
-        //     tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-        //     Some(vec![]),
-        // ))
+       
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
@@ -191,6 +183,7 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
     Ok(())
 }
 
+
 fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>> {
     use tauri_plugin_global_shortcut::{
         Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
@@ -200,7 +193,8 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
     let t_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyT);
     let b_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyB);
     let s_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyS);
-    let zoom_shortcut = Shortcut::new(Some(Modifiers::META), Code::Digit1);
+    let preferences_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Comma);
+
     let app_handle = app.handle().clone();
     app.handle().plugin(
         tauri_plugin_global_shortcut::Builder::new()
@@ -238,16 +232,10 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
                         ShortcutState::Released => {}
                     }
                 }
-                if shortcut == &zoom_shortcut {
+                if cfg!(dev) && shortcut == &preferences_shortcut {
                     match event.state() {
                         ShortcutState::Pressed => {
-                            println!("[DEBUG] Zoom shortcut pressed, simulating Ctrl+Alt+8");
-                            let mut enigo = Enigo::new(&Settings::default()).unwrap();
-                            enigo.key(enigo::Key::Meta, Press).unwrap();
-                            enigo.key(enigo::Key::Option, Press).unwrap();
-                            enigo.key(enigo::Key::Unicode('8'), Click).unwrap();
-                            enigo.key(enigo::Key::Option, Release).unwrap();
-                            enigo.key(enigo::Key::Meta, Release).unwrap();
+                            let _ = open_settings(app_handle.clone());
                         }
                         ShortcutState::Released => {}
                     }
@@ -259,7 +247,10 @@ fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>>
     app.global_shortcut().register(t_shortcut)?;
     app.global_shortcut().register(b_shortcut)?;
     app.global_shortcut().register(s_shortcut)?;
-    app.global_shortcut().register(zoom_shortcut)?;
+    if cfg!(dev) {
+        // In development mode, use Ctrl+Shift+D for drawing
+        app.global_shortcut().register(preferences_shortcut)?;
+    }
     Ok(())
 }
 

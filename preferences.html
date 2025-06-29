@@ -7,10 +7,12 @@
   <script type="module" src="/src/preferences.ts" defer></script>
   <style>
     body {
-      background: transparent; /* Make body transparent */
+      background: transparent;
+      /* Make body transparent */
       font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", Helvetica, Arial, sans-serif;
       margin: 0;
-      padding: 8px; /* Add padding for window shadow */
+      padding: 8px;
+      /* Add padding for window shadow */
       font-size: 13px;
       color: #ffffff;
       overflow: hidden;
@@ -19,12 +21,15 @@
     .preferences-window {
       display: flex;
       flex-direction: column;
-      height: calc(100vh - 16px); /* Account for body padding */
+      height: calc(100vh - 16px);
+      /* Account for body padding */
       background: #2c2c2e;
-      border-radius: 12px; /* Rounded corners */
+      border-radius: 12px;
+      /* Rounded corners */
       overflow: hidden;
       /* box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5); */
-      border: 1px solid #48484a; /* Subtle border */
+      border: 1px solid #48484a;
+      /* Subtle border */
     }
 
     .toolbar {
@@ -38,10 +43,12 @@
       font-size: 13px;
       color: #ffffff;
       position: relative;
-      border-radius: 12px 12px 0 0; /* Rounded top corners only */
+      border-radius: 12px 12px 0 0;
+      /* Rounded top corners only */
       /* Add drag region for moving window */
       -webkit-app-region: drag;
-        cursor: move; /* Optional: show move cursor */
+      cursor: move;
+      /* Optional: show move cursor */
     }
 
     .close-button {
@@ -61,7 +68,8 @@
       font-size: 8px;
       color: transparent;
       transition: all 0.2s ease;
-      -webkit-app-region: no-drag; /* Allow clicking on close button */
+      -webkit-app-region: no-drag;
+      /* Allow clicking on close button */
     }
 
     .close-button:hover {
@@ -79,13 +87,15 @@
       background: #2c2c2e;
       flex: 1;
       overflow-y: auto;
-      border-radius: 0 0 12px 12px; /* Rounded bottom corners */
+      border-radius: 0 0 12px 12px;
+      /* Rounded bottom corners */
     }
 
     .preference-group {
       /* background: #1c1c1e; */
       /* border: 1px solid #48484a; */
-      border-radius: 8px; /* Slightly more rounded for groups */
+      border-radius: 8px;
+      /* Slightly more rounded for groups */
       margin-bottom: 20px;
       overflow: hidden;
     }
@@ -210,7 +220,8 @@
     canvas.arrow-preview {
       background: #1c1c1e;
       border: 1px solid #48484a;
-      border-radius: 4px; /* Slightly rounded canvas corners */
+      border-radius: 4px;
+      /* Slightly rounded canvas corners */
     }
 
     /* Group headers */
@@ -254,7 +265,7 @@
       <button class="close-button" id="closeBtn"></button>
       PresentInk
     </div>
-    
+
     <div class="content">
       <div class="group-header">Drawing</div>
       <div class="preference-group">
@@ -266,7 +277,7 @@
             <canvas class="dot-preview" id="dotPreview" width="60" height="28"></canvas>
           </div>
         </div>
-        
+
         <div class="preference-row">
           <div class="preference-label">Arrowhead length</div>
           <div class="preference-control">
@@ -296,7 +307,7 @@
             <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
           </div>
         </div>
-        
+
         <div class="preference-row">
           <div class="preference-label">Show experimental features</div>
           <div class="preference-control">
@@ -308,4 +319,5 @@
     </div>
   </div>
 </body>
+
 </html>
