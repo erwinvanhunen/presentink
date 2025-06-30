@@ -14,6 +14,8 @@ pub struct AppSettings {
     pub show_experimental_features: bool,
     #[serde(rename = "breakTime")]
     pub break_time: u32,
+    #[serde(rename = "drawingShortcut")]
+    pub drawing_shortcut: String,
 }
 
 impl Default for AppSettings {
@@ -24,6 +26,7 @@ impl Default for AppSettings {
             launch_on_startup: false,
             show_experimental_features: false,
             break_time: 10,
+            drawing_shortcut: "Alt+Shift+D".into(),
         }
     }
 }

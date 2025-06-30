@@ -23,6 +23,12 @@ let mousePos = { x: 0, y: 0 };
 let penWidth = 3; // Default pen width
 let arrowHeadLength = 20; // Default arrow head length
 let hasMouseMoved = false;
+let lastMouseX = window.innerWidth / 2;
+let lastMouseY = window.innerHeight / 2;
+let placingText = false;
+let textInput: HTMLInputElement | null = null;
+let textSize = 22;
+
 
 if (document.readyState === "loading") {
   window.addEventListener("DOMContentLoaded", initializeOverlay);
@@ -60,7 +66,9 @@ async function initializeOverlay() {
     const color = event.payload as string;
     changeColor(color); // Change color without updating tray icon
   });
-  window.addEventListener('mousemove', async () => {
+  window.addEventListener('mousemove', async (e) => {
+    lastMouseX = e.clientX;
+    lastMouseY = e.clientY;
     if (!hasMouseMoved) {
       hasMouseMoved = true;
 
@@ -140,7 +148,7 @@ drawCanvas.onmousedown = (e) => {
   isPreviewingBox = false;
   isPreviewingStraightLine = false;
   isPreviewingCircle = false;
-  
+
   if (e.shiftKey && e.metaKey) {
     drawingMode = 'arrow';
   }
@@ -188,59 +196,89 @@ document.addEventListener('visibilitychange', () => {
 
 document.onkeydown = async (e) => {
   if (e.key === 'g') {
-    await invoke('change_color', {
-      color: "#00ff00"
-    });
+    if (!placingText) {
+      await invoke('change_color', {
+        color: "#00ff00"
+      });
+    }
   }
   if (e.key === 'r') {
-    await invoke('change_color', {
-      color: "#ff0000"
-    });
+    if (!placingText) {
+      await invoke('change_color', {
+        color: "#ff0000"
+      });
+    }
   }
   if (e.key === 'b') {
-    await invoke('change_color', {
-      color: "#0000ff"
-    });
+    if (!placingText) {
+      await invoke('change_color', {
+        color: "#0000ff"
+      });
+    }
   }
   if (e.key === 'y') {
-    await invoke('change_color', {
-      color: "#ffff00"
-    });
+    if (!placingText) {
+      await invoke('change_color', {
+        color: "#ffff00"
+      });
+    }
   }
   if (e.key === 'p') {
-    await invoke('change_color', {
-      color: "#ff00ff"
-    });
+    if (!placingText) {
+      await invoke('change_color', {
+        color: "#ff00ff"
+      });
+    }
   }
   if (e.key === 'o') {
-    await invoke('change_color', {
-      color: "#ffa500"
-    });
+    if (!placingText) {
+      await invoke('change_color', {
+        color: "#ffa500"
+      });
+    }
   }
   if (e.key === 'e') {
-    clearCanvas();
+    if (!placingText) {
+      clearCanvas();
+    }
+  }
+  if (e.key === 't' || e.key === 'T') {
+    if (!placingText) {
+      e.preventDefault();
+      placingText = true;
+      showTextInput(mousePos.x, mousePos.y); // Use the current drawing cursor position
+    }
   }
   if (e.key === 'Escape') {
-    const currentWindow = Window.getCurrent();
-    await currentWindow.hide();
+    if (!placingText) {
+      // const currentWindow = Window.getCurrent();
+      invoke("stop_draw");
+      // await currentWindow.hide();
+    }
   }
   if (e.key === 'ArrowUp') {
-    if (penWidth < 20) {
-      penWidth += 1;
-      await updateSetting('penWidth', penWidth);
-      drawCursor();
+    if (!placingText) {
+      if (penWidth < 20) {
+        penWidth += 1;
+        await updateSetting('penWidth', penWidth);
+        drawCursor();
+      }
     }
   }
   if (e.key === 'ArrowDown') {
-    if (penWidth > 1) {
-      penWidth -= 1;
-      await updateSetting('penWidth', penWidth);
-      drawCursor();
+    if (!placingText) {
+      if (penWidth > 1) {
+        penWidth -= 1;
+        await updateSetting('penWidth', penWidth);
+        drawCursor();
+      }
     }
   }
   if (e.key === 'z' && (e.metaKey || e.ctrlKey)) {
-    e.preventDefault(); // Prevent default undo action
-    undo();
+    if (!placingText) {
+      e.preventDefault(); // Prevent default undo action
+      undo();
+    }
   }
 };
 
@@ -331,9 +369,93 @@ drawCanvas.onmousemove = (e) => {
   }
 }
 
+function showTextInput(x: number, y: number) {
+  if (textInput) return;
+  textInput = document.createElement('input');
+  textInput.type = 'text';
+  // textInput.placeholder = 'text';
+  textInput.style.position = 'absolute';
+  textInput.style.left = `${x}px`;
+  textInput.style.top = `${y}px`;
+  textInput.style.transform = 'translate(-50%, -50%)';
+  textInput.style.fontSize = textSize + 'pt';
+  textInput.style.zIndex = '9999';
+  textInput.style.padding = '6px 12px';
+  textInput.style.borderRadius = '8px';
+  textInput.style.border = '1.5px solid #888';
+  textInput.style.background = 'transparent';
+  textInput.style.color = strokeColor
+  textInput.style.boxShadow = '0 2px 8px #0003';
+  textInput.style.minWidth = '32px';
+  textInput.style.width = '32px'; // Start small
+  textInput.autocomplete = 'off';
+  document.body.appendChild(textInput);
+  textInput.focus();
+
+  textInput.addEventListener('input', () => {
+    if( !textInput) return;
+    // Use a temporary span to measure the text width
+    const span = document.createElement('span');
+    span.style.visibility = 'hidden';
+    span.style.position = 'fixed';
+    span.style.fontSize = textInput.style.fontSize;
+    span.style.fontFamily = 'system-ui, sans-serif';
+    span.textContent = textInput.value || textInput.placeholder || '';
+    document.body.appendChild(span);
+    // Add some extra space for cursor/padding
+    textInput.style.width = (span.offsetWidth + 24) + 'px';
+    document.body.removeChild(span);
+  });
+
+  textInput.onkeydown = (ev) => {
+    if (ev.key === 'Enter' && textInput!.value.trim() !== '') {
+      placingText = false;
+      addTextAt(lastMouseX, lastMouseY, textInput!.value);
+      document.body.removeChild(textInput!);
+      textInput = null;
+    }
+    if (ev.key === 'Escape') {
+      ev.stopPropagation();
+      placingText = false;
+      document.body.removeChild(textInput!);
+      textInput = null;
+    }
+    if (ev.key === 'ArrowUp') {
+      textSize += 1;
+      textInput!.style.fontSize = textSize + 'pt';
+    }
+    if (ev.key === 'ArrowDown') {
+      if (textSize > 1) {
+        textSize -= 1;
+        textInput!.style.fontSize = textSize + 'pt';
+      }
+    }
+  };
+}
+
+// function placeTextOnClick(text: string) {
+//   function handler(ev: MouseEvent) {
+//     addTextAt(ev.clientX, ev.clientY, text);
+//     window.removeEventListener('click', handler, true);
+//   }
+//   window.addEventListener('click', handler, true);
+// }
+
+function addTextAt(x: number, y: number, text: string) {
+  if (ctx) {
+    ctx.font = `${textSize}pt system-ui, sans-serif`;
+    ctx.strokeStyle = strokeColor;
+    ctx.fillStyle = strokeColor; // Fill color for text
+    ctx.lineWidth = 2; // Stroke width for text
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(text, x, y);
+    saveState();
+  }
+}
 
 function drawCursor() {
-  if (!cursorCtx) return; 
+  if (!cursorCtx) return;
   cursorCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   cursorCtx.beginPath();
   cursorCtx.strokeStyle = strokeColor;
