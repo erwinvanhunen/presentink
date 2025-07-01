@@ -23,6 +23,7 @@ use xcap::{
 };
 mod settings;
 use settings::AppSettings;
+use std::collections::HashMap;
 
 use std::sync::Mutex;
 
@@ -30,6 +31,25 @@ mod screen_capture_permissions;
 use screen_capture_permissions::{preflight_access, request_access};
 pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
 pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
+
+lazy_static::lazy_static! {
+    static ref ICON_CACHE: Mutex<HashMap<String, tauri::image::Image<'static>>> = Mutex::new(HashMap::new());
+}
+
+fn get_icon(path: &str) -> Option<tauri::image::Image> {
+    let mut cache = ICON_CACHE.lock().unwrap();
+    if let Some(icon) = cache.get(path) {
+        return Some(icon.clone());
+    }
+    let icon_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(path);
+    if let Ok(icon) = tauri::image::Image::from_path(&icon_path) {
+        cache.insert(path.to_string(), icon.clone());
+        Some(icon)
+    } else {
+        None
+    }
+}
+
 pub fn run() {
     tauri::Builder::default()
         .manage(DrawMenuState(Mutex::new(None)))
@@ -38,7 +58,6 @@ pub fn run() {
         .enable_macos_default_menu(false)
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
-       
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
         .setup(|app| {
@@ -182,7 +201,6 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
         .build(app)?;
     Ok(())
 }
-
 
 fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>> {
     use tauri_plugin_global_shortcut::{
@@ -682,32 +700,18 @@ fn change_tray_icon(app: tauri::AppHandle, color: String, is_drawing: bool) -> R
         "icons/iconTemplate.png" // Default icon when not drawing
     };
 
-    let icon_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(icon_path);
+    // let icon_path = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join(icon_path);
 
-    match Image::from_path(&icon_path) {
-        Ok(icon) => {
-            // Get the tray handle and update icon
-            if let Some(tray) = app.tray_by_id("main-tray") {
-                tray.set_icon(Some(icon))
-                    .map_err(|e| format!("Failed to set tray icon: {}", e))?;
-                let _ = tray.set_icon_as_template(!is_drawing);
-            } else {
-                return Err("Tray not found".to_string());
-            }
+    if let Some(icon) = get_icon(icon_path) {
+        if let Some(tray) = app.tray_by_id("main-tray") {
+            tray.set_icon(Some(icon))
+                .map_err(|e| format!("Failed to set tray icon: {}", e))?;
+            let _ = tray.set_icon_as_template(!is_drawing);
+        } else {
+            return Err("Tray not found".to_string());
         }
-        Err(e) => {
-            println!("Failed to load icon {}: {}", icon_path.display(), e);
-            // Fallback to default icon
-            let default_path =
-                PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("icons/iconTemplate.png");
-            if let Ok(default_icon) = Image::from_path(&default_path) {
-                // Set the default icon if the specific color icon fails to load
-                if let Some(tray) = app.tray_by_id("main-tray") {
-                    let _ = tray.set_icon(Some(default_icon));
-                }
-            }
-            return Err(format!("Failed to load icon: {}", e));
-        }
+    } else {
+        return Err(format!("Failed to load icon: {}", icon_path));
     }
 
     Ok(())
