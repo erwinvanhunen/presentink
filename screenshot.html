@@ -157,13 +157,13 @@
             transform: translateY(-50%) scale(1.2);
         }
 
-        .instructions {
+        /* .instructions {
             position: fixed;
+            display: none;;
             top: 0px;
             left: 50%;
             transform: translateX(-50%);
             color: white;
-            /* background: rgba(0, 0, 0, 0.7); */
             background: #9ccc00dd;
             margin-top: 5px;
             padding: 10px 20px;
@@ -171,9 +171,9 @@
             font-family: system-ui;
             font-size: 14px;
             z-index: 1000;
-            transition: opacity 1s;
+            /* transition: opacity 1s ease-in-out; */
             opacity: 1;
-        }
+        } */
 
         .coords {
             position: fixed;
@@ -187,16 +187,11 @@
         .toolbar {
             display: none;
             position: fixed;
-            /* Remove these centering styles:
-    left: 50%;
-    transform: translateX(-50%);
-    */
             background: rgba(0, 0, 0, 0.8);
             border-radius: 12px;
             padding: 6px;
             z-index: 25000;
             backdrop-filter: blur(10px);
-            /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); */
         }
 
         .toolbar-button {
@@ -208,8 +203,6 @@
             margin: 0 4px;
             background: rgba(255, 255, 255, 0.1);
             border: none;
-            /* border: 1px solid rgba(255, 255, 255, 0.2); */
-            /* border-radius: 8px; */
             cursor: pointer;
             transition: all 0.2s ease;
         }
@@ -217,7 +210,6 @@
         .toolbar-button:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: translateY(-2px);
-            /* box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); */
         }
 
         .toolbar-button:active {
@@ -228,9 +220,9 @@
 </head>
 
 <body>
-    <div class="instructions" id="instructions">
+    <!-- <div class="instructions" id="instructions">
         Click and drag to select screenshot area. Press ESC to cancel.</span>
-    </div>
+    </div> -->
     <div class="coords" id="coords"></div>
     <div class="top-box" id="topBox"></div>
     <div class="right-box" id="rightBox"></div>
@@ -258,13 +250,6 @@
             </svg>
         </button>
     </div>
-    <!-- <button class="action-button" id="saveButton">Save</button>
-    <button class="action-button" id="clipboardButton">Clipboard</button>
-    <button class="action-button" id="closeButton"><svg width="16" height="16" viewBox="0 0 16 16" style="vertical-align:middle;margin-right:4px" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="8" cy="8" r="7" fill="#f44336" stroke="#d32f2f" stroke-width="1"/>
-        <line x1="5" y1="5" x2="11" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-        <line x1="11" y1="5" x2="5" y2="11" stroke="#fff" stroke-width="2" stroke-linecap="round"/>
-      </svg></button> -->
 </body>
 
 </html>

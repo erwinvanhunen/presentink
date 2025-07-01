@@ -20,7 +20,7 @@ let bottomBox: HTMLElement;
 let leftBox: HTMLElement;
 let rightBox: HTMLElement;
 let coords: HTMLElement;
-let instructions: HTMLElement;
+// let instructions: HTMLElement;
 let saveButton: HTMLElement;
 let closeButton: HTMLElement;
 let clipboardButton: HTMLElement;
@@ -45,7 +45,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     leftBox = document.getElementById('leftBox')!;
     rightBox = document.getElementById('rightBox')!;
     coords = document.getElementById('coords')!;
-    instructions = document.getElementById('instructions')!;
     toolbar = document.getElementById('toolbar')!;
     saveButton = document.getElementById('saveButton')!;
     closeButton = document.getElementById('closeButton')!;
@@ -65,8 +64,9 @@ window.addEventListener('DOMContentLoaded', async () => {
     selectionBox.addEventListener('mousedown', startDrag);
     monitor = window.monitor.index;
     factor = window.monitor.factor;
-    instructions.style.top = 20 * factor + 'px';
 
+    document.body.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
+   
     createResizeHandles();
 });
 
@@ -76,7 +76,6 @@ function preventSelection(event: MouseEvent) {
 }
 
 function startSelection(event: MouseEvent) {
-    // Don't start new selection if clicking on selection box or toolbar
     const target = event.target as HTMLElement;
     if (target.closest('#selectionBox') || target.closest('#toolbar')) {
         return;
@@ -92,10 +91,9 @@ function startSelection(event: MouseEvent) {
     selectionBox.style.height = '0px';
     selectionBox.style.display = 'block';
 
-    topBox.style.display = 'none';
-    bottomBox.style.display = 'none';
-    leftBox.style.display = 'none';
-    rightBox.style.display = 'none';
+    document.body.style.backgroundColor = 'rgba(0, 0, 0, 0)';
+    updateOverlayBoxes(event.clientX, event.clientY, 0, 0);
+
 }
 
 
@@ -191,33 +189,17 @@ function updateSelection(event: MouseEvent) {
         coords.style.display = 'none';
     }
 
-    var rect = instructions.getBoundingClientRect();
+    // var rect = instructions.getBoundingClientRect();
 
-    if (currentX > rect.left && currentX < rect.right && currentY > rect.top && currentY < rect.bottom) {
-        instructions.style.opacity = '0.3';
-    } else {
-        instructions.style.opacity = '1';
-    }
+
     if (isSelecting) {
-        const selRect = {
-            left: left,
-            right: left + width,
-            top: top,
-            bottom: top + height
-        };
+        // const selRect = {
+        //     left: left,
+        //     right: left + width,
+        //     top: top,
+        //     bottom: top + height
+        // };
 
-        // Check if selection rectangle and instructions rectangle overlap
-        const overlap =
-            selRect.left < rect.right &&
-            selRect.right > rect.left &&
-            selRect.top < rect.bottom &&
-            selRect.bottom > rect.top;
-
-        if (overlap) {
-            instructions.style.opacity = '0';
-        } else {
-            instructions.style.opacity = '1';
-        }
         selectionBox.style.left = left + 'px';
         selectionBox.style.top = top + 'px';
         selectionBox.style.width = width + 'px';
