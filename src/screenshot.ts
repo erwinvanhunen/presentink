@@ -20,13 +20,11 @@ let bottomBox: HTMLElement;
 let leftBox: HTMLElement;
 let rightBox: HTMLElement;
 let coords: HTMLElement;
-// let instructions: HTMLElement;
 let saveButton: HTMLElement;
 let closeButton: HTMLElement;
 let clipboardButton: HTMLElement;
 let toolbar: HTMLElement;
 let monitor = "";
-let factor: number;
 let isDragging = false;
 let dragStartX = 0;
 let dragStartY = 0;
@@ -63,7 +61,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     document.addEventListener('keydown', handleKeydown);
     selectionBox.addEventListener('mousedown', startDrag);
     monitor = window.monitor.index;
-    factor = window.monitor.factor;
 
     document.body.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
    

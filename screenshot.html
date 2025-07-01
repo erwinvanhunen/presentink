@@ -53,11 +53,6 @@
             cursor: move;
         }
 
-        /* .selection-box:hover {
-            border-color: #0099ff;
-        } */
-
-
         .resize-handle {
             position: absolute;
             background: #007acc;
@@ -157,24 +152,6 @@
             transform: translateY(-50%) scale(1.2);
         }
 
-        /* .instructions {
-            position: fixed;
-            display: none;;
-            top: 0px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: white;
-            background: #9ccc00dd;
-            margin-top: 5px;
-            padding: 10px 20px;
-            border-radius: 5px;
-            font-family: system-ui;
-            font-size: 14px;
-            z-index: 1000;
-            /* transition: opacity 1s ease-in-out; */
-            opacity: 1;
-        } */
-
         .coords {
             position: fixed;
             font-size: small;
@@ -187,11 +164,14 @@
         .toolbar {
             display: none;
             position: fixed;
-            background: rgba(0, 0, 0, 0.8);
+            /* background: rgba(0, 0, 0, 0.8); */
+            background: #9ccc0099;
             border-radius: 12px;
             padding: 6px;
             z-index: 25000;
             backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
         }
 
         .toolbar-button {
@@ -220,9 +200,6 @@
 </head>
 
 <body>
-    <!-- <div class="instructions" id="instructions">
-        Click and drag to select screenshot area. Press ESC to cancel.</span>
-    </div> -->
     <div class="coords" id="coords"></div>
     <div class="top-box" id="topBox"></div>
     <div class="right-box" id="rightBox"></div>

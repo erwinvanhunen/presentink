@@ -3,6 +3,7 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api/core";
 import { getSettings, updateSetting, AppSettings } from './settings';
 
+
 let undoStack: string[] = [];
 const MAX_UNDO = 30; // Adjust for memory usage, if you want
 const drawCanvas = document.getElementById('draw-canvas') as HTMLCanvasElement;
@@ -37,7 +38,6 @@ if (document.readyState === "loading") {
 }
 
 async function initializeOverlay() {
-
   appSettings = await getSettings();
   penWidth = appSettings.penWidth;
   arrowHeadLength = appSettings.arrowHeadLength;
@@ -144,6 +144,7 @@ let isPreviewingBox = false;
 let isPreviewingCircle = false;
 
 drawCanvas.onmousedown = (e) => {
+
   isPreviewingArrow = false;
   isPreviewingBox = false;
   isPreviewingStraightLine = false;
@@ -156,17 +157,28 @@ drawCanvas.onmousedown = (e) => {
     drawingMode = 'box';
   } else if (e.altKey) {
     drawingMode = 'circle';
+  } else if (e.ctrlKey) {
+    drawingMode = 'marker';
   }
   else {
     drawingMode = 'freehand';
   }
-  if (drawingMode === 'freehand') {
+  if (drawingMode === 'freehand' || drawingMode === 'marker') {
     drawing = true;
     prevX = e.offsetX;
     prevY = e.offsetY;
     lineStartX = e.offsetX;
     lineStartY = e.offsetY;
     isPreviewingStraightLine = e.shiftKey; // Are we drawing a straight line?
+    if (ctx && previewCtx) {
+      if (drawingMode === 'marker') {
+        ctx.globalCompositeOperation = "difference";
+        previewCtx.globalCompositeOperation = "difference"; // Ensure we draw on top of existing content
+      } else {
+        ctx.globalCompositeOperation = "source-over"; // Default for freehand
+        previewCtx.globalCompositeOperation = "source-over"; // Default for preview
+      }
+    }
   } else if (drawingMode === 'arrow') {
     drawing = true;
     startX = e.offsetX;
@@ -292,17 +304,28 @@ drawCanvas.onmousemove = (e) => {
       drawingMode = 'box';
     } else if (e.altKey) {
       drawingMode = 'circle';
+    } else if (e.ctrlKey) {
+      drawingMode = 'marker';
     } else {
       drawingMode = 'freehand';
     }
-    if (drawingMode === 'freehand' && drawing) {
-
+    if ((drawingMode === 'freehand' || drawingMode === 'marker') && drawing) {
+      if (drawingMode === 'marker') {
+        ctx.globalAlpha = 0.05; // Semi-transparent marker
+        ctx.lineWidth = penWidth * 2; // Make marker thicker
+        previewCtx.lineWidth = penWidth * 3; // Make marker thicker
+        ctx.lineCap = 'square';
+        previewCtx.lineCap = 'square';
+      } else {
+        ctx.globalAlpha = 1.0; // Full opacity for freehand
+        ctx.lineWidth = penWidth;
+        previewCtx.lineWidth = penWidth;
+        ctx.lineCap = 'round';
+        previewCtx.lineCap = 'round';
+      }
       ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = penWidth;
-      ctx.lineCap = 'round';
       previewCtx.strokeStyle = strokeColor;
-      previewCtx.lineWidth = penWidth;
-      previewCtx.lineCap = 'round';
+
       // If shift is held either since mousedown or now
       if (isPreviewingStraightLine || e.shiftKey) {
         previewCtx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
@@ -393,7 +416,7 @@ function showTextInput(x: number, y: number) {
   textInput.focus();
 
   textInput.addEventListener('input', () => {
-    if( !textInput) return;
+    if (!textInput) return;
     // Use a temporary span to measure the text width
     const span = document.createElement('span');
     span.style.visibility = 'hidden';
@@ -432,14 +455,6 @@ function showTextInput(x: number, y: number) {
     }
   };
 }
-
-// function placeTextOnClick(text: string) {
-//   function handler(ev: MouseEvent) {
-//     addTextAt(ev.clientX, ev.clientY, text);
-//     window.removeEventListener('click', handler, true);
-//   }
-//   window.addEventListener('click', handler, true);
-// }
 
 function addTextAt(x: number, y: number, text: string) {
   if (ctx) {
@@ -485,10 +500,17 @@ drawCanvas.onmouseup = async (e) => {
     }
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
 
-    if (drawingMode === 'freehand' && drawing) {
+    if ((drawingMode === 'freehand' || (drawingMode === 'marker' && drawing))) {
+      if (drawingMode === 'marker') {
+        ctx.globalAlpha = 0.05; // Semi-transparent marker
+        ctx.lineWidth = penWidth * 3; // Make marker thicker
+        ctx.lineCap = 'square'
+      } else {
+        ctx.globalAlpha = 1.0; // Full opacity for freehand
+        ctx.lineWidth = penWidth;
+        ctx.lineCap = 'round';
+      }
       ctx.strokeStyle = strokeColor;
-      ctx.lineWidth = penWidth;
-      ctx.lineCap = 'round';
       if (isPreviewingStraightLine || e.shiftKey) {
         // Commit the straight line
         ctx.beginPath();
