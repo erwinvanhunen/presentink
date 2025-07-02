@@ -212,7 +212,39 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
+document.onkeyup = async (e) => {
+  if (e.ctrlKey) {
+    if (ctx && previewCtx) {
+      ctx.globalCompositeOperation = "source-over"; // Reset composite operation on key release
+      previewCtx.globalCompositeOperation = "source-over"; // Reset composite operation on key release
+      drawingMode = 'none'
+      drawing = false;
+      mousePos.x = lastMouseX;
+      mousePos.y = lastMouseY;
+      drawCursor();
+    }
+  } else {
+    drawingMode = 'freehand'; // Reset to freehand mode
+    mousePos.x = lastMouseX;
+    mousePos.y = lastMouseY;
+    drawCursor();
+  }
+}
+
 document.onkeydown = async (e) => {
+  if (e.shiftKey && e.metaKey) {
+    drawingMode = 'arrow';
+    drawCursor();
+  } else if (e.metaKey) {
+    drawingMode = 'box';
+    drawCursor();
+  } else if (e.altKey) {
+    drawingMode = 'circle';
+    drawCursor();
+  } else if (e.ctrlKey) {
+    drawingMode = 'marker';
+    drawCursor();
+  }
   if (e.key === 'g') {
     if (!placingText) {
       await invoke('change_color', {
@@ -315,8 +347,7 @@ drawCanvas.onmousemove = (e) => {
     } else {
       drawingMode = 'freehand';
     }
-    if(drawingMode === 'marker')
-    {
+    if (drawingMode === 'marker') {
       ctx.globalAlpha = 0.05;
     } else {
       ctx.globalAlpha = 1.0; // Reset to full opacity for other modes
@@ -327,6 +358,9 @@ drawCanvas.onmousemove = (e) => {
         previewCtx.lineWidth = penWidth * 3; // Make marker thicker
         ctx.lineCap = 'square';
         previewCtx.lineCap = 'square';
+        mousePos.x = e.offsetX;
+        mousePos.y = e.offsetY;
+        drawCursor();
       } else {
         ctx.lineWidth = penWidth;
         previewCtx.lineWidth = penWidth;
@@ -372,6 +406,11 @@ drawCanvas.onmousemove = (e) => {
           e.offsetY - startY
         );
       }
+      prevX = e.offsetX;
+      prevY = e.offsetY;
+      mousePos.x = e.offsetX;
+      mousePos.y = e.offsetY;
+      drawCursor();
     } else if (drawingMode === 'circle' && drawing) {
       previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
       if (isPreviewingCircle) {
@@ -392,9 +431,14 @@ drawCanvas.onmousemove = (e) => {
           Math.PI * 2
         );
         previewCtx.stroke();
-      }
-    } else {
+        prevX = e.offsetX;
+        prevY = e.offsetY;
 
+      }
+      mousePos.x = e.offsetX;
+      mousePos.y = e.offsetY;
+      drawCursor();
+    } else {
       mousePos.x = e.offsetX;
       mousePos.y = e.offsetY;
       drawCursor();
@@ -482,14 +526,57 @@ function addTextAt(x: number, y: number, text: string) {
 function drawCursor() {
   if (!cursorCtx) return;
   cursorCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
-  cursorCtx.beginPath();
   cursorCtx.strokeStyle = strokeColor;
-  cursorCtx.arc(mousePos.x, mousePos.y, penWidth / 2, 0, 2 * Math.PI);
-  cursorCtx.fillStyle = strokeColor;
-  cursorCtx.shadowColor = 'rgba(0,0,0,0.18)';
-  cursorCtx.shadowBlur = 2;
-  cursorCtx.fill();
-  cursorCtx.shadowBlur = 0;
+  if (drawingMode === 'box') {
+    invoke('print_output', { text: `Drawing box at ${mousePos.x}, ${mousePos.y}` });
+    cursorCtx.strokeRect(mousePos.x - penWidth / 2, mousePos.y - penWidth / 2, penWidth, penWidth);
+  } else if (drawingMode === 'circle') {
+    cursorCtx.beginPath();
+    cursorCtx.ellipse(mousePos.x, mousePos.y, penWidth / 2, penWidth / 2, 0, 0, Math.PI * 2);
+    cursorCtx.stroke();
+  } else if (drawingMode === 'marker') {
+    const w = penWidth * 1.5;
+    const h = penWidth * 2.8;
+    const bodyHeight = h * 0.7;
+    const tipHeight = h - bodyHeight;
+
+    cursorCtx.save();
+    cursorCtx.translate(mousePos.x, mousePos.y);
+    cursorCtx.rotate(-Math.PI / 8); // Slant the marker
+
+    // Marker body (above the tip)
+    cursorCtx.beginPath();
+    cursorCtx.rect(-w / 2, -bodyHeight, w, bodyHeight - tipHeight);
+    cursorCtx.fillStyle = strokeColor;
+    cursorCtx.strokeStyle = strokeColor;
+    cursorCtx.lineWidth = 1.2;
+    cursorCtx.fill();
+    cursorCtx.stroke();
+
+    // Marker tip (chisel, colored) - tip is at (0,0)
+    cursorCtx.beginPath();
+    cursorCtx.moveTo(-w / 2, 0 - tipHeight);
+    cursorCtx.lineTo(w / 2, 0 - tipHeight);
+    cursorCtx.lineTo(0, 0);
+    cursorCtx.closePath();
+    cursorCtx.fillStyle = strokeColor;
+    cursorCtx.globalAlpha = 0.85;
+    cursorCtx.fill();
+    cursorCtx.globalAlpha = 1.0;
+    cursorCtx.strokeStyle = "#444";
+    cursorCtx.stroke();
+
+    cursorCtx.restore();
+  } else {
+    cursorCtx.beginPath();
+    cursorCtx.strokeStyle = strokeColor;
+    cursorCtx.arc(mousePos.x, mousePos.y, penWidth / 2, 0, 2 * Math.PI);
+    cursorCtx.fillStyle = strokeColor;
+    //cursorCtx.shadowColor = 'rgba(0,0,0,0.18)';
+    //cursorCtx.shadowBlur = 2;
+    cursorCtx.fill();
+    //cursorCtx.shadowBlur = 0;
+  }
 }
 
 drawCanvas.oncontextmenu = (e) => {
