@@ -112,6 +112,12 @@ function clearCanvas(): void {
   if (ctx) {
     ctx.clearRect(0, 0, drawCanvas.width, drawCanvas.height);
   }
+  if (cursorCtx) {
+    cursorCtx.clearRect(0, 0, cursorCanvas.width, cursorCanvas.height);
+  }
+  if (previewCtx) {
+    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+  }
 }
 
 
@@ -163,6 +169,15 @@ drawCanvas.onmousedown = (e) => {
   else {
     drawingMode = 'freehand';
   }
+  if (ctx && previewCtx) {
+    if (drawingMode === 'marker') {
+      ctx.globalCompositeOperation = "difference";
+      previewCtx.globalCompositeOperation = "difference"; // Ensure we draw on top of existing content
+    } else {
+      ctx.globalCompositeOperation = "source-over"; // Default for freehand
+      previewCtx.globalCompositeOperation = "source-over"; // Default for preview
+    }
+  }
   if (drawingMode === 'freehand' || drawingMode === 'marker') {
     drawing = true;
     prevX = e.offsetX;
@@ -170,15 +185,6 @@ drawCanvas.onmousedown = (e) => {
     lineStartX = e.offsetX;
     lineStartY = e.offsetY;
     isPreviewingStraightLine = e.shiftKey; // Are we drawing a straight line?
-    if (ctx && previewCtx) {
-      if (drawingMode === 'marker') {
-        ctx.globalCompositeOperation = "difference";
-        previewCtx.globalCompositeOperation = "difference"; // Ensure we draw on top of existing content
-      } else {
-        ctx.globalCompositeOperation = "source-over"; // Default for freehand
-        previewCtx.globalCompositeOperation = "source-over"; // Default for preview
-      }
-    }
   } else if (drawingMode === 'arrow') {
     drawing = true;
     startX = e.offsetX;
@@ -309,15 +315,19 @@ drawCanvas.onmousemove = (e) => {
     } else {
       drawingMode = 'freehand';
     }
+    if(drawingMode === 'marker')
+    {
+      ctx.globalAlpha = 0.05;
+    } else {
+      ctx.globalAlpha = 1.0; // Reset to full opacity for other modes
+    }
     if ((drawingMode === 'freehand' || drawingMode === 'marker') && drawing) {
       if (drawingMode === 'marker') {
-        ctx.globalAlpha = 0.05; // Semi-transparent marker
         ctx.lineWidth = penWidth * 2; // Make marker thicker
         previewCtx.lineWidth = penWidth * 3; // Make marker thicker
         ctx.lineCap = 'square';
         previewCtx.lineCap = 'square';
       } else {
-        ctx.globalAlpha = 1.0; // Full opacity for freehand
         ctx.lineWidth = penWidth;
         previewCtx.lineWidth = penWidth;
         ctx.lineCap = 'round';
