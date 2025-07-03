@@ -24,7 +24,7 @@ use xcap::{
 mod settings;
 use settings::AppSettings;
 use std::collections::HashMap;
-
+use uuid::Uuid;
 use std::sync::Mutex;
 
 mod screen_capture_permissions;
@@ -446,6 +446,7 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             .center()
             .resizable(false)
             .transparent(true)
+            .theme(None)
             .visible_on_all_workspaces(true)
             .decorations(false)
             .always_on_top(true)
@@ -457,7 +458,7 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
                             x: position.x,
                             y: position.y,
                         }));
-
+                    let _ = window.set_shadow(false);
                     let _ = window.hide();
                     let _ = window.set_focus();
                     let _ = window.set_always_on_top(true);
@@ -805,9 +806,10 @@ async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
 fn close_screenshot_windows(app: tauri::AppHandle) {
     for (label, window) in app.webview_windows().iter() {
         if label.starts_with("screenshot-window-") {
-            println!("[DEBUG] Closing screenshot window: {}", label);
+            println!("[DEBUG] Destroying {}", label);
             // Emit an event to the window to close it
             let _ = window.destroy();
+            
         }
     }
 }
@@ -871,8 +873,9 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
     close_screenshot_windows(app.clone());
     if let Ok(monitors) = app.available_monitors() {
         for (index, monitor) in monitors.iter().enumerate() {
-            let window_label = format!("screenshot-window-{}", index);
-
+            let uuid = Uuid::new_v4();
+            let window_label = format!("screenshot-window-{}-{}", index, uuid);
+            println!("[DEBUG] {}", window_label);
             // Close existing window if it exists
             if let Some(existing_window) = app.webview_windows().get(&window_label) {
                 let _ = existing_window.close();
@@ -891,7 +894,7 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
                 &window_label,
                 WebviewUrl::App("screenshot.html".into()),
             )
-            .title(&format!("Screenshot Handler {}", index + 1))
+            .title(&format!("Screenshot Handler {}-{}", index + 1, uuid))
             .background_throttling(tauri::utils::config::BackgroundThrottlingPolicy::Disabled)
             .position(position.x as f64, position.y as f64)
             .inner_size(size.width as f64, size.height as f64)
@@ -901,12 +904,14 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             .visible_on_all_workspaces(true)
             .decorations(false)
             .always_on_top(true)
+            .theme(None)
             .initialization_script(init_script)
             .skip_taskbar(true)
             .accept_first_mouse(true)
             .build()
             {
                 Ok(window) => {
+                    let _ = window.set_shadow(false);
                     let _ = window.hide_menu();
                     let _ =
                         window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {

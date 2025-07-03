@@ -32,7 +32,6 @@ let textSize = 22;
 let centeredCircleCenter = { x: 0, y: 0 };
 let widthCenterCircleRadius = 0;
 let heightCenterCircleRadius = 0;
-let isPreviewingCenteredCircle = false;
 
 if (document.readyState === "loading") {
   window.addEventListener("DOMContentLoaded", initializeOverlay);
@@ -105,6 +104,8 @@ function toggleCanvas(show: boolean): void {
   } else {
     clearCanvas();
     window.show().then(() => {
+      drawingMode = 'freehand'; // Reset to freehand mode 
+      drawCursor(); // Redraw the cursor in freehand mode
       window.setFocus();
       window.setAlwaysOnTop(true);
     });
@@ -151,6 +152,7 @@ let isPreviewingStraightLine = false;
 let isPreviewingArrow = false;
 let isPreviewingBox = false;
 let isPreviewingCircle = false;
+let isPreviewingCenteredCircle = false;
 
 drawCanvas.onmousedown = (e) => {
 
@@ -158,6 +160,7 @@ drawCanvas.onmousedown = (e) => {
   isPreviewingBox = false;
   isPreviewingStraightLine = false;
   isPreviewingCircle = false;
+  isPreviewingCenteredCircle = false;
 
   if (e.shiftKey && e.metaKey) {
     drawingMode = 'arrow';
@@ -244,6 +247,7 @@ document.addEventListener('visibilitychange', () => {
 
 document.onkeyup = async (e) => {
   if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+    if(drawing) return;
     drawingMode = 'freehand'; // Reset to freehand mode
     drawCursor();
   }
@@ -359,19 +363,19 @@ drawCanvas.onmousemove = (e) => {
     ctx.globalAlpha = 1.0; // Full opacity for freehand
     previewCtx.globalAlpha = 1.0; // Full opacity for preview
     drawCanvas.style.cursor = 'none';
-    if (e.shiftKey && e.metaKey) {
-      drawingMode = 'arrow';
-    } else if (e.altKey && e.shiftKey) {
-      drawingMode = 'centered-circle';
-    } else if (e.metaKey) {
-      drawingMode = 'box';
-    } else if (e.altKey) {
-      drawingMode = 'circle';
-    } else if (e.ctrlKey) {
-      drawingMode = 'marker';
-    } else {
-      drawingMode = 'freehand';
-    }
+    // if (e.shiftKey && e.metaKey) {
+    //   drawingMode = 'arrow';
+    // } else if (e.altKey && e.shiftKey) {
+    //   drawingMode = 'centered-circle';
+    // } else if (e.metaKey) {
+    //   drawingMode = 'box';
+    // } else if (e.altKey) {
+    //   drawingMode = 'circle';
+    // } else if (e.ctrlKey) {
+    //   drawingMode = 'marker';
+    // } else {
+    //   drawingMode = 'freehand';
+    // }
     if ((drawingMode === 'freehand' || drawingMode === 'marker') && drawing) {
       if (drawingMode === 'marker') {
         ctx.globalAlpha = 0.02; // Semi-transparent marker
@@ -762,6 +766,8 @@ drawCanvas.onmouseup = async (e) => {
     }
   }
   saveState(); // Save the state after drawing
+  drawingMode = 'freehand'; // Reset to freehand mode
+  drawCursor(); // Redraw the cursor in freehand mode
 };
 
 function undo() {

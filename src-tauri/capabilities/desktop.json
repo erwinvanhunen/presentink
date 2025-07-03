@@ -21,6 +21,7 @@
     "core:event:allow-emit-to",
     "core:event:allow-emit",
     "core:window:allow-hide",
+    "core:window:allow-inner-size",
     "core:window:allow-set-visible-on-all-workspaces",
     "core:window:allow-set-always-on-top",
     "core:window:allow-set-focus",
