@@ -24,6 +24,7 @@ let saveButton: HTMLElement;
 let closeButton: HTMLElement;
 let clipboardButton: HTMLElement;
 let toolbar: HTMLElement;
+let instructions: HTMLElement;
 let monitor = "";
 let isDragging = false;
 let dragStartX = 0;
@@ -47,6 +48,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     saveButton = document.getElementById('saveButton')!;
     closeButton = document.getElementById('closeButton')!;
     clipboardButton = document.getElementById('clipboardButton')!;
+    instructions = document.querySelector('.instructions') as HTMLElement;
     saveButton.addEventListener('click', saveScreenshot);
     clipboardButton.addEventListener('click', copyScreenshot);
     closeButton.addEventListener('click', () => {
@@ -73,6 +75,7 @@ function preventSelection(event: MouseEvent) {
 }
 
 function startSelection(event: MouseEvent) {
+    instructions.style.display = 'none';
     const target = event.target as HTMLElement;
     if (target.closest('#selectionBox') || target.closest('#toolbar')) {
         return;
@@ -439,6 +442,15 @@ function handleKeydown(event: KeyboardEvent) {
 
     if (event.key === 'Escape') {
         invoke("close_screenshot_windows");
+    }
+    let rect = selectionBox.getBoundingClientRect();
+    if(event.metaKey && event.key === 's' && rect.width > 0 && rect.height > 0) {
+        event.preventDefault();
+        saveScreenshot();
+    }
+    if(event.metaKey && event.key === 'c' && rect.width > 0 && rect.height > 0) {
+        event.preventDefault();
+        copyScreenshot();
     }
 }
 
