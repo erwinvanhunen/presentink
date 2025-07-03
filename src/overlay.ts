@@ -29,7 +29,10 @@ let lastMouseY = window.innerHeight / 2;
 let placingText = false;
 let textInput: HTMLInputElement | null = null;
 let textSize = 22;
-
+let centeredCircleCenter = { x: 0, y: 0 };
+let widthCenterCircleRadius = 0;
+let heightCenterCircleRadius = 0;
+let isPreviewingCenteredCircle = false;
 
 if (document.readyState === "loading") {
   window.addEventListener("DOMContentLoaded", initializeOverlay);
@@ -159,7 +162,9 @@ drawCanvas.onmousedown = (e) => {
   if (e.shiftKey && e.metaKey) {
     drawingMode = 'arrow';
   }
-  else if (e.metaKey) {
+  else if (e.shiftKey && e.altKey) {
+    drawingMode = 'centered-circle';
+  } else if (e.metaKey) {
     drawingMode = 'box';
   } else if (e.altKey) {
     drawingMode = 'circle';
@@ -169,15 +174,15 @@ drawCanvas.onmousedown = (e) => {
   else {
     drawingMode = 'freehand';
   }
-  if (ctx && previewCtx) {
-    if (drawingMode === 'marker') {
-      ctx.globalCompositeOperation = "difference";
-      previewCtx.globalCompositeOperation = "difference"; // Ensure we draw on top of existing content
-    } else {
-      ctx.globalCompositeOperation = "source-over"; // Default for freehand
-      previewCtx.globalCompositeOperation = "source-over"; // Default for preview
-    }
-  }
+  // if (ctx && previewCtx) {
+  //   if (drawingMode === 'marker') {
+  //     ctx.globalCompositeOperation = "difference";
+  //     previewCtx.globalCompositeOperation = "difference"; // Ensure we draw on top of existing content
+  //   } else {
+  //     ctx.globalCompositeOperation = "source-over"; // Default for freehand
+  //     previewCtx.globalCompositeOperation = "source-over"; // Default for preview
+  //   }
+  // }
   if (drawingMode === 'freehand' || drawingMode === 'marker') {
     drawing = true;
     prevX = e.offsetX;
@@ -200,6 +205,12 @@ drawCanvas.onmousedown = (e) => {
     startX = e.offsetX;
     startY = e.offsetY;
     isPreviewingCircle = true;
+  } else if (drawingMode === 'centered-circle') {
+    drawing = true;
+    centeredCircleCenter = { x: e.offsetX, y: e.offsetY };
+    widthCenterCircleRadius = 0;
+    heightCenterCircleRadius = 0;
+    isPreviewingCenteredCircle = true;
   }
 };
 
@@ -212,27 +223,31 @@ document.addEventListener('visibilitychange', () => {
   }
 });
 
-document.onkeyup = async (e) => {
-  if (e.ctrlKey) {
-    if (ctx && previewCtx) {
-      ctx.globalCompositeOperation = "source-over"; // Reset composite operation on key release
-      previewCtx.globalCompositeOperation = "source-over"; // Reset composite operation on key release
-      drawingMode = 'none'
-      drawing = false;
-      mousePos.x = lastMouseX;
-      mousePos.y = lastMouseY;
-      drawCursor();
-    }
-  } else {
-    drawingMode = 'freehand'; // Reset to freehand mode
-    mousePos.x = lastMouseX;
-    mousePos.y = lastMouseY;
-    drawCursor();
-  }
-}
+// document.onkeyup = async (e) => {
+//   if (e.ctrlKey) {
+//     if (ctx && previewCtx) {
+//       ctx.globalCompositeOperation = "source-over"; // Reset composite operation on key release
+//       previewCtx.globalCompositeOperation = "source-over"; // Reset composite operation on key release
+//       drawingMode = 'none'
+//       drawing = false;
+//       mousePos.x = lastMouseX;
+//       mousePos.y = lastMouseY;
+//       drawCursor();
+//     }
+//   } else {
+//    // drawingMode = 'freehand'; // Reset to freehand mode
+//     mousePos.x = lastMouseX;
+//     mousePos.y = lastMouseY;
+//     drawCursor();
+//   }
+// }
 
 document.onkeydown = async (e) => {
-  if (e.shiftKey && e.metaKey) {
+  if (e.altKey && e.shiftKey) {
+    // If both Alt and Shift are pressed, reset to freehand mode
+    drawingMode = 'centered-circle';
+    drawCursor();
+  } else if (e.shiftKey && e.metaKey) {
     drawingMode = 'arrow';
     drawCursor();
   } else if (e.metaKey) {
@@ -334,11 +349,14 @@ document.onkeydown = async (e) => {
 
 drawCanvas.onmousemove = (e) => {
   if (ctx && previewCtx) {
+    ctx.globalAlpha = 1.0; // Full opacity for freehand
+    previewCtx.globalAlpha = 1.0; // Full opacity for preview
     drawCanvas.style.cursor = 'none';
     if (e.shiftKey && e.metaKey) {
       drawingMode = 'arrow';
-    }
-    else if (e.metaKey) {
+    } else if (e.altKey && e.shiftKey) {
+      drawingMode = 'centered-circle';
+    } else if (e.metaKey) {
       drawingMode = 'box';
     } else if (e.altKey) {
       drawingMode = 'circle';
@@ -347,13 +365,11 @@ drawCanvas.onmousemove = (e) => {
     } else {
       drawingMode = 'freehand';
     }
-    if (drawingMode === 'marker') {
-      ctx.globalAlpha = 0.05;
-    } else {
-      ctx.globalAlpha = 1.0; // Reset to full opacity for other modes
-    }
     if ((drawingMode === 'freehand' || drawingMode === 'marker') && drawing) {
       if (drawingMode === 'marker') {
+        ctx.globalAlpha = 0.02; // Semi-transparent marker
+        previewCtx.globalAlpha = 0.02; // Semi-transparent marker
+        // Adjust line width and cap for marker
         ctx.lineWidth = penWidth * 2; // Make marker thicker
         previewCtx.lineWidth = penWidth * 3; // Make marker thicker
         ctx.lineCap = 'square';
@@ -434,6 +450,33 @@ drawCanvas.onmousemove = (e) => {
         prevX = e.offsetX;
         prevY = e.offsetY;
 
+      }
+      mousePos.x = e.offsetX;
+      mousePos.y = e.offsetY;
+      drawCursor();
+    } else if (drawingMode === 'centered-circle' && drawing) {
+      previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
+      if (isPreviewingCenteredCircle) {
+        // Calculate the radius based on the mouse position
+        const dx = e.offsetX - centeredCircleCenter.x;
+        const dy = e.offsetY - centeredCircleCenter.y;
+        widthCenterCircleRadius = Math.sqrt(dx * dx);
+        heightCenterCircleRadius = Math.sqrt(dy * dy);
+        previewCtx.lineWidth = penWidth;
+        previewCtx.strokeStyle = strokeColor;
+        previewCtx.beginPath();
+        previewCtx.ellipse(
+          centeredCircleCenter.x,
+          centeredCircleCenter.y,
+          widthCenterCircleRadius,
+          heightCenterCircleRadius,
+          0,
+          0,
+          Math.PI * 2
+        );
+        previewCtx.stroke();
+        prevX = e.offsetX;
+        prevY = e.offsetY;
       }
       mousePos.x = e.offsetX;
       mousePos.y = e.offsetY;
@@ -528,11 +571,19 @@ function drawCursor() {
   cursorCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   cursorCtx.strokeStyle = strokeColor;
   if (drawingMode === 'box') {
-    invoke('print_output', { text: `Drawing box at ${mousePos.x}, ${mousePos.y}` });
     cursorCtx.strokeRect(mousePos.x - penWidth / 2, mousePos.y - penWidth / 2, penWidth, penWidth);
   } else if (drawingMode === 'circle') {
     cursorCtx.beginPath();
     cursorCtx.ellipse(mousePos.x, mousePos.y, penWidth / 2, penWidth / 2, 0, 0, Math.PI * 2);
+    cursorCtx.stroke();
+  } else if (drawingMode === 'centered-circle') {
+    cursorCtx.beginPath();
+    cursorCtx.ellipse(mousePos.x, mousePos.y, penWidth / 2, penWidth / 2, 0, 0, Math.PI * 2);
+    cursorCtx.stroke();
+    cursorCtx.beginPath();
+    cursorCtx.arc(mousePos.x, mousePos.y, 2, 0, 2 * Math.PI);
+    cursorCtx.fillStyle = strokeColor;
+    cursorCtx.fill();
     cursorCtx.stroke();
   } else if (drawingMode === 'marker') {
     const w = penWidth * 1.5;
@@ -599,7 +650,7 @@ drawCanvas.onmouseup = async (e) => {
 
     if ((drawingMode === 'freehand' || (drawingMode === 'marker' && drawing))) {
       if (drawingMode === 'marker') {
-        ctx.globalAlpha = 0.05; // Semi-transparent marker
+        ctx.globalAlpha = 0.02; // Semi-transparent marker
         ctx.lineWidth = penWidth * 3; // Make marker thicker
         ctx.lineCap = 'square'
       } else {
@@ -652,9 +703,24 @@ drawCanvas.onmouseup = async (e) => {
       );
       ctx.stroke();
 
+    } else if (drawingMode === 'centered-circle' && drawing) {
+      drawing = false;
+      ctx.lineWidth = penWidth;
+      ctx.strokeStyle = strokeColor;
+      ctx.beginPath();
+      ctx.ellipse(
+        centeredCircleCenter.x,
+        centeredCircleCenter.y,
+        widthCenterCircleRadius,
+        heightCenterCircleRadius,
+        0,
+        0,
+        Math.PI * 2
+      );
+      ctx.stroke();
     }
-    saveState(); // Save the state after drawing
   }
+  saveState(); // Save the state after drawing
 };
 
 function undo() {
