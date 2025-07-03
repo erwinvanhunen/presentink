@@ -10,7 +10,7 @@
         body {
             margin: 0;
             padding: 0;
-            background: rgba(50, 0, 0, 0.0);
+            background: rgba(0, 0, 0, 0.0);
             cursor: crosshair !important;
             user-select: none;
             overflow: hidden;
@@ -207,7 +207,6 @@
             color: #fff;
             padding: 32px 40px;
             border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25);
             text-align: center;
             font-size: 1.15rem;
             pointer-events: none;
@@ -217,13 +216,16 @@
 </head>
 
 <body>
+
     <div class="instructions" id="instructions">
         <p>Click and drag to select an area for the screenshot.</p>
         <p>Use the resize handles to adjust the selection. Use mouse to move selection if required.</p>
-        <p>Press <strong>Command + S</strong> to save, <strong>Command + C</strong> to copy, or <strong>Esc</strong> to
+        <p>Press <strong>Command + S</strong> to save, <strong>Command + C</strong> to copy, or <strong>Esc</strong>
+            to
             close.
         </p>
     </div>
+
     <div class="coords" id="coords"></div>
     <div class="top-box" id="topBox"></div>
     <div class="right-box" id="rightBox"></div>
@@ -231,20 +233,20 @@
     <div class="bottom-box" id="bottomBox"></div>
     <div class="selection-box" id="selectionBox"></div>
     <div class="toolbar" id="toolbar">
-        <button class="toolbar-button" id="saveButton">
+        <button class="toolbar-button" id="saveButton" title="Save Selection">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
                 <path
                     d="M3 2a1 1 0 0 0-1 1v10a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V3a1 1 0 0 0-1-1H3zm7 1v3H6V3h4zM6 8h4v5H6V8z" />
             </svg>
         </button>
-        <button class="toolbar-button" id="clipboardButton">
+        <button class="toolbar-button" id="clipboardButton" title="Copy to clipboard">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
                 <path
                     d="M4 2a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v1h2a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h2V2zm2-1a1 1 0 0 0-1 1v1h6V2a1 1 0 0 0-1-1H6z" />
                 <path d="M3 5v9h10V5H3zm2 2h6v1H5V7zm0 2h6v1H5V9zm0 2h4v1H5v-1z" />
             </svg>
         </button>
-        <button class="toolbar-button" id="closeButton">
+        <button class="toolbar-button" id="closeButton" title="Close Selection">
             <svg width="16" height="16" viewBox="0 0 16 16" fill="white" xmlns="http://www.w3.org/2000/svg">
                 <path
                     d="M2.146 2.854a.5.5 0 1 1 .708-.708L8 7.293l5.146-5.147a.5.5 0 0 1 .708.708L8.707 8l5.147 5.146a.5.5 0 0 1-.708.708L8 8.707l-5.146 5.147a.5.5 0 0 1-.708-.708L7.293 8 2.146 2.854z" />

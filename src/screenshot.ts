@@ -65,7 +65,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     monitor = window.monitor.index;
 
     document.body.style.backgroundColor = 'rgba(0, 0, 0, 0.7)';
-   
+
     createResizeHandles();
 });
 
@@ -74,7 +74,8 @@ function preventSelection(event: MouseEvent) {
     event.preventDefault();
 }
 
-function startSelection(event: MouseEvent) {
+async function startSelection(event: MouseEvent) {
+    //forceWindowRepaint();
     instructions.style.display = 'none';
     const target = event.target as HTMLElement;
     if (target.closest('#selectionBox') || target.closest('#toolbar')) {
@@ -444,11 +445,11 @@ function handleKeydown(event: KeyboardEvent) {
         invoke("close_screenshot_windows");
     }
     let rect = selectionBox.getBoundingClientRect();
-    if(event.metaKey && event.key === 's' && rect.width > 0 && rect.height > 0) {
+    if (event.metaKey && event.key === 's' && rect.width > 0 && rect.height > 0) {
         event.preventDefault();
         saveScreenshot();
     }
-    if(event.metaKey && event.key === 'c' && rect.width > 0 && rect.height > 0) {
+    if (event.metaKey && event.key === 'c' && rect.width > 0 && rect.height > 0) {
         event.preventDefault();
         copyScreenshot();
     }
