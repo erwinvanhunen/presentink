@@ -242,6 +242,13 @@ document.addEventListener('visibilitychange', () => {
 //   }
 // }
 
+document.onkeyup = async (e) => {
+  if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+    drawingMode = 'freehand'; // Reset to freehand mode
+    drawCursor();
+  }
+}
+
 document.onkeydown = async (e) => {
   if (e.altKey && e.shiftKey) {
     // If both Alt and Shift are pressed, reset to freehand mode
@@ -585,8 +592,42 @@ function drawCursor() {
     cursorCtx.fillStyle = strokeColor;
     cursorCtx.fill();
     cursorCtx.stroke();
+  } else if (drawingMode === 'arrow') {
+    // Draw a dot
+    const radius = penWidth / 2;
+    cursorCtx.beginPath();
+    cursorCtx.arc(mousePos.x, mousePos.y, radius, 0, 2 * Math.PI);
+    cursorCtx.fillStyle = strokeColor;
+    cursorCtx.globalAlpha = 0.7;
+    cursorCtx.fill();
+    // cursorCtx.globalAlpha = 1.0;
+    // cursorCtx.strokeStyle = "#ccc";
+    // cursorCtx.lineWidth = 1.2;
+    // cursorCtx.stroke();
+
+    // Draw a small arrow inside the dot, fitting exactly
+    const arrowLen = radius * 0.8; // Arrow shaft fits inside the circle
+    const arrowHead = Math.max(3, radius * 0.4); // Arrowhead size, smaller than radius
+
+    // Arrow shaft
+    cursorCtx.beginPath();
+    cursorCtx.moveTo(mousePos.x, mousePos.y + radius * 0.5); // Start a bit below center for visual centering
+    cursorCtx.lineTo(mousePos.x, mousePos.y - arrowLen + arrowHead);
+    cursorCtx.strokeStyle = "#ccc";
+    cursorCtx.lineWidth = 2;
+    cursorCtx.stroke();
+
+    // Arrowhead
+    cursorCtx.beginPath();
+    const tipY = mousePos.y - arrowLen;
+    cursorCtx.moveTo(mousePos.x, tipY);
+    cursorCtx.lineTo(mousePos.x - arrowHead, tipY + arrowHead);
+    cursorCtx.lineTo(mousePos.x + arrowHead, tipY + arrowHead);
+    cursorCtx.closePath();
+    cursorCtx.fillStyle = "#ccc";
+    cursorCtx.fill();
   } else if (drawingMode === 'marker') {
-    const w = penWidth * 1.5;
+    const w = penWidth;
     const h = penWidth * 2.8;
     const bodyHeight = h * 0.7;
     const tipHeight = h - bodyHeight;
