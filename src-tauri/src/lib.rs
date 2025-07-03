@@ -444,6 +444,7 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             .position(position.x as f64, position.y as f64)
             .inner_size(size.width as f64, size.height as f64)
             .center()
+            .shadow(false)
             .resizable(false)
             .transparent(true)
             .theme(None)
@@ -458,7 +459,6 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
                             x: position.x,
                             y: position.y,
                         }));
-                    let _ = window.set_shadow(false);
                     let _ = window.hide();
                     let _ = window.set_focus();
                     let _ = window.set_always_on_top(true);
@@ -905,13 +905,13 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             .decorations(false)
             .always_on_top(true)
             .theme(None)
+            .shadow(false)
             .initialization_script(init_script)
             .skip_taskbar(true)
             .accept_first_mouse(true)
             .build()
             {
                 Ok(window) => {
-                    let _ = window.set_shadow(false);
                     let _ = window.hide_menu();
                     let _ =
                         window.set_position(tauri::Position::Physical(tauri::PhysicalPosition {
