@@ -141,6 +141,29 @@
         0 0 0 1px rgba(255, 255, 255, 0.1);
     }
 
+    .demo-gif {
+      width: 100%;
+      max-width: 420px;
+      margin: 0 auto 36px auto;
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 8px 32px rgba(59,130,246,0.10), 0 0 0 1px rgba(255,255,255,0.04);
+      background: rgba(51,65,85,0.25);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 220px;
+      transition: box-shadow 0.3s;
+    }
+    .demo-gif img {
+      width: 100%;
+      height: auto;
+      display: block;
+      object-fit: cover;
+      border-radius: 20px;
+      background: #1a1f2e;
+    }
+
     @media (max-width: 600px) {
       .container {
         margin-top: 32px;
@@ -168,6 +191,9 @@
     <div class="title">PresentInk</div>
     <div class="tagline">Draw anywhere. Present anywhere.<br>Take your presentations to the next level.</div>
 
+    <div class="demo-gif">
+      <img src="presentink-demo.gif" alt="PresentInk in action" />
+    </div>
     <ul class="features">
       <li>
         <svg width="24" height="24" viewBox="0 0 24 24">
