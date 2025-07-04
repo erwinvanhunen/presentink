@@ -24,8 +24,8 @@ use xcap::{
 mod settings;
 use settings::AppSettings;
 use std::collections::HashMap;
-use uuid::Uuid;
 use std::sync::Mutex;
+use uuid::Uuid;
 
 mod screen_capture_permissions;
 use screen_capture_permissions::{preflight_access, request_access};
@@ -52,6 +52,11 @@ fn get_icon(path: &str) -> Option<tauri::image::Image> {
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
+             let _ = app.get_webview_window("main")
+                       .expect("no main window")
+                       .set_focus();
+        }))
         .manage(DrawMenuState(Mutex::new(None)))
         .manage(FileNameMenuState(Mutex::new(None)))
         .plugin(tauri_plugin_notification::init())
@@ -681,7 +686,6 @@ async fn open_url(app: tauri::AppHandle, url: String) -> Result<(), String> {
         .open_url(&url, None::<&str>)
         .map_err(|e| format!("Failed to open URL: {}", e))?;
 
-    println!("Opened URL: {}", url);
     Ok(())
 }
 
@@ -794,7 +798,6 @@ async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
         .collect();
 
     for (label, window) in windows_to_close {
-        println!("[DEBUG] Destroying screenshot window: {}", label);
         let _ = window.destroy();
     }
 
@@ -806,10 +809,8 @@ async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
 fn close_screenshot_windows(app: tauri::AppHandle) {
     for (label, window) in app.webview_windows().iter() {
         if label.starts_with("screenshot-window-") {
-            println!("[DEBUG] Destroying {}", label);
             // Emit an event to the window to close it
             let _ = window.destroy();
-            
         }
     }
 }
@@ -875,7 +876,6 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
         for (index, monitor) in monitors.iter().enumerate() {
             let uuid = Uuid::new_v4();
             let window_label = format!("screenshot-window-{}-{}", index, uuid);
-            println!("[DEBUG] {}", window_label);
             // Close existing window if it exists
             if let Some(existing_window) = app.webview_windows().get(&window_label) {
                 let _ = existing_window.close();
