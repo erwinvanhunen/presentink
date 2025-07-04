@@ -23,8 +23,8 @@ let mousePos = { x: 0, y: 0 };
 let penWidth = 3; // Default pen width
 let arrowHeadLength = 20; // Default arrow head length
 let hasMouseMoved = false;
-let lastMouseX = window.innerWidth / 2;
-let lastMouseY = window.innerHeight / 2;
+// let lastMouseX = window.innerWidth / 2;
+// let lastMouseY = window.innerHeight / 2;
 let placingText = false;
 let textInput: HTMLInputElement | null = null;
 let textSize = 22;
@@ -69,9 +69,9 @@ async function initializeOverlay() {
     const color = event.payload as string;
     changeColor(color); // Change color without updating tray icon
   });
-  window.addEventListener('mousemove', async (e) => {
-    lastMouseX = e.clientX;
-    lastMouseY = e.clientY;
+  window.addEventListener('mousemove', async () => {
+    // lastMouseX = e.clientX;
+    // lastMouseY = e.clientY;
     if (!hasMouseMoved) {
       hasMouseMoved = true;
 
@@ -130,12 +130,11 @@ async function initializeOverlay() {
       if (e.deltaY < 0) {
         if (textSize > 1) {
           textSize -= 1;
-          textInput!.style.fontSize = textSize + 'pt';
+          updateTextInputWidth();
         }
       } else if (e.deltaY > 0) {
         textSize += 1;
-        textInput!.style.fontSize = textSize + 'pt';
-      }
+        updateTextInputWidth();}
     }
   });
 }
@@ -634,14 +633,12 @@ function showTextInput(x: number, y: number) {
     if (ev.key === 'ArrowUp') {
       ev.preventDefault();
       textSize += 1;
-      textInput!.style.fontSize = textSize + 'pt';
       updateTextInputWidth();
     }
     if (ev.key === 'ArrowDown') {
       if (textSize > 1) {
         ev.preventDefault();
         textSize -= 1;
-        textInput!.style.fontSize = textSize + 'pt';
         updateTextInputWidth();
       }
     }
@@ -651,6 +648,7 @@ function showTextInput(x: number, y: number) {
 
 function updateTextInputWidth() {
   if (!textInput) return;
+  textInput.style.fontSize = textSize + 'pt';
   const span = document.createElement('span');
   span.style.visibility = 'hidden';
   span.style.position = 'fixed';
