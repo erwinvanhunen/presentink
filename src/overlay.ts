@@ -94,7 +94,24 @@ async function initializeOverlay() {
     await currentWindow.setFocus();
     await currentWindow.setAlwaysOnTop(true);
   });
+  window.addEventListener('wheel', async (e) => {
+    invoke('print_output', { text: `Mouse wheel scrolled with deltaY: ${e.deltaY}` });
+    // On Mac, metaKey is the Command key
+    if (!placingText) {
 
+      e.preventDefault();
+      if (e.deltaY < 0 && penWidth < 20) {
+      
+        penWidth += 1;
+        await updateSetting('penWidth', penWidth);
+        drawCursor();
+      } else if (e.deltaY > 0 && penWidth > 1) {
+        penWidth -= 1;
+        await updateSetting('penWidth', penWidth);
+        drawCursor();
+      }
+    }
+  }, { passive: false });
 }
 function toggleCanvas(show: boolean): void {
   const window = Window.getCurrent();
@@ -247,7 +264,7 @@ document.addEventListener('visibilitychange', () => {
 
 document.onkeyup = async (e) => {
   if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-    if(drawing) return;
+    if (drawing) return;
     drawingMode = 'freehand'; // Reset to freehand mode
     drawCursor();
   }
