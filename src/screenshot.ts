@@ -411,7 +411,6 @@ async function copyScreenshot() {
     invoke("take_region_screenshot", { index: monitor, x: area.x + 2, y: area.y + 2, width: area.width - 4, height: area.height - 4, save: false, path: "" });
 }
 
-
 // Prevent default context me
 async function saveScreenshot() {
     // if (!isSelecting) return;

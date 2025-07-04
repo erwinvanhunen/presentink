@@ -52,10 +52,11 @@ fn get_icon(path: &str) -> Option<tauri::image::Image> {
 
 pub fn run() {
     tauri::Builder::default()
-        .plugin(tauri_plugin_single_instance::init(|app, argv, cwd| {
-             let _ = app.get_webview_window("main")
-                       .expect("no main window")
-                       .set_focus();
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            let _ = app
+                .get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
         }))
         .manage(DrawMenuState(Mutex::new(None)))
         .manage(FileNameMenuState(Mutex::new(None)))
@@ -438,6 +439,7 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             }
             let position = monitor.position();
             let size = monitor.size();
+
             match WebviewWindowBuilder::new(
                 app,
                 &window_label,
@@ -454,6 +456,7 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             .transparent(true)
             .theme(None)
             .visible_on_all_workspaces(true)
+            .accept_first_mouse(true)
             .decorations(false)
             .always_on_top(true)
             .build()
@@ -797,7 +800,7 @@ async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
         })
         .collect();
 
-    for (label, window) in windows_to_close {
+    for (_label, window) in windows_to_close {
         let _ = window.destroy();
     }
 

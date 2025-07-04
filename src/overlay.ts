@@ -3,7 +3,6 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api/core";
 import { getSettings, updateSetting, AppSettings } from './settings';
 
-
 let undoStack: string[] = [];
 const MAX_UNDO = 30; // Adjust for memory usage, if you want
 const drawCanvas = document.getElementById('draw-canvas') as HTMLCanvasElement;
@@ -93,15 +92,14 @@ async function initializeOverlay() {
   window.addEventListener('mouseover', async () => {
     await currentWindow.setFocus();
     await currentWindow.setAlwaysOnTop(true);
+    drawCursor();
   });
   window.addEventListener('wheel', async (e) => {
-    invoke('print_output', { text: `Mouse wheel scrolled with deltaY: ${e.deltaY}` });
-    // On Mac, metaKey is the Command key
-    if (!placingText) {
 
+    if (!placingText) {
       e.preventDefault();
       if (e.deltaY < 0 && penWidth < 20) {
-      
+
         penWidth += 1;
         await updateSetting('penWidth', penWidth);
         drawCursor();
@@ -109,6 +107,20 @@ async function initializeOverlay() {
         penWidth -= 1;
         await updateSetting('penWidth', penWidth);
         drawCursor();
+      }
+    }
+    if (placingText) {
+      e.preventDefault();
+      if (e.deltaY < 0 && textSize < 50) {
+        textSize += 1;
+        if (textInput) {
+          textInput.style.fontSize = textSize + 'pt';
+        }
+      } else if (e.deltaY > 0 && textSize > 1) {
+        textSize -= 1;
+        if (textInput) {
+          textInput.style.fontSize = textSize + 'pt';
+        }
       }
     }
   }, { passive: false });
@@ -191,9 +203,6 @@ drawCanvas.onmousedown = (e) => {
   } else if (e.ctrlKey) {
     drawingMode = 'marker';
   }
-  else {
-    drawingMode = 'freehand';
-  }
   // if (ctx && previewCtx) {
   //   if (drawingMode === 'marker') {
   //     ctx.globalCompositeOperation = "difference";
@@ -231,7 +240,7 @@ drawCanvas.onmousedown = (e) => {
     widthCenterCircleRadius = 0;
     heightCenterCircleRadius = 0;
     isPreviewingCenteredCircle = true;
-  }
+  } 
 };
 
 window.addEventListener('focus', () => {
@@ -334,6 +343,10 @@ document.onkeydown = async (e) => {
     if (!placingText) {
       clearCanvas();
     }
+  }
+  if (e.key === 'x') { // 'u' for blurrect, or pick your own key
+    drawingMode = 'blurrect';
+    drawCursor();
   }
   if (e.key === 't' || e.key === 'T') {
     if (!placingText) {
@@ -780,7 +793,9 @@ drawCanvas.onmouseup = async (e) => {
         Math.PI * 2
       );
       ctx.stroke();
-    }
+
+    } 
+    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   }
   saveState(); // Save the state after drawing
   drawingMode = 'freehand'; // Reset to freehand mode
