@@ -433,6 +433,8 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             }
             let position = monitor.position();
             let size = monitor.size();
+
+
             match WebviewWindowBuilder::new(
                 app,
                 &window_label,
@@ -449,6 +451,7 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             .transparent(true)
             .theme(None)
             .visible_on_all_workspaces(true)
+            .accept_first_mouse(true)
             .decorations(false)
             .always_on_top(true)
             .build()
@@ -793,8 +796,7 @@ async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
         })
         .collect();
 
-    for (label, window) in windows_to_close {
-        println!("[DEBUG] Destroying screenshot window: {}", label);
+    for (_label, window) in windows_to_close {
         let _ = window.destroy();
     }
 
@@ -806,7 +808,6 @@ async fn close_screenshot_windows_async(app: &tauri::AppHandle) {
 fn close_screenshot_windows(app: tauri::AppHandle) {
     for (label, window) in app.webview_windows().iter() {
         if label.starts_with("screenshot-window-") {
-            println!("[DEBUG] Destroying {}", label);
             // Emit an event to the window to close it
             let _ = window.destroy();
             
@@ -875,8 +876,6 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
         for (index, monitor) in monitors.iter().enumerate() {
             let uuid = Uuid::new_v4();
             let window_label = format!("screenshot-window-{}-{}", index, uuid);
-            println!("[DEBUG] {}", window_label);
-            // Close existing window if it exists
             if let Some(existing_window) = app.webview_windows().get(&window_label) {
                 let _ = existing_window.close();
             }

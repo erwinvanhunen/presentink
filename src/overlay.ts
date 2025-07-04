@@ -95,6 +95,18 @@ async function initializeOverlay() {
     await currentWindow.setAlwaysOnTop(true);
   });
 
+  window.addEventListener('visibilitychange', () => {
+    if (!document.hidden) {
+      const currentWindow = Window.getCurrent();
+      currentWindow.setFocus();
+      currentWindow.setAlwaysOnTop(true);
+    }
+  });
+  window.addEventListener('focus', () => {
+    const currentWindow = Window.getCurrent();
+    currentWindow.setFocus();
+    currentWindow.setAlwaysOnTop(true);
+  });
 }
 function toggleCanvas(show: boolean): void {
   const window = Window.getCurrent();
@@ -247,7 +259,7 @@ document.addEventListener('visibilitychange', () => {
 
 document.onkeyup = async (e) => {
   if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
-    if(drawing) return;
+    if (drawing) return;
     drawingMode = 'freehand'; // Reset to freehand mode
     drawCursor();
   }
@@ -578,6 +590,7 @@ function addTextAt(x: number, y: number, text: string) {
 }
 
 function drawCursor() {
+  document.body.style.cursor = 'none'; // Hide the default cursor
   if (!cursorCtx) return;
   cursorCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   cursorCtx.strokeStyle = strokeColor;
