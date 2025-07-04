@@ -3,7 +3,6 @@ import { listen } from '@tauri-apps/api/event';
 import { invoke } from "@tauri-apps/api/core";
 import { getSettings, updateSetting, AppSettings } from './settings';
 
-
 let undoStack: string[] = [];
 const MAX_UNDO = 30; // Adjust for memory usage, if you want
 const drawCanvas = document.getElementById('draw-canvas') as HTMLCanvasElement;
@@ -186,9 +185,6 @@ drawCanvas.onmousedown = (e) => {
   } else if (e.ctrlKey) {
     drawingMode = 'marker';
   }
-  else {
-    drawingMode = 'freehand';
-  }
   // if (ctx && previewCtx) {
   //   if (drawingMode === 'marker') {
   //     ctx.globalCompositeOperation = "difference";
@@ -226,7 +222,7 @@ drawCanvas.onmousedown = (e) => {
     widthCenterCircleRadius = 0;
     heightCenterCircleRadius = 0;
     isPreviewingCenteredCircle = true;
-  }
+  } 
 };
 
 window.addEventListener('focus', () => {
@@ -259,6 +255,7 @@ document.addEventListener('visibilitychange', () => {
 
 document.onkeyup = async (e) => {
   if (!e.ctrlKey && !e.metaKey && !e.shiftKey && !e.altKey) {
+    if (drawing) return;
     if (drawing) return;
     drawingMode = 'freehand'; // Reset to freehand mode
     drawCursor();
@@ -329,6 +326,10 @@ document.onkeydown = async (e) => {
     if (!placingText) {
       clearCanvas();
     }
+  }
+  if (e.key === 'x') { // 'u' for blurrect, or pick your own key
+    drawingMode = 'blurrect';
+    drawCursor();
   }
   if (e.key === 't' || e.key === 'T') {
     if (!placingText) {
@@ -776,7 +777,9 @@ drawCanvas.onmouseup = async (e) => {
         Math.PI * 2
       );
       ctx.stroke();
-    }
+
+    } 
+    previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   }
   saveState(); // Save the state after drawing
   drawingMode = 'freehand'; // Reset to freehand mode

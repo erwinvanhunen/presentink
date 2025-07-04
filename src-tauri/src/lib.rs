@@ -24,8 +24,8 @@ use xcap::{
 mod settings;
 use settings::AppSettings;
 use std::collections::HashMap;
-use uuid::Uuid;
 use std::sync::Mutex;
+use uuid::Uuid;
 
 mod screen_capture_permissions;
 use screen_capture_permissions::{preflight_access, request_access};
@@ -52,6 +52,12 @@ fn get_icon(path: &str) -> Option<tauri::image::Image> {
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
+            let _ = app
+                .get_webview_window("main")
+                .expect("no main window")
+                .set_focus();
+        }))
         .manage(DrawMenuState(Mutex::new(None)))
         .manage(FileNameMenuState(Mutex::new(None)))
         .plugin(tauri_plugin_notification::init())
@@ -684,7 +690,6 @@ async fn open_url(app: tauri::AppHandle, url: String) -> Result<(), String> {
         .open_url(&url, None::<&str>)
         .map_err(|e| format!("Failed to open URL: {}", e))?;
 
-    println!("Opened URL: {}", url);
     Ok(())
 }
 
@@ -810,7 +815,6 @@ fn close_screenshot_windows(app: tauri::AppHandle) {
         if label.starts_with("screenshot-window-") {
             // Emit an event to the window to close it
             let _ = window.destroy();
-            
         }
     }
 }
