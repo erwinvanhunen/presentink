@@ -31,6 +31,8 @@ let textSize = 22;
 let centeredCircleCenter = { x: 0, y: 0 };
 let widthCenterCircleRadius = 0;
 let heightCenterCircleRadius = 0;
+let isDraggingTextInput = false;
+let dragOffset = { x: 0, y: 0 };
 
 if (document.readyState === "loading") {
   window.addEventListener("DOMContentLoaded", initializeOverlay);
@@ -106,7 +108,38 @@ async function initializeOverlay() {
     currentWindow.setFocus();
     currentWindow.setAlwaysOnTop(true);
   });
+
+  window.addEventListener('wheel', (e) => {
+    if (!placingText) {
+      if (e.deltaY < 0) {
+        // Scrolling up
+        if (penWidth < 20) {
+          penWidth += 1;
+          updateSetting('penWidth', penWidth);
+          drawCursor();
+        }
+      } else if (e.deltaY > 0) {
+        // Scrolling down
+        if (penWidth > 1) {
+          penWidth -= 1;
+          updateSetting('penWidth', penWidth);
+          drawCursor();
+        }
+      }
+    } else {
+      if (e.deltaY < 0) {
+        if (textSize > 1) {
+          textSize -= 1;
+          textInput!.style.fontSize = textSize + 'pt';
+        }
+      } else if (e.deltaY > 0) {
+        textSize += 1;
+        textInput!.style.fontSize = textSize + 'pt';
+      }
+    }
+  });
 }
+
 function toggleCanvas(show: boolean): void {
   const window = Window.getCurrent();
   if (!show) {
@@ -222,7 +255,7 @@ drawCanvas.onmousedown = (e) => {
     widthCenterCircleRadius = 0;
     heightCenterCircleRadius = 0;
     isPreviewingCenteredCircle = true;
-  } 
+  }
 };
 
 window.addEventListener('focus', () => {
@@ -347,6 +380,7 @@ document.onkeydown = async (e) => {
   }
   if (e.key === 'ArrowUp') {
     if (!placingText) {
+      e.preventDefault()
       if (penWidth < 20) {
         penWidth += 1;
         await updateSetting('penWidth', penWidth);
@@ -356,6 +390,7 @@ document.onkeydown = async (e) => {
   }
   if (e.key === 'ArrowDown') {
     if (!placingText) {
+      e.preventDefault();
       if (penWidth > 1) {
         penWidth -= 1;
         await updateSetting('penWidth', penWidth);
@@ -517,28 +552,56 @@ function showTextInput(x: number, y: number) {
   if (textInput) return;
   textInput = document.createElement('input');
   textInput.type = 'text';
-  // textInput.placeholder = 'text';
   textInput.style.position = 'absolute';
   textInput.style.left = `${x}px`;
   textInput.style.top = `${y}px`;
-  textInput.style.transform = 'translate(-50%, -50%)';
+  // textInput.style.transform = 'translate(-50%, -50%)';
   textInput.style.fontSize = textSize + 'pt';
   textInput.style.zIndex = '9999';
   textInput.style.padding = '6px 12px';
   textInput.style.borderRadius = '8px';
-  textInput.style.border = '1.5px solid #888';
-  textInput.style.background = 'transparent';
-  textInput.style.color = strokeColor
+  textInput.style.border = '2px dashed #0a84ff';
+  textInput.style.background = 'rgba(255,255,255,0.12)';
+  textInput.style.color = strokeColor;
   textInput.style.boxShadow = '0 2px 8px #0003';
   textInput.style.minWidth = '32px';
-  textInput.style.width = '32px'; // Start small
+  textInput.style.width = '32px';
   textInput.autocomplete = 'off';
+  textInput.spellcheck = false;
+  textInput.style.cursor = 'move';
   document.body.appendChild(textInput);
   textInput.focus();
 
+  // Drag logic
+  textInput.addEventListener('mousedown', (ev) => {
+    isDraggingTextInput = true;
+    dragOffset.x = ev.clientX - textInput!.offsetLeft;
+    dragOffset.y = ev.clientY - textInput!.offsetTop;
+    textInput!.style.border = '2.5px solid #0a84ff';
+    textInput!.style.background = 'rgba(10,132,255,0.08)';
+    ev.preventDefault();
+  });
+
+  window.addEventListener('mousemove', onTextInputDrag);
+  window.addEventListener('mouseup', stopTextInputDrag);
+
+  function onTextInputDrag(ev: MouseEvent) {
+    if (isDraggingTextInput && textInput) {
+    textInput.style.left = `${ev.clientX - dragOffset.x}px`;
+    textInput.style.top = `${ev.clientY - dragOffset.y}px`;
+  }
+  }
+  function stopTextInputDrag() {
+    if (textInput) {
+      textInput.style.border = '2px dashed #0a84ff';
+      textInput.style.background = 'rgba(255,255,255,0.12)';
+    }
+    isDraggingTextInput = false;
+  }
+
+  // Dynamic width as you type
   textInput.addEventListener('input', () => {
     if (!textInput) return;
-    // Use a temporary span to measure the text width
     const span = document.createElement('span');
     span.style.visibility = 'hidden';
     span.style.position = 'fixed';
@@ -546,7 +609,6 @@ function showTextInput(x: number, y: number) {
     span.style.fontFamily = 'system-ui, sans-serif';
     span.textContent = textInput.value || textInput.placeholder || '';
     document.body.appendChild(span);
-    // Add some extra space for cursor/padding
     textInput.style.width = (span.offsetWidth + 24) + 'px';
     document.body.removeChild(span);
   });
@@ -554,27 +616,50 @@ function showTextInput(x: number, y: number) {
   textInput.onkeydown = (ev) => {
     if (ev.key === 'Enter' && textInput!.value.trim() !== '') {
       placingText = false;
-      addTextAt(lastMouseX, lastMouseY, textInput!.value);
+      // Use the top-left position of the input box
+      addTextAt(textInput!.offsetLeft + 14, textInput!.offsetTop + 8, textInput!.value);
       document.body.removeChild(textInput!);
       textInput = null;
+      window.removeEventListener('mousemove', onTextInputDrag);
+      window.removeEventListener('mouseup', stopTextInputDrag);
     }
     if (ev.key === 'Escape') {
       ev.stopPropagation();
       placingText = false;
       document.body.removeChild(textInput!);
       textInput = null;
+      window.removeEventListener('mousemove', onTextInputDrag);
+      window.removeEventListener('mouseup', stopTextInputDrag);
     }
     if (ev.key === 'ArrowUp') {
+      ev.preventDefault();
       textSize += 1;
       textInput!.style.fontSize = textSize + 'pt';
+      updateTextInputWidth();
     }
     if (ev.key === 'ArrowDown') {
       if (textSize > 1) {
+        ev.preventDefault();
         textSize -= 1;
         textInput!.style.fontSize = textSize + 'pt';
+        updateTextInputWidth();
       }
     }
   };
+}
+
+
+function updateTextInputWidth() {
+  if (!textInput) return;
+  const span = document.createElement('span');
+  span.style.visibility = 'hidden';
+  span.style.position = 'fixed';
+  span.style.fontSize = textInput.style.fontSize;
+  span.style.fontFamily = 'system-ui, sans-serif';
+  span.textContent = textInput.value || textInput.placeholder || '';
+  document.body.appendChild(span);
+  textInput.style.width = (span.offsetWidth + 24) + 'px';
+  document.body.removeChild(span);
 }
 
 function addTextAt(x: number, y: number, text: string) {
@@ -583,8 +668,8 @@ function addTextAt(x: number, y: number, text: string) {
     ctx.strokeStyle = strokeColor;
     ctx.fillStyle = strokeColor; // Fill color for text
     ctx.lineWidth = 2; // Stroke width for text
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'top';
     ctx.fillText(text, x, y);
     saveState();
   }
@@ -616,12 +701,8 @@ function drawCursor() {
     cursorCtx.beginPath();
     cursorCtx.arc(mousePos.x, mousePos.y, radius, 0, 2 * Math.PI);
     cursorCtx.fillStyle = strokeColor;
-    cursorCtx.globalAlpha = 0.7;
+    //cursorCtx.globalAlpha = 0.7;
     cursorCtx.fill();
-    // cursorCtx.globalAlpha = 1.0;
-    // cursorCtx.strokeStyle = "#ccc";
-    // cursorCtx.lineWidth = 1.2;
-    // cursorCtx.stroke();
 
     // Draw a small arrow inside the dot, fitting exactly
     const arrowLen = radius * 0.8; // Arrow shaft fits inside the circle
@@ -778,7 +859,7 @@ drawCanvas.onmouseup = async (e) => {
       );
       ctx.stroke();
 
-    } 
+    }
     previewCtx.clearRect(0, 0, previewCanvas.width, previewCanvas.height);
   }
   saveState(); // Save the state after drawing
