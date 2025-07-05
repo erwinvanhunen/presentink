@@ -27,9 +27,14 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use uuid::Uuid;
 
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+
 mod screen_capture_permissions;
 use screen_capture_permissions::{preflight_access, request_access};
 pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
+pub struct ScreenShotMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
+pub struct BreakTimerMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
+pub struct TextTypingMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 
 lazy_static::lazy_static! {
@@ -59,6 +64,9 @@ pub fn run() {
                 .set_focus();
         }))
         .manage(DrawMenuState(Mutex::new(None)))
+        .manage(ScreenShotMenuState(Mutex::new(None)))
+        .manage(BreakTimerMenuState(Mutex::new(None)))
+        .manage(TextTypingMenuState(Mutex::new(None)))
         .manage(FileNameMenuState(Mutex::new(None)))
         .plugin(tauri_plugin_notification::init())
         .enable_macos_default_menu(false)
@@ -66,10 +74,24 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(
+                    |app, shortcut, event: tauri_plugin_global_shortcut::ShortcutEvent| {
+                        handle_shortcut(app, shortcut, &event);
+                    },
+                )
+                .build(),
+        )
         .setup(|app| {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
-            setup_shortcuts(app)?;
+            // setup_shortcuts(&app.handle())?;
             setup_menus(&app.handle())?;
+
+            // Register shortcuts after the app is set up
+            if let Err(e) = register_shortcuts(&app.handle()) {
+                eprintln!("Failed to register shortcuts: {}", e);
+            }
 
             create_splash_window(&app.handle());
             create_overlay_windows(&app.handle());
@@ -97,7 +119,11 @@ pub fn run() {
             close_screenshot_windows,
             enable_autolaunch,
             disable_autolaunch,
-            auto_launch_enabled
+            auto_launch_enabled,
+            update_shortcut,
+            enable_shortcuts,
+            disable_shortcuts,
+            get_settings
         ])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
@@ -108,19 +134,37 @@ pub fn run() {
 
 fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
     let settings: AppSettings = settings::get_settings(&app);
-
+    let shortcuts = settings.shortcuts;
     let icon = Image::from_bytes(include_bytes!("../icons/iconTemplate.png"))
         .expect("failed to load embedded tray icon");
 
-    let draw_i = CheckMenuItem::with_id(app, "draw", "Draw", true, false, Some("Alt+Shift+D"))?;
+    let draw_i = CheckMenuItem::with_id(app, "draw", "Draw", true, false, Some(shortcuts.drawing))?;
     {
         let draw_state = app.state::<DrawMenuState>();
         *draw_state.0.lock().unwrap() = Some(draw_i.clone());
     }
-    let breaktimer_i =
-        MenuItem::with_id(app, "breaktimer", "Break Timer", true, Some("Alt+Shift+B"))?;
-    let screenshot_i =
-        MenuItem::with_id(app, "screenshot", "Screenshot", true, Some("Alt+Shift+S"))?;
+    let breaktimer_i = MenuItem::with_id(
+        app,
+        "breaktimer",
+        "Break Timer",
+        true,
+        Some(shortcuts.break_mode),
+    )?;
+    {
+        let breaktimer_state = app.state::<BreakTimerMenuState>();
+        *breaktimer_state.0.lock().unwrap() = Some(breaktimer_i.clone());
+    }
+    let screenshot_i = MenuItem::with_id(
+        app,
+        "screenshot",
+        "Screenshot",
+        true,
+        Some(shortcuts.screenshot),
+    )?;
+    {
+        let screenshot_state = app.state::<ScreenShotMenuState>();
+        *screenshot_state.0.lock().unwrap() = Some(screenshot_i.clone());
+    }
     let quit_i = MenuItem::with_id(app, "quit", "Quit", true, Some("Cmd+Q"))?;
     let separator = PredefinedMenuItem::separator(app)?;
     let settings_i = MenuItem::with_id(app, "settings", "Settings...", true, Some(""))?;
@@ -139,7 +183,11 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
         &separator,
     ];
     let select_text_i = MenuItem::with_id(app, "select-text", "Select Text", true, Some(""))?;
-    let type_text_i = MenuItem::with_id(app, "edit-text", "Type Text", true, Some("Alt+Shift+T"))?;
+    let type_text_i = MenuItem::with_id(app, "edit-text", "Type Text", true, Some(shortcuts.text))?;
+    {
+        let text_typing_state = app.state::<TextTypingMenuState>();
+        *text_typing_state.0.lock().unwrap() = Some(type_text_i.clone());   
+    }
     let filename_i = MenuItem::with_id(app, "file-name", "No file selected", false, Some(""))?;
     {
         let file_name_state = app.state::<FileNameMenuState>();
@@ -208,73 +256,180 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
     Ok(())
 }
 
-fn setup_shortcuts(app: &mut tauri::App) -> Result<(), Box<dyn Error + 'static>> {
-    use tauri_plugin_global_shortcut::{
-        Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState,
-    };
+fn handle_shortcut(
+    app: &tauri::AppHandle,
+    shortcut: &Shortcut,
+    event: &tauri_plugin_global_shortcut::ShortcutEvent,
+) {
+    let settings = settings::get_settings(&app);
+    let shortcuts = settings.shortcuts;
 
-    let d_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyD);
-    let t_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyT);
-    let b_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyB);
-    let s_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyS);
-    let preferences_shortcut = Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::Comma);
+    let draw_shortcut = parse_shortcut_string(&shortcuts.drawing).unwrap_or(Shortcut::new(
+        Some(Modifiers::ALT | Modifiers::SHIFT),
+        Code::KeyD,
+    ));
+    let text_shortcut = parse_shortcut_string(&shortcuts.text).unwrap_or(Shortcut::new(
+        Some(Modifiers::ALT | Modifiers::SHIFT),
+        Code::KeyT,
+    ));
+    let break_shortcut = parse_shortcut_string(&shortcuts.break_mode).unwrap_or(Shortcut::new(
+        Some(Modifiers::ALT | Modifiers::SHIFT),
+        Code::KeyB,
+    ));
+    let screenshot_shortcut = parse_shortcut_string(&shortcuts.screenshot).unwrap_or(
+        Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyS),
+    );
 
-    let app_handle = app.handle().clone();
-    app.handle().plugin(
-        tauri_plugin_global_shortcut::Builder::new()
-            .with_handler(move |_app, shortcut, event| {
-                if shortcut == &d_shortcut {
-                    match event.state() {
-                        ShortcutState::Pressed => {
-                            toggle_draw(&app_handle);
-                        }
-                        ShortcutState::Released => {}
-                    }
-                }
+    let preferences_shortcut = parse_shortcut_string(&shortcuts.preferences).unwrap_or(
+        Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyP),
+    );
 
-                if shortcut == &s_shortcut {
-                    match event.state() {
-                        ShortcutState::Pressed => {
-                            start_screenshot(&app_handle);
-                        }
-                        ShortcutState::Released => {}
-                    }
+    match event.state() {
+        ShortcutState::Pressed => {
+            if shortcut == &draw_shortcut {
+                toggle_draw(&app);
+            } else if shortcut == &screenshot_shortcut {
+                start_screenshot(&app);
+            } else if shortcut == &text_shortcut {
+                send_script(app.clone());
+            } else if shortcut == &break_shortcut {
+                show_break_time(app.clone());
+            } else if shortcut == &preferences_shortcut {
+                if let Err(e) = open_settings(app.clone()) {
+                    println!("Failed to open settings: {}", e);
                 }
-                if shortcut == &t_shortcut {
-                    match event.state() {
-                        ShortcutState::Pressed => {
-                            send_script(app_handle.clone());
-                        }
-                        ShortcutState::Released => {}
-                    }
-                }
-                if shortcut == &b_shortcut {
-                    match event.state() {
-                        ShortcutState::Pressed => {
-                            show_break_time(app_handle.clone());
-                        }
-                        ShortcutState::Released => {}
-                    }
-                }
-                if cfg!(dev) && shortcut == &preferences_shortcut {
-                    match event.state() {
-                        ShortcutState::Pressed => {
-                            let _ = open_settings(app_handle.clone());
-                        }
-                        ShortcutState::Released => {}
-                    }
-                }
-            })
-            .build(),
-    )?;
-    app.global_shortcut().register(d_shortcut)?;
-    app.global_shortcut().register(t_shortcut)?;
-    app.global_shortcut().register(b_shortcut)?;
-    app.global_shortcut().register(s_shortcut)?;
-    if cfg!(dev) {
-        // In development mode, use Ctrl+Shift+D for drawing
-        app.global_shortcut().register(preferences_shortcut)?;
+            } else {
+                println!("Unhandled shortcut: {:?}", shortcut);
+            }
+        }
+        ShortcutState::Released => {}
     }
+}
+
+fn parse_shortcut_string(shortcut: &str) -> Option<Shortcut> {
+    let mut modifiers = Modifiers::empty();
+    let mut main_key: Option<Code> = None;
+
+    for part in shortcut.split('+') {
+        match part.trim().to_lowercase().as_str() {
+            "cmd" | "meta" => modifiers |= Modifiers::META,
+            "ctrl" | "control" => modifiers |= Modifiers::CONTROL,
+            "opt" | "alt" | "option" => modifiers |= Modifiers::ALT,
+            "shift" => modifiers |= Modifiers::SHIFT,
+            other => {
+                if other.len() == 1 && other.chars().all(|c| c.is_ascii_alphabetic()) {
+                    let c = other.chars().next().unwrap().to_ascii_uppercase();
+                    main_key = match c {
+                        'A' => Some(Code::KeyA),
+                        'B' => Some(Code::KeyB),
+                        'C' => Some(Code::KeyC),
+                        'D' => Some(Code::KeyD),
+                        'E' => Some(Code::KeyE),
+                        'F' => Some(Code::KeyF),
+                        'G' => Some(Code::KeyG),
+                        'H' => Some(Code::KeyH),
+                        'I' => Some(Code::KeyI),
+                        'J' => Some(Code::KeyJ),
+                        'K' => Some(Code::KeyK),
+                        'L' => Some(Code::KeyL),
+                        'M' => Some(Code::KeyM),
+                        'N' => Some(Code::KeyN),
+                        'O' => Some(Code::KeyO),
+                        'P' => Some(Code::KeyP),
+                        'Q' => Some(Code::KeyQ),
+                        'R' => Some(Code::KeyR),
+                        'S' => Some(Code::KeyS),
+                        'T' => Some(Code::KeyT),
+                        'U' => Some(Code::KeyU),
+                        'V' => Some(Code::KeyV),
+                        'W' => Some(Code::KeyW),
+                        'X' => Some(Code::KeyX),
+                        'Y' => Some(Code::KeyY),
+                        'Z' => Some(Code::KeyZ),
+                        _ => None,
+                    };
+                } else if other.len() == 1 && other.chars().all(|c| c.is_ascii_digit()) {
+                    let c = other.chars().next().unwrap();
+                    main_key = match c {
+                        '0' => Some(Code::Digit0),
+                        '1' => Some(Code::Digit1),
+                        '2' => Some(Code::Digit2),
+                        '3' => Some(Code::Digit3),
+                        '4' => Some(Code::Digit4),
+                        '5' => Some(Code::Digit5),
+                        '6' => Some(Code::Digit6),
+                        '7' => Some(Code::Digit7),
+                        '8' => Some(Code::Digit8),
+                        '9' => Some(Code::Digit9),
+                        _ => None,
+                    };
+                } else {
+                    // You may want to match other special keys here if needed
+                    main_key = match other {
+                        "comma" => Some(Code::Comma),
+                        "period" => Some(Code::Period),
+                        "slash" => Some(Code::Slash),
+                        "semicolon" => Some(Code::Semicolon),
+                        "quote" => Some(Code::Quote),
+                        "bracketleft" => Some(Code::BracketLeft),
+                        "bracketright" => Some(Code::BracketRight),
+                        "backslash" => Some(Code::Backslash),
+                        "minus" => Some(Code::Minus),
+                        "equal" => Some(Code::Equal),
+                        "space" => Some(Code::Space),
+                        "tab" => Some(Code::Tab),
+                        "escape" => Some(Code::Escape),
+                        "enter" => Some(Code::Enter),
+                        "backspace" => Some(Code::Backspace),
+                        "delete" => Some(Code::Delete),
+                        "insert" => Some(Code::Insert),
+                        "home" => Some(Code::Home),
+                        "end" => Some(Code::End),
+                        "pageup" => Some(Code::PageUp),
+                        "pagedown" => Some(Code::PageDown),
+                        "arrowleft" | "left" => Some(Code::ArrowLeft),
+                        "arrowright" | "right" => Some(Code::ArrowRight),
+                        "arrowup" | "up" => Some(Code::ArrowUp),
+                        "arrowdown" | "down" => Some(Code::ArrowDown),
+                        _ => None,
+                    };
+                }
+            }
+        }
+    }
+    main_key.map(|code| Shortcut::new(Some(modifiers), code))
+}
+
+fn register_shortcuts(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
+    let settings = settings::get_settings(&app);
+    let shortcuts = settings.shortcuts;
+
+    let draw_shortcut = parse_shortcut_string(&shortcuts.drawing).unwrap_or(Shortcut::new(
+        Some(Modifiers::ALT | Modifiers::SHIFT),
+        Code::KeyD,
+    ));
+    let text_shortcut = parse_shortcut_string(&shortcuts.text).unwrap_or(Shortcut::new(
+        Some(Modifiers::ALT | Modifiers::SHIFT),
+        Code::KeyT,
+    ));
+    let break_shortcut = parse_shortcut_string(&shortcuts.break_mode).unwrap_or(Shortcut::new(
+        Some(Modifiers::ALT | Modifiers::SHIFT),
+        Code::KeyB,
+    ));
+    let screenshot_shortcut = parse_shortcut_string(&shortcuts.screenshot).unwrap_or(
+        Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyS),
+    );
+
+    let preferences_shortcut = parse_shortcut_string(&shortcuts.preferences).unwrap_or(
+        Shortcut::new(Some(Modifiers::ALT | Modifiers::SHIFT), Code::KeyP),
+    );
+
+    // Register shortcuts
+    app.global_shortcut().register(draw_shortcut)?;
+    app.global_shortcut().register(text_shortcut)?;
+    app.global_shortcut().register(break_shortcut)?;
+    app.global_shortcut().register(screenshot_shortcut)?;
+    app.global_shortcut().register(preferences_shortcut)?;
     Ok(())
 }
 
@@ -329,6 +484,27 @@ fn set_draw_menu_checked(app: &tauri::AppHandle, checked: bool) {
     let state = app.state::<DrawMenuState>();
     if let Some(draw_item) = &*state.0.lock().unwrap() {
         let _ = draw_item.set_checked(checked);
+    }
+}
+
+fn update_menu_shortcuts(app: &tauri::AppHandle) {
+    let settings = settings::get_settings(&app);
+    let shortcuts = settings.shortcuts;
+    let drawitem_state = app.state::<DrawMenuState>();
+    let screenshotitem_state = app.state::<ScreenShotMenuState>();
+    let breaktimeritem_state = app.state::<BreakTimerMenuState>();
+    let texttypingitem_state = app.state::<TextTypingMenuState>();
+    if let Some(draw_item) = &*drawitem_state.0.lock().unwrap() {
+        let _ = draw_item.set_accelerator(Some(shortcuts.drawing));
+    }
+    if let Some(screenshot_item) = &*screenshotitem_state.0.lock().unwrap() {
+        let _ = screenshot_item.set_accelerator(Some(shortcuts.screenshot));
+    }
+    if let Some(breaktimer_item) = &*breaktimeritem_state.0.lock().unwrap() {
+        let _ = breaktimer_item.set_accelerator(Some(shortcuts.break_mode));
+    }
+    if let Some(text_typing_item) = &*texttypingitem_state.0.lock().unwrap() {
+        let _ = text_typing_item.set_accelerator(Some(shortcuts.text));
     }
 }
 
@@ -439,7 +615,6 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             }
             let position = monitor.position();
             let size = monitor.size();
-
 
             match WebviewWindowBuilder::new(
                 app,
@@ -935,4 +1110,48 @@ fn create_screenshot_windows(app: &tauri::AppHandle) {
             }
         }
     }
+}
+
+#[tauri::command]
+fn update_shortcut(app: tauri::AppHandle, action: String, shortcut: String) -> Result<(), String> {
+    // Update the shortcut in settings
+    // You'll need to implement this in your settings module
+    // settings::update_shortcut(&app, &action, &shortcut).map_err(|e| e.to_string())?;
+    let mut settings = settings::get_settings(&app);
+    match action.as_str() {
+        "drawing" => settings.shortcuts.drawing = shortcut.clone(),
+        "text" => settings.shortcuts.text = shortcut.clone(),
+        "break_mode" => settings.shortcuts.break_mode = shortcut.clone(),
+        "screenshot" => settings.shortcuts.screenshot = shortcut.clone(),
+        "preferences" => settings.shortcuts.preferences = shortcut.clone(),
+        _ => return Err("Unknown shortcut action".into()),
+    }
+    let _ = settings::save_settings(&app, &settings);
+    // Unregister all shortcuts and re-register with new settings
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|e| e.to_string())?;
+    register_shortcuts(&app).map_err(|e| e.to_string())?;
+
+    update_menu_shortcuts(&app);
+    Ok(())
+}
+
+#[tauri::command]
+fn disable_shortcuts(app: tauri::AppHandle) -> Result<(), String> {
+    app.global_shortcut()
+        .unregister_all()
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn enable_shortcuts(app: tauri::AppHandle) -> Result<(), String> {
+    register_shortcuts(&app).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+fn get_settings(app: tauri::AppHandle) -> Result<AppSettings, String> {
+    Ok(settings::get_settings(&app))
 }

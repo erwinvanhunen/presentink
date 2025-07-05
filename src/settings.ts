@@ -1,5 +1,4 @@
 import { Store } from '@tauri-apps/plugin-store';
-
 export interface AppSettings {
   penWidth: number;
   arrowHeadLength: number;
@@ -7,6 +6,13 @@ export interface AppSettings {
   showExperimentalFeatures: boolean;
   breakTime: number;
   penColor?: string; // Optional, can be added later
+  shortcuts?: {
+    drawing: string;
+    text: string;
+    break_mode: string;
+    screenshot: string;
+    preferences: string; // Default shortcut for preferences
+  };
 }
 
 const defaultSettings: AppSettings = {
@@ -16,6 +22,13 @@ const defaultSettings: AppSettings = {
   showExperimentalFeatures: false,
   breakTime: 10, // default to 10 minutes
   penColor: '#ff0000', // Default pen color (red)
+  shortcuts: {
+    drawing: 'Option+Shift+D',
+    text: 'Option+Shift+T',
+    break_mode: 'Option+Shift+B',
+    screenshot: 'Option+Shift+S',
+    preferences: 'Option+Shift+P' // Default shortcut for preferences
+  }
 };
 
 let store: Store;

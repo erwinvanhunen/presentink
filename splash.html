@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <title>PresentInk</title>
+    <script type="module" src="/src/splash.ts" defer></script>
     <style>
         body,
         html {
@@ -86,38 +87,11 @@
             <div clas="icon"><img src="/images/icon_256x256.png" width="128" height="128" /></div>
             <div class="text">
                 <div class="title">PresentInk</div>
-                <div class="hint">Press <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>D</kbd> to toggle drawing</div>
+                <div class="hint">Press <span id="shortcut-keys"><kbd>Option</kbd> + <kbd>Shift</kbd> +
+                        <kbd>AAA</kbd></span> to toggle drawing</div>
             </div>
         </div>
     </div>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            intro = document.getElementById('app-intro');
-
-             setTimeout(() => {
-                intro.classList.add('visible');
-            }, 10); // allow DOM to render
-
-            // Fade out after 1.5s (half of 3s)
-            setTimeout(() => {
-                intro.classList.remove('visible');
-            }, 1500);
-
-            // Fully hide after 3s
-            setTimeout(() => {
-                intro.style.display = 'none';
-            }, 3000);
-            // intro.style.opacity = '1';
-
-            // setTimeout(() => {
-            //     intro.style.opacity = '0';
-            // }, 2000); // Show for 2 seconds
-
-            // setTimeout(() => {
-            //     intro.style.display = 'none';
-            // }, 3000); // Fully hide after fade out
-        });
-    </script>
 </body>
 
 </html>

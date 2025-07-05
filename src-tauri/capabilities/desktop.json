@@ -10,7 +10,8 @@
     "break-window-*",
     "about",
     "help",
-    "screenshot-window-*"
+    "screenshot-window-*",
+    "splash"
   ],
   "permissions": [
     "global-shortcut:allow-register",
