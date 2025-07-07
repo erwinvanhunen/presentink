@@ -1190,36 +1190,38 @@ async fn check_for_new_version(app: tauri::AppHandle) -> Result<(), String> {
         .unwrap()
         .as_secs();
     let mut settings = settings::get_settings(&app);
-    let last_check = settings.last_version_check;
-    if let Ok(last) = last_check.parse::<u64>() {
-        if now - last < 60 * 60 * 24 {
-            return Ok(()); // Already checked today
+    if settings.version_check {
+        let last_check = settings.last_version_check;
+        if let Ok(last) = last_check.parse::<u64>() {
+            if now - last < 60 * 60 * 24 {
+                return Ok(()); // Already checked today
+            }
         }
-    }
-    settings.last_version_check = now.to_string();
-    let _ = settings::save_settings(&app, &settings);
+        settings.last_version_check = now.to_string();
+        let _ = settings::save_settings(&app, &settings);
 
-    // Fetch latest release from GitHub
-    let client = reqwest::Client::new();
-    let resp = client
-        .get("https://api.github.com/repos/erwinvanhunen/presentink/releases/latest")
-        .header("User-Agent", "PresentInk")
-        .send()
-        .await
-        .map_err(|e| e.to_string())?;
+        // Fetch latest release from GitHub
+        let client = reqwest::Client::new();
+        let resp = client
+            .get("https://api.github.com/repos/erwinvanhunen/presentink/releases/latest")
+            .header("User-Agent", "PresentInk")
+            .send()
+            .await
+            .map_err(|e| e.to_string())?;
 
-    let release: GithubRelease = resp.json().await.map_err(|e| e.to_string())?;
+        let release: GithubRelease = resp.json().await.map_err(|e| e.to_string())?;
 
-    // Get current version from tauri.conf.json (env! macro)
-    let available_version = Version::parse(&release.tag_name).unwrap();
-    if app.package_info().version < available_version {
-        // If the available version is greater than the current version, notify the user
-        let _ = app
-            .notification()
-            .builder()
-            .title("PresentInk")
-            .body("A new version is available! Download it now from https://presentink.com")
-            .show();
+        // Get current version from tauri.conf.json (env! macro)
+        let available_version = Version::parse(&release.tag_name).unwrap();
+        if app.package_info().version < available_version {
+            // If the available version is greater than the current version, notify the user
+            let _ = app
+                .notification()
+                .builder()
+                .title("PresentInk")
+                .body("A new version is available! Download it now from https://presentink.com")
+                .show();
+        }
     }
     Ok(())
 }

@@ -490,13 +490,15 @@ function setupEventListeners() {
     const arrowHeadValue = document.getElementById('arrowHeadValue');
     const launchAtLogin = document.getElementById('launchAtLogin') as HTMLInputElement
     const showExperimental = document.getElementById('showExperimental') as HTMLInputElement;
-
+    const versionCheck = document.getElementById('checkForUpdates') as HTMLInputElement;
     const closeBtn = document.getElementById('closeBtn');
     if (closeBtn) {
         closeBtn.addEventListener('click', async () => {
             await currentWindow.close();
         });
     }
+
+
 
     if (arrowHead && arrowHeadValue && arrowCtx && arrowCanvas && penWidth && penWidthValue && penWidthCtx && penWidthCanvas) {
         arrowHead.oninput = () => {
@@ -545,6 +547,13 @@ function setupEventListeners() {
                 'show-experimental-features': showExperimental.checked
 
             });
+        };
+    }
+
+    if (versionCheck) {
+        versionCheck.onchange = () => {
+            invoke("print_output", { text: `Version check is now ${versionCheck.checked ? 'enabled' : 'disabled'}` });
+            updateSetting('versionCheck', versionCheck.checked);
         };
     }
 
@@ -605,7 +614,7 @@ function updateUI() {
     const arrowHeadValue = document.getElementById('arrowHeadValue');
     const launchAtLogin = document.getElementById('launchAtLogin') as HTMLInputElement
     const showExperimental = document.getElementById('showExperimental') as HTMLInputElement;
-
+    const versionCheck = document.getElementById('checkForUpdates') as HTMLInputElement;
     penWidthInt = appSettings.penWidth || 3;
     arrowHeadLengthInt = appSettings.arrowHeadLength || 20;
     penWidth.value = penWidthInt.toString();
@@ -620,8 +629,16 @@ function updateUI() {
     if (showExperimental) {
         showExperimental.checked = appSettings.showExperimentalFeatures || false;
     }
-
-
+    if (versionCheck) {
+        invoke("print_output", { text: `Version check is ${appSettings.versionCheck ? 'enabled' : 'disabled'}` });
+        if (appSettings.versionCheck === undefined) {
+            // If versionCheck is undefined, set it to true by default
+            appSettings.versionCheck = true;
+            updateSetting('versionCheck', true);
+        } else {
+            versionCheck.checked = appSettings.versionCheck;
+        }
+    }
     // Update shortcut displays
     const shortcuts = appSettings.shortcuts || {
         drawing: 'Option+Shift+D',

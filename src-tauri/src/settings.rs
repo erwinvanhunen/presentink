@@ -26,7 +26,9 @@ pub struct AppSettings {
     #[serde(rename = "shortcuts")]
     pub shortcuts: Shortcuts,
     #[serde(rename= "lastVersionCheck")]
-    pub last_version_check: String
+    pub last_version_check: String,
+    #[serde(rename = "versionCheck")]
+    pub version_check: bool, // Optional field for version check
 }
 
 impl Default for Shortcuts {
@@ -50,7 +52,8 @@ impl Default for AppSettings {
             show_experimental_features: false,
             break_time: 10,
             shortcuts: Shortcuts::default(),
-            last_version_check: "0".into() // Default date for last version check
+            last_version_check: "0".into(), // Default date for last version check
+            version_check: true // Default to true for version checks
         }
     }
 }

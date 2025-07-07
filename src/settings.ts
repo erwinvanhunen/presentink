@@ -6,6 +6,8 @@ export interface AppSettings {
   showExperimentalFeatures: boolean;
   breakTime: number;
   penColor?: string; // Optional, can be added later
+  versionCheck?: boolean; // Optional, can be added later
+  lastVersionCheck?: string; // Optional, can be added later
   shortcuts?: {
     drawing: string;
     text: string;
@@ -22,6 +24,8 @@ const defaultSettings: AppSettings = {
   showExperimentalFeatures: false,
   breakTime: 10, // default to 10 minutes
   penColor: '#ff0000', // Default pen color (red)
+  versionCheck: true, // Default to true for version checks
+  lastVersionCheck: '0',
   shortcuts: {
     drawing: 'Option+Shift+D',
     text: 'Option+Shift+T',
