@@ -1185,12 +1185,13 @@ fn get_settings(app: tauri::AppHandle) -> Result<AppSettings, String> {
 #[tauri::command]
 async fn check_for_new_version(app: tauri::AppHandle) -> Result<(), String> {
     // Only check once per day
-    let now = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .unwrap()
-        .as_secs();
+
     let mut settings = settings::get_settings(&app);
     if settings.version_check {
+        let now = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs();
         let last_check = settings.last_version_check;
         if let Ok(last) = last_check.parse::<u64>() {
             if now - last < 60 * 60 * 24 {
