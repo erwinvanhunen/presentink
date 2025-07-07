@@ -3585,6 +3585,7 @@ dependencies = [
  "lazy_static",
  "objc",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
  "tauri",

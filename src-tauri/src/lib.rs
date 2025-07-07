@@ -7,6 +7,7 @@ use enigo::{
     Direction::{Press, Release},
     Enigo, Keyboard, Settings,
 };
+use semver::Version;
 use std::error::Error;
 use std::path::PathBuf;
 use tauri::{
@@ -1210,10 +1211,9 @@ async fn check_for_new_version(app: tauri::AppHandle) -> Result<(), String> {
     let release: GithubRelease = resp.json().await.map_err(|e| e.to_string())?;
 
     // Get current version from tauri.conf.json (env! macro)
-    let current_version = env!("CARGO_PKG_VERSION");
-
-    if release.tag_name.trim_start_matches('v') != current_version {
-        // Send a notification
+    let available_version = Version::parse(&release.tag_name).unwrap();
+    if app.package_info().version < available_version {
+        // If the available version is greater than the current version, notify the user
         let _ = app
             .notification()
             .builder()
