@@ -1,12 +1,12 @@
 import { invoke } from '@tauri-apps/api/core';
 import { AppSettings } from './settings';
+
 async function loadShortcut() {
     try {
-        //invoke("get_settings", { text: `getting settings` });
-
+      
         // Get settings from backend
         let settings = await invoke("get_settings") as AppSettings
-        const drawingShortcut = settings.shortcuts?.drawing || 'Option+Shift+GGG';
+        const drawingShortcut = settings.shortcuts?.drawing || 'Option+Shift+D';
         // Parse the shortcut string and format it nicely
         const keys = drawingShortcut.split('+').map(key => key.trim());
         const formattedKeys = keys.map(key => `<kbd>${key}</kbd>`).join(' + ');
@@ -31,14 +31,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             intro.classList.add('visible');
         }, 10); // allow DOM to render
 
-        // Fade out after 1.5s (half of 3s)
-        // setTimeout(() => {
-        //     intro.classList.remove('visible');
-        // }, 1500);
+        
+        setTimeout(() => {
+            intro.classList.remove('visible');
+        }, 1500);
 
-        // Fully hide after 3s
-        // setTimeout(() => {
-        //     intro.style.display = 'none';
-        // }, 3000);
+
+        setTimeout(() => {
+            intro.style.display = 'none';
+        }, 3000);
     }
 });

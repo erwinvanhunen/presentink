@@ -25,6 +25,8 @@ pub struct AppSettings {
     pub break_time: u32,
     #[serde(rename = "shortcuts")]
     pub shortcuts: Shortcuts,
+    #[serde(rename= "lastVersionCheck")]
+    pub last_version_check: String
 }
 
 impl Default for Shortcuts {
@@ -34,7 +36,7 @@ impl Default for Shortcuts {
             text: "Option+Shift+T".into(),
             break_mode: "Option+Shift+B".into(),
             screenshot: "Option+Shift+S".into(),
-            preferences: "Option+Shift+P".into(),
+            preferences: "Option+Shift+P".into()
         }
     }
 }
@@ -48,6 +50,7 @@ impl Default for AppSettings {
             show_experimental_features: false,
             break_time: 10,
             shortcuts: Shortcuts::default(),
+            last_version_check: "0".into() // Default date for last version check
         }
     }
 }

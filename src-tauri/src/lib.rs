@@ -15,6 +15,7 @@ use tauri::{
     menu::{CheckMenuItem, Menu, MenuItem, PredefinedMenuItem, Submenu},
     tray::TrayIconBuilder,
 };
+use tauri_plugin_notification::NotificationExt;
 
 use tauri_plugin_opener::OpenerExt;
 use xcap::{
@@ -27,8 +28,8 @@ use std::collections::HashMap;
 use std::sync::Mutex;
 use uuid::Uuid;
 
+use std::time::{SystemTime, UNIX_EPOCH};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
-
 mod screen_capture_permissions;
 use screen_capture_permissions::{preflight_access, request_access};
 pub struct DrawMenuState(pub Mutex<Option<CheckMenuItem<tauri::Wry>>>);
@@ -36,6 +37,22 @@ pub struct ScreenShotMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 pub struct BreakTimerMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 pub struct TextTypingMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
 pub struct FileNameMenuState(pub Mutex<Option<MenuItem<tauri::Wry>>>);
+
+#[derive(serde::Deserialize, Debug)]
+#[serde(default)]
+struct GithubRelease {
+    tag_name: String,
+    html_url: String,
+}
+
+impl Default for GithubRelease {
+    fn default() -> Self {
+        GithubRelease {
+            tag_name: String::new(),
+            html_url: String::new(),
+        }
+    }
+}
 
 lazy_static::lazy_static! {
     static ref ICON_CACHE: Mutex<HashMap<String, tauri::image::Image<'static>>> = Mutex::new(HashMap::new());
@@ -130,7 +147,8 @@ pub fn run() {
             update_shortcut,
             enable_shortcuts,
             disable_shortcuts,
-            get_settings
+            get_settings,
+            check_for_new_version
         ])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
@@ -1161,4 +1179,47 @@ fn enable_shortcuts(app: tauri::AppHandle) -> Result<(), String> {
 #[tauri::command]
 fn get_settings(app: tauri::AppHandle) -> Result<AppSettings, String> {
     Ok(settings::get_settings(&app))
+}
+
+#[tauri::command]
+async fn check_for_new_version(app: tauri::AppHandle) -> Result<(), String> {
+    // Only check once per day
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+    let mut settings = settings::get_settings(&app);
+    let last_check = settings.last_version_check;
+    if let Ok(last) = last_check.parse::<u64>() {
+        if now - last < 60 * 60 * 24 {
+            return Ok(()); // Already checked today
+        }
+    }
+    settings.last_version_check = now.to_string();
+    let _ = settings::save_settings(&app, &settings);
+
+    // Fetch latest release from GitHub
+    let client = reqwest::Client::new();
+    let resp = client
+        .get("https://api.github.com/repos/erwinvanhunen/presentink/releases/latest")
+        .header("User-Agent", "PresentInk")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let release: GithubRelease = resp.json().await.map_err(|e| e.to_string())?;
+
+    // Get current version from tauri.conf.json (env! macro)
+    let current_version = env!("CARGO_PKG_VERSION");
+
+    if release.tag_name.trim_start_matches('v') != current_version {
+        // Send a notification
+        let _ = app
+            .notification()
+            .builder()
+            .title("PresentInk")
+            .body("A new version is available! Download it now from https://presentink.com")
+            .show();
+    }
+    Ok(())
 }

@@ -13,7 +13,9 @@ let originalScript: ScriptAction[] = [];
 let currentScript: ScriptAction[] = [];
 let permissionGranted: boolean = false;
 
+
 window.addEventListener("DOMContentLoaded", async () => {
+  invoke("check_for_new_version");
   const window = Window.getCurrent();
   window.hide();
 
