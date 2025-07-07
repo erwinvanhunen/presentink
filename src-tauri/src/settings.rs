@@ -69,14 +69,15 @@ pub fn save_settings(app: &AppHandle, settings: &AppSettings) -> Result<(), Stri
     let store = StoreBuilder::new(app, ".settings.dat")
         .build()
         .map_err(|e| format!("Failed to create store: {}", e))?;
-    
+
     let settings_value = serde_json::to_value(settings)
         .map_err(|e| format!("Failed to serialize settings: {}", e))?;
-    
+
     store.set("settings", settings_value);
-    
-    store.save()
+
+    store
+        .save()
         .map_err(|e| format!("Failed to save settings: {}", e))?;
-    
+
     Ok(())
 }

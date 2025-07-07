@@ -11,7 +11,7 @@ const previewCanvas = document.getElementById('preview-canvas') as HTMLCanvasEle
 const previewCtx = previewCanvas.getContext('2d');
 const cursorCanvas = document.getElementById('cursor-canvas') as HTMLCanvasElement;
 const cursorCtx = cursorCanvas.getContext('2d');
-
+const wrapper = document.getElementById('wrapper') as HTMLDivElement;
 let appSettings: AppSettings;
 let drawingMode = "freehand"; // Default drawing mode
 let strokeColor = "#ff0000"; // Default stroke color
@@ -128,13 +128,15 @@ async function initializeOverlay() {
       }
     } else {
       if (e.deltaY < 0) {
+        textSize += 1;
+        updateTextInputWidth();
+
+      } else if (e.deltaY > 0) {
         if (textSize > 1) {
           textSize -= 1;
           updateTextInputWidth();
         }
-      } else if (e.deltaY > 0) {
-        textSize += 1;
-        updateTextInputWidth();}
+      }
     }
   });
 }
@@ -142,9 +144,12 @@ async function initializeOverlay() {
 function toggleCanvas(show: boolean): void {
   const window = Window.getCurrent();
   if (!show) {
+    wrapper.style.background = 'transparent';
+    cancelAddingText();
     clearCanvas();
     window.hide();
   } else {
+    wrapper.style.background = 'transparent';
     clearCanvas();
     window.show().then(() => {
       drawingMode = 'freehand'; // Reset to freehand mode 
@@ -359,9 +364,20 @@ document.onkeydown = async (e) => {
       clearCanvas();
     }
   }
-  if (e.key === 'x') { // 'u' for blurrect, or pick your own key
-    drawingMode = 'blurrect';
-    drawCursor();
+  if (e.key === 'w') {
+    if (wrapper.style.background === 'none') {
+      wrapper.style.background = "white";
+    } else {
+      wrapper.style.background = 'transparent';
+    }
+  }
+  if (e.key === 'k') {
+    invoke("print_output", { text: `Toggling background color ${wrapper.style.background}` });
+    if (wrapper.style.background === 'none') {
+      wrapper.style.background = "black";
+    } else {
+      wrapper.style.background = 'transparent';
+    }
   }
   if (e.key === 't' || e.key === 'T') {
     if (!placingText) {
@@ -550,6 +566,7 @@ drawCanvas.onmousemove = (e) => {
 function showTextInput(x: number, y: number) {
   if (textInput) return;
   textInput = document.createElement('input');
+  textInput.id = 'text-helper';
   textInput.type = 'text';
   textInput.style.position = 'absolute';
   textInput.style.left = `${x}px`;
@@ -584,19 +601,6 @@ function showTextInput(x: number, y: number) {
   window.addEventListener('mousemove', onTextInputDrag);
   window.addEventListener('mouseup', stopTextInputDrag);
 
-  function onTextInputDrag(ev: MouseEvent) {
-    if (isDraggingTextInput && textInput) {
-    textInput.style.left = `${ev.clientX - dragOffset.x}px`;
-    textInput.style.top = `${ev.clientY - dragOffset.y}px`;
-  }
-  }
-  function stopTextInputDrag() {
-    if (textInput) {
-      textInput.style.border = '2px dashed #0a84ff';
-      textInput.style.background = 'rgba(255,255,255,0.12)';
-    }
-    isDraggingTextInput = false;
-  }
 
   // Dynamic width as you type
   textInput.addEventListener('input', () => {
@@ -624,11 +628,7 @@ function showTextInput(x: number, y: number) {
     }
     if (ev.key === 'Escape') {
       ev.stopPropagation();
-      placingText = false;
-      document.body.removeChild(textInput!);
-      textInput = null;
-      window.removeEventListener('mousemove', onTextInputDrag);
-      window.removeEventListener('mouseup', stopTextInputDrag);
+      cancelAddingText();
     }
     if (ev.key === 'ArrowUp') {
       ev.preventDefault();
@@ -645,10 +645,35 @@ function showTextInput(x: number, y: number) {
   };
 }
 
+function cancelAddingText() {
+  placingText = false;
+  if (document.body.contains(textInput!)) {
+    document.body.removeChild(textInput!);
+  }
+  textInput = null;
+  window.removeEventListener('mousemove', onTextInputDrag);
+  window.removeEventListener('mouseup', stopTextInputDrag);
+}
+
+function onTextInputDrag(ev: MouseEvent) {
+  if (isDraggingTextInput && textInput) {
+    textInput.style.left = `${ev.clientX - dragOffset.x}px`;
+    textInput.style.top = `${ev.clientY - dragOffset.y}px`;
+  }
+}
+function stopTextInputDrag() {
+  if (textInput) {
+    textInput.style.border = '2px dashed #0a84ff';
+    textInput.style.background = 'rgba(255,255,255,0.12)';
+  }
+  isDraggingTextInput = false;
+}
+
 
 function updateTextInputWidth() {
   if (!textInput) return;
   textInput.style.fontSize = textSize + 'pt';
+
   const span = document.createElement('span');
   span.style.visibility = 'hidden';
   span.style.position = 'fixed';
@@ -761,10 +786,7 @@ function drawCursor() {
     cursorCtx.strokeStyle = strokeColor;
     cursorCtx.arc(mousePos.x, mousePos.y, penWidth / 2, 0, 2 * Math.PI);
     cursorCtx.fillStyle = strokeColor;
-    //cursorCtx.shadowColor = 'rgba(0,0,0,0.18)';
-    //cursorCtx.shadowBlur = 2;
     cursorCtx.fill();
-    //cursorCtx.shadowBlur = 0;
   }
 }
 

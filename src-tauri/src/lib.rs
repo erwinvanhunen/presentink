@@ -74,6 +74,13 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_store::Builder::default().build())
+        // .plugin(
+        //     tauri_plugin_log::Builder::new()
+        //         .target(tauri_plugin_log::Target::new(
+        //             tauri_plugin_log::TargetKind::Stdout,
+        //         ))
+        //         .build(),
+        // )
         .plugin(
             tauri_plugin_global_shortcut::Builder::new()
                 .with_handler(
@@ -186,7 +193,7 @@ fn setup_menus(app: &tauri::AppHandle) -> Result<(), Box<dyn Error + 'static>> {
     let type_text_i = MenuItem::with_id(app, "edit-text", "Type Text", true, Some(shortcuts.text))?;
     {
         let text_typing_state = app.state::<TextTypingMenuState>();
-        *text_typing_state.0.lock().unwrap() = Some(type_text_i.clone());   
+        *text_typing_state.0.lock().unwrap() = Some(type_text_i.clone());
     }
     let filename_i = MenuItem::with_id(app, "file-name", "No file selected", false, Some(""))?;
     {
@@ -626,7 +633,7 @@ fn create_overlay_windows(app: &tauri::AppHandle) {
             .inner_size(size.width as f64, size.height as f64)
             .position(position.x as f64, position.y as f64)
             .inner_size(size.width as f64, size.height as f64)
-            .center()
+            // ee.center()
             .shadow(false)
             .resizable(false)
             .transparent(true)
