@@ -17,6 +17,8 @@ const resetDrawShortcutBtn = document.getElementById('resetDrawShortcut') as HTM
 const resetTextShortcutBtn = document.getElementById('resetTextShortcut') as HTMLButtonElement;
 const resetBreakShortcutBtn = document.getElementById('resetBreakShortcut') as HTMLButtonElement;
 const resetScreenshotShortcutBtn = document.getElementById('resetScreenshotShortcut') as HTMLButtonElement;
+const checkNowBtn = document.getElementById('checkNowBtn') as HTMLButtonElement;
+const lastCheckText = document.getElementById('lastCheckText') as HTMLSpanElement;
 
 // Default shortcuts constant
 const DEFAULT_SHORTCUTS = {
@@ -31,19 +33,91 @@ let recordingShortcut = false;
 let currentShortcutType: 'drawing' | 'text' | 'break_mode' | 'screenshot' | null = null;
 
 window.addEventListener('contextmenu', (e) => {
-  e.preventDefault();
+    e.preventDefault();
 });
 
 document.querySelectorAll('.prefs-cat-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.prefs-cat-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    const cat = btn.getAttribute('data-cat');
-    document.querySelectorAll('.prefs-category').forEach(div  => {
-      (div as HTMLDivElement).style.display = div.id === 'cat-' + cat ? 'block' : 'none';
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.prefs-cat-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        const cat = btn.getAttribute('data-cat');
+        document.querySelectorAll('.prefs-category').forEach(div => {
+            (div as HTMLDivElement).style.display = div.id === 'cat-' + cat ? 'block' : 'none';
+        });
     });
-  });
 });
+
+async function checkForUpdates() {
+    checkNowBtn.disabled = true;
+    checkNowBtn.classList.add('checking');
+    checkNowBtn.textContent = 'Checking...';
+    let result: any = null;
+    try {
+        // Call your version check command
+        result = await invoke('check_for_updates') as any;
+
+        if (result.hasUpdate) {
+            // Show update available
+            lastCheckText.textContent = `Update available: ${result.latestVersion}. Click to visit website.`;
+            lastCheckText.style.color = '#32d74b'; // Green
+            lastCheckText.style.cursor = 'pointer';
+            lastCheckText.addEventListener('click', () => {
+                invoke('open_url', { url: 'https://presentink.com' });
+            });
+        } else {
+            // No update available
+            lastCheckText.textContent = 'You have the latest version';
+            lastCheckText.style.color = '#8e8e93'; // Gray
+            lastCheckText.style.cursor = 'default';
+            lastCheckText.removeEventListener('click', () => {
+                invoke('open_url', { url: 'https://presentink.com' });
+            });
+        }
+
+        // Update last check time in settings
+        // const now = new Date().toISOString();
+        appSettings.lastVersionCheck = Math.floor(Date.now() / 1000).toString();
+        await updateSetting('lastVersionCheck', Math.floor(Date.now() / 1000).toString());
+
+    } catch (error) {
+        console.error('Failed to check for updates:', error);
+        lastCheckText.textContent = 'Check failed - try again later';
+        lastCheckText.style.color = '#ff6b6b'; // Red
+    } finally {
+        checkNowBtn.disabled = false;
+        checkNowBtn.classList.remove('checking');
+        checkNowBtn.textContent = 'Check Now';
+
+        if (!result || !result.hasUpdate) {
+            // Reset text color after 5 seconds
+            setTimeout(() => {
+                lastCheckText.style.color = '#8e8e93';
+                updateLastCheckDisplay();
+            }, 5000);
+        }
+    }
+}
+
+function updateLastCheckDisplay() {
+    const lastCheck = appSettings.lastVersionCheck;
+    if (lastCheck && lastCheck !== '0') {
+        const date = new Date(parseInt(lastCheck) * 1000);
+        const now = new Date();
+        const diffDays = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60 * 24));
+
+        if (diffDays === 0) {
+            lastCheckText.textContent = 'Last checked: Today';
+        } else if (diffDays === 1) {
+            lastCheckText.textContent = 'Last checked: Yesterday';
+        } else if (diffDays < 7) {
+            lastCheckText.textContent = `Last checked: ${diffDays} days ago`;
+        } else {
+            lastCheckText.textContent = `Last checked: ${date.toLocaleDateString()}`;
+        }
+    } else {
+        lastCheckText.textContent = 'Last checked: Never';
+    }
+}
 
 async function resetShortcutToDefault(type: 'drawing' | 'text' | 'break_mode' | 'screenshot') {
     const defaultShortcut = DEFAULT_SHORTCUTS[type];
@@ -571,6 +645,8 @@ function setupEventListeners() {
         };
     }
 
+    checkNowBtn.addEventListener('click', checkForUpdates);
+
 
 }
 
@@ -676,4 +752,6 @@ function updateUI() {
     if (arrowCtx && arrowCanvas) {
         drawArrow(arrowCtx, arrowCanvas, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, penWidthInt, arrowHeadLengthInt);
     }
+
+    updateLastCheckDisplay();
 }

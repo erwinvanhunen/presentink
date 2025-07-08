@@ -439,6 +439,43 @@
       padding: 32px 32px 32px 32px;
       display: block;
     }
+
+    .check-now-btn {
+      background: linear-gradient(to bottom, #48484a, #3a3a3c);
+      border: 1px solid #636366;
+      border-radius: 6px;
+      padding: 6px 16px;
+      color: #ffffff;
+      font-size: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.1),
+        0 1px 2px rgba(0, 0, 0, 0.3);
+      min-width: 80px;
+    }
+
+    .check-now-btn:hover {
+      background: linear-gradient(to bottom, #5a5a5c, #48484a);
+      border-color: #7c7c7e;
+    }
+
+    .check-now-btn:active {
+      background: linear-gradient(to bottom, #3a3a3c, #2c2c2e);
+      box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+    }
+
+    .check-now-btn:disabled {
+      background: linear-gradient(to bottom, #3a3a3c, #2c2c2e);
+      border-color: #48484a;
+      color: #8e8e93;
+      cursor: not-allowed;
+    }
+
+    .check-now-btn.checking {
+      background: linear-gradient(to bottom, #0a84ff, #0066cc);
+      border-color: #0066cc;
+    }
   </style>
 </head>
 
@@ -470,6 +507,13 @@
               <div class="preference-label">Check for new version on startup</div>
               <div class="preference-control">
                 <input type="checkbox" id="checkForUpdates" name="checkForUpdates">
+              </div>
+            </div>
+            <div class="preference-row">
+              <div class="preference-label"></div>
+              <div class="preference-control">
+                <button class="check-now-btn" id="checkNowBtn">Check Now</button>
+                <span class="secondary-text" id="lastCheckText">Last checked: Never</span>
               </div>
             </div>
             <div class="preference-row">

@@ -149,7 +149,8 @@ pub fn run() {
             enable_shortcuts,
             disable_shortcuts,
             get_settings,
-            check_for_new_version
+            check_for_new_version,
+            check_for_updates
         ])
         .plugin(tauri_plugin_opener::init())
         .run(tauri::generate_context!())
@@ -1225,4 +1226,47 @@ async fn check_for_new_version(app: tauri::AppHandle) -> Result<(), String> {
         }
     }
     Ok(())
+}
+
+#[tauri::command]
+async fn check_for_updates(app: tauri::AppHandle) -> Result<serde_json::Value, String> {
+    let now = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    let mut settings = settings::get_settings(&app);
+    settings.last_version_check = now.to_string();
+
+    let _ = settings::save_settings(&app, &settings);
+
+    // Fetch latest release from GitHub
+    let client = reqwest::Client::new();
+    let resp = client
+        .get("https://api.github.com/repos/erwinvanhunen/presentink/releases/latest")
+        .header("User-Agent", "PresentInk")
+        .send()
+        .await
+        .map_err(|e| e.to_string())?;
+
+    let release: GithubRelease = resp.json().await.map_err(|e| e.to_string())?;
+
+    // Get current version from tauri.conf.json (env! macro)
+    let available_version = Version::parse(&release.tag_name).unwrap();
+    let mut has_update = false;
+    if app.package_info().version < available_version {
+        has_update = true;
+        // If the available version is greater than the current version, notify the user
+        let _ = app
+            .notification()
+            .builder()
+            .title("PresentInk")
+            .body("A new version is available! Download it now from https://presentink.com")
+            .show();
+    }
+    Ok(serde_json::json!({
+        "hasUpdate": has_update,
+        "latestVersion": available_version.to_string(),
+        "currentVersion": app.package_info().version.to_string(),
+    }))
 }
