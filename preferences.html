@@ -92,10 +92,6 @@
     }
 
     .preference-group {
-      /* background: #1c1c1e; */
-      /* border: 1px solid #48484a; */
-      border-radius: 8px;
-      /* Slightly more rounded for groups */
       margin-bottom: 20px;
       overflow: hidden;
     }
@@ -104,17 +100,12 @@
       display: flex;
       align-items: center;
       padding: 12px 16px;
-      /* border-bottom: 1px solid #48484a; */
       min-height: 20px;
     }
 
     .preference-row:last-child {
       border-bottom: none;
     }
-
-    /* .preference-row:hover {
-      background: rgba(255, 255, 255, 0.05);
-    } */
 
     .preference-label {
       flex: 1;
@@ -395,6 +386,59 @@
       background: linear-gradient(to bottom, #48484a, #3a3a3c);
       box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.3);
     }
+
+    .prefs-main {
+      display: flex;
+      height: calc(100vh - 38px - 16px);
+      /* toolbar + body padding */
+       min-height: 0;
+    }
+
+    .prefs-sidebar {
+      width: 180px;
+      background: #232325;
+      border-right: 1px solid #48484a;
+      display: flex;
+      flex-direction: column;
+      padding: 16px 0;
+      gap: 4px;
+      height: 100%;
+      flex-shrink: 0;
+    }
+
+    .prefs-cat-btn {
+      background: none;
+      border: none;
+      color: #fff;
+      text-align: left;
+      padding: 10px 24px;
+      font-size: 15px;
+      /* border-radius: 8px; */
+      cursor: pointer;
+      transition: background 0.15s;
+      font-weight: 500;
+    }
+
+    .prefs-cat-btn.active,
+    .prefs-cat-btn:hover {
+      background: #38383a;
+    }
+
+    .prefs-content {
+      flex: 1;
+      padding: 0 0 0 0;
+      background: #2c2c2e;
+      border-radius: 0 0 12px 0;
+      overflow: auto;
+      min-width: 0;
+      display: flex;
+    }
+
+    .prefs-category {
+      width: 100%;
+      padding: 32px 32px 32px 32px;
+      display: block;
+    }
   </style>
 </head>
 
@@ -405,102 +449,115 @@
       PresentInk
     </div>
 
-    <div class="content">
-      <div class="group-header">Drawing</div>
-      <div class="preference-group">
-        <div class="preference-row">
-          <div class="preference-label">Pen width</div>
-          <div class="preference-control">
-            <input id="penWidth" type="range" min="1" max="24" value="6">
-            <span class="value-label" id="penWidthValue">3 px</span>
-            <canvas class="dot-preview" id="dotPreview" width="60" height="28"></canvas>
+    <div class="prefs-main">
+      <nav class="prefs-sidebar">
+        <button class="prefs-cat-btn active" data-cat="general">General</button>
+        <button class="prefs-cat-btn" data-cat="drawing">Drawing</button>
+        <button class="prefs-cat-btn" data-cat="break">Break Timer</button>
+        <button class="prefs-cat-btn" data-cat="shortcuts">Shortcuts</button>
+      </nav>
+      <div class="prefs-content">
+        <div class="prefs-category" id="cat-drawing">
+          <div class="group-header">Drawing</div>
+          <div class="preference-group">
+            <div class="preference-row">
+              <div class="preference-label">Pen width</div>
+              <div class="preference-control">
+                <input id="penWidth" type="range" min="1" max="24" value="6">
+                <span class="value-label" id="penWidthValue">3 px</span>
+                <canvas class="dot-preview" id="dotPreview" width="60" height="28"></canvas>
+              </div>
+            </div>
+            <div class="preference-row">
+              <div class="preference-label">Arrowhead length</div>
+              <div class="preference-control">
+                <input id="arrowHead" type="range" min="8" max="40" value="20">
+                <span class="value-label" id="arrowHeadValue">20 px</span>
+                <canvas class="arrow-preview" id="arrowPreview" width="60" height="28"></canvas>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div class="preference-row">
-          <div class="preference-label">Arrowhead length</div>
-          <div class="preference-control">
-            <input id="arrowHead" type="range" min="8" max="40" value="20">
-            <span class="value-label" id="arrowHeadValue">20 px</span>
-            <canvas class="arrow-preview" id="arrowPreview" width="60" height="28"></canvas>
+        <div class="prefs-category" id="cat-break" style="display:none">
+          <div class="group-header">Break timer</div>
+          <div class="preference-group">
+            <div class="preference-row">
+              <div class="preference-label">Break timer length</div>
+              <div class="preference-control">
+                <input id="breakTime" type="range" min="1" max="60" value="10">
+                <span class="value-label" id="breakTimeValue">10 min</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="prefs-category" id="cat-general" style="display:none">
+          <div class="group-header">General</div>
+          <div class="preference-group">
+            <div class="preference-row">
+              <div class="preference-label">Launch at login</div>
+              <div class="preference-control">
+                <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
+              </div>
+            </div>
+            <div class="preference-row">
+              <div class="preference-label">Check for new version on startup</div>
+              <div class="preference-control">
+                <input type="checkbox" id="checkForUpdates" name="checkForUpdates">
+              </div>
+            </div>
+            <div class="preference-row">
+              <div class="preference-label">Show experimental features</div>
+              <div class="preference-control">
+                <input type="checkbox" id="showExperimental" name="showExperimental">
+                <span class="secondary-text">Restart required</span>
+              </div>
+            </div>
           </div>
         </div>
       </div>
-
-      <div class="group-header">Break Timer</div>
-      <div class="preference-group">
-        <div class="preference-row">
-          <div class="preference-label">Break timer length</div>
-          <div class="preference-control">
-            <input id="breakTime" type="range" min="1" max="60" value="10">
-            <span class="value-label" id="breakTimeValue">10 min</span>
+      <div class="prefs-category" id="cat-shortcuts" style="display:none">
+        <div class="group-header">Shortcuts</div>
+        <div class="preference-group">
+          <div class="shortcut-row">
+            <label>Drawing</label>
+            <div class="shortcut-display" id="drawingShortcut">
+              <span class="key modifier">⌥</span>
+              <span class="key modifier">⇧</span>
+              <span class="key">D</span>
+            </div>
+            <button class="change-shortcut-btn" id="changeDrawShortcut">Change</button>
+            <button class="reset-shortcut-btn" id="resetDrawShortcut">Reset</button>
           </div>
-        </div>
-      </div>
-
-      <div class="group-header">General</div>
-      <div class="preference-group">
-        <div class="preference-row">
-          <div class="preference-label">Launch at login</div>
-          <div class="preference-control">
-            <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
+          <div class="shortcut-row">
+            <label>Screenshot</label>
+            <div class="shortcut-display" id="screenshotShortcut">
+              <span class="key modifier">⌥</span>
+              <span class="key modifier">⇧</span>
+              <span class="key">S</span>
+            </div>
+            <button class="change-shortcut-btn" id="changeScreenshotShortcut">Change</button>
+            <button class="reset-shortcut-btn" id="resetScreenshotShortcut">Reset</button>
           </div>
-        </div>
-        <div class="preference-row">
-          <div class="preference-label">Check for new version on startup</div>
-          <div class="preference-control">
-            <input type="checkbox" id="checkForUpdates" name="checkForUpdates">
+          <div class="shortcut-row">
+            <label>Break</label>
+            <div class="shortcut-display" id="breakShortcut">
+              <span class="key modifier">⌥</span>
+              <span class="key modifier">⇧</span>
+              <span class="key">B</span>
+            </div>
+            <button class="change-shortcut-btn" id="changeBreakShortcut">Change</button>
+            <button class="reset-shortcut-btn" id="resetBreakShortcut">Reset</button>
           </div>
-        </div>
-        <div class="preference-row">
-          <div class="preference-label">Show experimental features</div>
-          <div class="preference-control">
-            <input type="checkbox" id="showExperimental" name="showExperimental">
-            <span class="secondary-text">Restart required</span>
+          <div class="shortcut-row">
+            <label>Text Typing</label>
+            <div class="shortcut-display" id="textShortcut">
+              <span class="key modifier">⌥</span>
+              <span class="key modifier">⇧</span>
+              <span class="key">T</span>
+            </div>
+            <button class="change-shortcut-btn" id="changeTextShortcut">Change</button>
+            <button class="reset-shortcut-btn" id="resetTextShortcut">Reset</button>
           </div>
-        </div>
-      </div>
-      <div class="group-header">Shortcuts</div>
-      <div class="preference-group">
-        <div class="shortcut-row">
-          <label>Drawing</label>
-          <div class="shortcut-display" id="drawingShortcut">
-            <span class="key modifier">⌥</span>
-            <span class="key modifier">⇧</span>
-            <span class="key">D</span>
-          </div>
-          <button class="change-shortcut-btn" id="changeDrawShortcut">Change</button>
-          <button class="reset-shortcut-btn" id="resetDrawShortcut">Reset</button>
-        </div>
-        <div class="shortcut-row">
-          <label>Screenshot</label>
-          <div class="shortcut-display" id="screenshotShortcut">
-            <span class="key modifier">⌥</span>
-            <span class="key modifier">⇧</span>
-            <span class="key">S</span>
-          </div>
-          <button class="change-shortcut-btn" id="changeScreenshotShortcut">Change</button>
-          <button class="reset-shortcut-btn" id="resetScreenshotShortcut">Reset</button>
-        </div>
-        <div class="shortcut-row">
-          <label>Break</label>
-          <div class="shortcut-display" id="breakShortcut">
-            <span class="key modifier">⌥</span>
-            <span class="key modifier">⇧</span>
-            <span class="key">B</span>
-          </div>
-          <button class="change-shortcut-btn" id="changeBreakShortcut">Change</button>
-          <button class="reset-shortcut-btn" id="resetBreakShortcut">Reset</button>
-        </div>
-        <div class="shortcut-row">
-          <label>Text Typing</label>
-          <div class="shortcut-display" id="textShortcut">
-            <span class="key modifier">⌥</span>
-            <span class="key modifier">⇧</span>
-            <span class="key">T</span>
-          </div>
-          <button class="change-shortcut-btn" id="changeTextShortcut">Change</button>
-          <button class="reset-shortcut-btn" id="resetTextShortcut">Reset</button>
         </div>
       </div>
     </div>

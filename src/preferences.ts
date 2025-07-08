@@ -30,6 +30,17 @@ const DEFAULT_SHORTCUTS = {
 let recordingShortcut = false;
 let currentShortcutType: 'drawing' | 'text' | 'break_mode' | 'screenshot' | null = null;
 
+document.querySelectorAll('.prefs-cat-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.prefs-cat-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    const cat = btn.getAttribute('data-cat');
+    document.querySelectorAll('.prefs-category').forEach(div  => {
+      (div as HTMLDivElement).style.display = div.id === 'cat-' + cat ? 'block' : 'none';
+    });
+  });
+});
+
 async function resetShortcutToDefault(type: 'drawing' | 'text' | 'break_mode' | 'screenshot') {
     const defaultShortcut = DEFAULT_SHORTCUTS[type];
 

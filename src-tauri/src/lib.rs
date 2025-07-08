@@ -831,7 +831,7 @@ fn open_settings(app: tauri::AppHandle) -> Result<(), String> {
     let _window =
         WebviewWindowBuilder::new(&app, "settings", WebviewUrl::App("preferences.html".into()))
             .title("PresentInk Settings")
-            .inner_size(640.0, 470.0)
+            .inner_size(700.0, 470.0)
             .center()
             .resizable(false)
             .decorations(false)
