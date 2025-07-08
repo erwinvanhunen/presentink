@@ -391,7 +391,7 @@
       display: flex;
       height: calc(100vh - 38px - 16px);
       /* toolbar + body padding */
-       min-height: 0;
+      min-height: 0;
     }
 
     .prefs-sidebar {
@@ -457,7 +457,31 @@
         <button class="prefs-cat-btn" data-cat="shortcuts">Shortcuts</button>
       </nav>
       <div class="prefs-content">
-        <div class="prefs-category" id="cat-drawing">
+        <div class="prefs-category" id="cat-general">
+          <div class="group-header">General</div>
+          <div class="preference-group">
+            <div class="preference-row">
+              <div class="preference-label">Launch at login</div>
+              <div class="preference-control">
+                <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
+              </div>
+            </div>
+            <div class="preference-row">
+              <div class="preference-label">Check for new version on startup</div>
+              <div class="preference-control">
+                <input type="checkbox" id="checkForUpdates" name="checkForUpdates">
+              </div>
+            </div>
+            <div class="preference-row">
+              <div class="preference-label">Show experimental features</div>
+              <div class="preference-control">
+                <input type="checkbox" id="showExperimental" name="showExperimental">
+                <span class="secondary-text">Restart required</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="prefs-category" id="cat-drawing" style="display:none">
           <div class="group-header">Drawing</div>
           <div class="preference-group">
             <div class="preference-row">
@@ -490,73 +514,49 @@
             </div>
           </div>
         </div>
-        <div class="prefs-category" id="cat-general" style="display:none">
-          <div class="group-header">General</div>
+        <div class="prefs-category" id="cat-shortcuts" style="display:none">
+          <div class="group-header">Shortcuts</div>
           <div class="preference-group">
-            <div class="preference-row">
-              <div class="preference-label">Launch at login</div>
-              <div class="preference-control">
-                <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
+            <div class="shortcut-row">
+              <label>Drawing</label>
+              <div class="shortcut-display" id="drawingShortcut">
+                <span class="key modifier">⌥</span>
+                <span class="key modifier">⇧</span>
+                <span class="key">D</span>
               </div>
+              <button class="change-shortcut-btn" id="changeDrawShortcut">Change</button>
+              <button class="reset-shortcut-btn" id="resetDrawShortcut">Reset</button>
             </div>
-            <div class="preference-row">
-              <div class="preference-label">Check for new version on startup</div>
-              <div class="preference-control">
-                <input type="checkbox" id="checkForUpdates" name="checkForUpdates">
+            <div class="shortcut-row">
+              <label>Screenshot</label>
+              <div class="shortcut-display" id="screenshotShortcut">
+                <span class="key modifier">⌥</span>
+                <span class="key modifier">⇧</span>
+                <span class="key">S</span>
               </div>
+              <button class="change-shortcut-btn" id="changeScreenshotShortcut">Change</button>
+              <button class="reset-shortcut-btn" id="resetScreenshotShortcut">Reset</button>
             </div>
-            <div class="preference-row">
-              <div class="preference-label">Show experimental features</div>
-              <div class="preference-control">
-                <input type="checkbox" id="showExperimental" name="showExperimental">
-                <span class="secondary-text">Restart required</span>
+            <div class="shortcut-row">
+              <label>Break</label>
+              <div class="shortcut-display" id="breakShortcut">
+                <span class="key modifier">⌥</span>
+                <span class="key modifier">⇧</span>
+                <span class="key">B</span>
               </div>
+              <button class="change-shortcut-btn" id="changeBreakShortcut">Change</button>
+              <button class="reset-shortcut-btn" id="resetBreakShortcut">Reset</button>
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="prefs-category" id="cat-shortcuts" style="display:none">
-        <div class="group-header">Shortcuts</div>
-        <div class="preference-group">
-          <div class="shortcut-row">
-            <label>Drawing</label>
-            <div class="shortcut-display" id="drawingShortcut">
-              <span class="key modifier">⌥</span>
-              <span class="key modifier">⇧</span>
-              <span class="key">D</span>
+            <div class="shortcut-row">
+              <label>Text Typing</label>
+              <div class="shortcut-display" id="textShortcut">
+                <span class="key modifier">⌥</span>
+                <span class="key modifier">⇧</span>
+                <span class="key">T</span>
+              </div>
+              <button class="change-shortcut-btn" id="changeTextShortcut">Change</button>
+              <button class="reset-shortcut-btn" id="resetTextShortcut">Reset</button>
             </div>
-            <button class="change-shortcut-btn" id="changeDrawShortcut">Change</button>
-            <button class="reset-shortcut-btn" id="resetDrawShortcut">Reset</button>
-          </div>
-          <div class="shortcut-row">
-            <label>Screenshot</label>
-            <div class="shortcut-display" id="screenshotShortcut">
-              <span class="key modifier">⌥</span>
-              <span class="key modifier">⇧</span>
-              <span class="key">S</span>
-            </div>
-            <button class="change-shortcut-btn" id="changeScreenshotShortcut">Change</button>
-            <button class="reset-shortcut-btn" id="resetScreenshotShortcut">Reset</button>
-          </div>
-          <div class="shortcut-row">
-            <label>Break</label>
-            <div class="shortcut-display" id="breakShortcut">
-              <span class="key modifier">⌥</span>
-              <span class="key modifier">⇧</span>
-              <span class="key">B</span>
-            </div>
-            <button class="change-shortcut-btn" id="changeBreakShortcut">Change</button>
-            <button class="reset-shortcut-btn" id="resetBreakShortcut">Reset</button>
-          </div>
-          <div class="shortcut-row">
-            <label>Text Typing</label>
-            <div class="shortcut-display" id="textShortcut">
-              <span class="key modifier">⌥</span>
-              <span class="key modifier">⇧</span>
-              <span class="key">T</span>
-            </div>
-            <button class="change-shortcut-btn" id="changeTextShortcut">Change</button>
-            <button class="reset-shortcut-btn" id="resetTextShortcut">Reset</button>
           </div>
         </div>
       </div>

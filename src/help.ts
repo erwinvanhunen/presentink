@@ -8,3 +8,6 @@ window.addEventListener('DOMContentLoaded', async () => {
     };
 });
 
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+});

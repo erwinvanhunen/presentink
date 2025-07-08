@@ -30,6 +30,10 @@ const DEFAULT_SHORTCUTS = {
 let recordingShortcut = false;
 let currentShortcutType: 'drawing' | 'text' | 'break_mode' | 'screenshot' | null = null;
 
+window.addEventListener('contextmenu', (e) => {
+  e.preventDefault();
+});
+
 document.querySelectorAll('.prefs-cat-btn').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.prefs-cat-btn').forEach(b => b.classList.remove('active'));
@@ -563,7 +567,6 @@ function setupEventListeners() {
 
     if (versionCheck) {
         versionCheck.onchange = () => {
-            invoke("print_output", { text: `Version check is now ${versionCheck.checked ? 'enabled' : 'disabled'}` });
             updateSetting('versionCheck', versionCheck.checked);
         };
     }
@@ -641,7 +644,6 @@ function updateUI() {
         showExperimental.checked = appSettings.showExperimentalFeatures || false;
     }
     if (versionCheck) {
-        invoke("print_output", { text: `Version check is ${appSettings.versionCheck ? 'enabled' : 'disabled'}` });
         if (appSettings.versionCheck === undefined) {
             // If versionCheck is undefined, set it to true by default
             appSettings.versionCheck = true;
