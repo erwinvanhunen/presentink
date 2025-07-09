@@ -483,6 +483,42 @@
       margin-right: 10px;
       vertical-align: middle;
     }
+
+    .color-dot {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 4px solid #2c2c2e;
+      margin: 0 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+      vertical-align: middle;
+      cursor: pointer;
+      transition: border 0.2s;
+    }
+
+    input[type="radio"][name="defaultColor"] {
+      display: none;
+    }
+
+    input[type="radio"][name="defaultColor"]:checked+.color-dot {
+      border: 4px solid #3F97FF;
+      box-shadow: 0 0 0 3px rgba(63, 151, 255, 0.25), 0 1px 2px rgba(0, 0, 0, 0.15);
+      position: relative;
+    }
+
+    .color-dot.selected::after {
+      content: '✓';
+      color: #fff;
+      font-size: 13px;
+      font-weight: bold;
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      text-shadow: 0 1px 2px #3F97FF, 0 0 2px #000;
+      pointer-events: none;
+    }
   </style>
 </head>
 
@@ -561,6 +597,35 @@
         <div class="prefs-category" id="cat-drawing" style="display:none">
           <div class="group-header">Drawing</div>
           <div class="preference-group">
+            <div class="preference-row">
+              <div class="preference-label">Default color</div>
+              <div class="preference-control" id="colorPickerGroup">
+                <label>
+                  <input type="radio" name="defaultColor" value="#ff0000" checked>
+                  <span class="color-dot" style="background:#ff0000"></span>
+                </label>
+                <label>
+                  <input type="radio" name="defaultColor" value="#00ff00">
+                  <span class="color-dot" style="background:#00ff00"></span>
+                </label>
+                <label>
+                  <input type="radio" name="defaultColor" value="#0000ff">
+                  <span class="color-dot" style="background:#0000ff"></span>
+                </label>
+                 <label>
+                  <input type="radio" name="defaultColor" value="#ffff00">
+                  <span class="color-dot" style="background:#ffff00"></span>
+                </label>
+                <label>
+                  <input type="radio" name="defaultColor" value="#ffa500">
+                  <span class="color-dot" style="background:#ffa500"></span>
+                </label>
+                <label>
+                  <input type="radio" name="defaultColor" value="#ff00ff">
+                  <span class="color-dot" style="background:#ff00ff"></span>
+                </label>
+              </div>
+            </div>
             <div class="preference-row">
               <div class="preference-label">Pen width</div>
               <div class="preference-control">
@@ -658,4 +723,5 @@
     </div>
   </div>
 </body>
+
 </html>

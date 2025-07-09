@@ -150,6 +150,10 @@ function toggleCanvas(show: boolean): void {
     window.hide();
   } else {
     wrapper.style.background = 'transparent';
+    strokeColor = appSettings.defaultColor || '#ff0000'; // Use default color from settings
+      invoke('change_color', {
+        color: strokeColor
+      });
     clearCanvas();
     window.show().then(() => {
       drawingMode = 'freehand'; // Reset to freehand mode 

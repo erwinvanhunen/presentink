@@ -8,6 +8,7 @@ export interface AppSettings {
   penColor?: string; // Optional, can be added later
   versionCheck?: boolean; // Optional, can be added later
   lastVersionCheck?: string; // Optional, can be added later
+  defaultColor: string
   shortcuts?: {
     drawing: string;
     text: string;
@@ -26,6 +27,7 @@ const defaultSettings: AppSettings = {
   penColor: '#ff0000', // Default pen color (red)
   versionCheck: true, // Default to true for version checks
   lastVersionCheck: '0',
+  defaultColor: '#ff0000', // Default color for the pen
   shortcuts: {
     drawing: 'Option+Shift+D',
     text: 'Option+Shift+T',

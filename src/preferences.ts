@@ -5,6 +5,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window';
 let appSettings: AppSettings;
 let penWidthInt = 3;
 let arrowHeadLengthInt = 20;
+let strokeColor = '#ff0000'; // Default stroke color
 const drawShortcutInput = document.getElementById('drawingShortcut') as HTMLInputElement;
 const changeDrawShortcutBtn = document.getElementById('changeDrawShortcut') as HTMLButtonElement;
 const textShortcutInput = document.getElementById('textShortcut') as HTMLInputElement;
@@ -19,6 +20,7 @@ const resetBreakShortcutBtn = document.getElementById('resetBreakShortcut') as H
 const resetScreenshotShortcutBtn = document.getElementById('resetScreenshotShortcut') as HTMLButtonElement;
 const checkNowBtn = document.getElementById('checkNowBtn') as HTMLButtonElement;
 const lastCheckText = document.getElementById('lastCheckText') as HTMLSpanElement;
+
 
 // Default shortcuts constant
 const DEFAULT_SHORTCUTS = {
@@ -231,6 +233,8 @@ window.addEventListener('DOMContentLoaded', async () => {
     setupEventListeners();
     setupShortcutEventListeners();
     updateUI();
+    markDefaultColorFromSettings(appSettings.defaultColor);
+
 });
 
 changeDrawShortcutBtn.addEventListener('click', () => {
@@ -647,13 +651,29 @@ function setupEventListeners() {
 
     checkNowBtn.addEventListener('click', checkForUpdates);
 
+    const colorRadios = document.querySelectorAll('input[type="radio"][name="defaultColor"]');
+    colorRadios.forEach(radio => {
+        radio.addEventListener('change', () => {
+            colorRadios.forEach(r => r.nextElementSibling?.classList.remove('selected'));
+            if ((radio as HTMLInputElement).checked) {
+                radio.nextElementSibling?.classList.add('selected');
+                updateSetting('defaultColor', (radio as HTMLInputElement).value);
+                strokeColor = (radio as HTMLInputElement).value; // Update stroke color
+                updateUI();
+            }
 
+        });
+        // Set initial state on load
+        if ((radio as HTMLInputElement).checked) {
+            radio.nextElementSibling?.classList.add('selected');
+        }
+    });
 }
 
 function drawPenWidth(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, width: number) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.lineWidth = width;
-    ctx.strokeStyle = '#ff0000'; // Example color
+    ctx.strokeStyle = strokeColor; // Example color
     ctx.moveTo(0, canvas.height / 2);
     ctx.lineTo(canvas.width, canvas.height / 2);
     ctx.stroke();
@@ -671,7 +691,7 @@ function drawArrow(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, fro
     const shaftY = toY - (headlen - 2) * Math.sin(angle);
 
     // Draw shaft
-    ctx.strokeStyle = "#ff0000"; // Use the selected stroke color
+    ctx.strokeStyle = strokeColor; // Use the selected stroke color
     ctx.lineWidth = penWidth;
     ctx.lineCap = 'square'
     ctx.beginPath();
@@ -691,7 +711,7 @@ function drawArrow(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, fro
     ctx.lineTo(arrowX1, arrowY1);
     ctx.lineTo(arrowX2, arrowY2);
     ctx.closePath();
-    ctx.fillStyle = "#ff0000"; // Use the selected fill color
+    ctx.fillStyle = strokeColor; // Use the selected fill color
     ctx.fill();
 }
 
@@ -754,4 +774,23 @@ function updateUI() {
     }
 
     updateLastCheckDisplay();
+
+}
+
+function markDefaultColorFromSettings(defaultColor: string) {
+    const colorRadios = document.querySelectorAll<HTMLInputElement>('input[type="radio"][name="defaultColor"]');
+    strokeColor = defaultColor; // Set the global stroke color
+    colorRadios.forEach(radio => {
+        // Set checked property based on settings
+        radio.checked = radio.value === defaultColor;
+        // Update .selected class for the color dot
+        if (radio.nextElementSibling) {
+            if (radio.checked) {
+                radio.nextElementSibling.classList.add('selected');
+            } else {
+                radio.nextElementSibling.classList.remove('selected');
+            }
+        }
+    });
+    updateUI();
 }
