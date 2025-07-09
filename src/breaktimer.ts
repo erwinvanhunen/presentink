@@ -5,7 +5,7 @@ import { invoke } from '@tauri-apps/api/core';
 
 let timeLeft = 10 * 60; // default to 30 minutes in seconds
 let timerElem: HTMLSpanElement;
-let interval: number | null = null;
+let interval: any | null = null;
 
 window.addEventListener('DOMContentLoaded', async () => {
     const appSettings = await getSettings();

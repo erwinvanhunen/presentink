@@ -122,6 +122,15 @@
       justify-content: flex-end;
     }
 
+    .preference-control2 {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 0;
+      min-width: 200px;
+      justify-content: flex-end;
+    }
+
     /* Dark macOS slider */
     input[type=range] {
       -webkit-appearance: none;
@@ -174,7 +183,7 @@
       border-color: #0066cc;
     }
 
-    input[type=checkbox]:checked::after {
+    input[type=checkbox]:checked::not(.switch)::after {
       content: '✓';
       position: absolute;
       top: -2px;
@@ -192,6 +201,53 @@
       background: linear-gradient(to bottom, #2c2c2e, #1c1c1e);
     }
 
+    input[type="checkbox"].switch {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 38px;
+      height: 22px;
+      background: #48484a;
+      border-radius: 11px;
+      position: relative;
+      outline: none;
+      cursor: pointer;
+      transition: background 0.2s;
+      border: none;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+      vertical-align: middle;
+    }
+
+    input[type="checkbox"].switch:checked {
+      background: linear-gradient(to bottom, #0a84ff, #0066cc);
+    }
+
+    input[type="checkbox"].switch:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    input[type="checkbox"].switch::before {
+      content: '';
+      position: absolute;
+      left: 3px;
+      top: 3px;
+      width: 16px;
+      height: 16px;
+      background: #fff;
+      border-radius: 50%;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
+      transition: left 0.2s, background 0.2s;
+    }
+
+    input[type="checkbox"].switch:checked::before {
+      left: 19px;
+      background: #fff;
+    }
+
+    input[type="checkbox"].switch:active::before {
+      width: 18px;
+    }
+
     .value-label {
       font-size: 11px;
       color: #a1a1a6;
@@ -201,9 +257,13 @@
     }
 
     .secondary-text {
+      display: block;
       font-size: 11px;
       color: #8e8e93;
-      margin-left: 8px;
+      margin-left: 0;
+      margin-top: 2px;
+      text-align: right;
+      width: 100%;
     }
 
     /* Preview canvases */
@@ -519,6 +579,28 @@
       text-shadow: 0 1px 2px #3F97FF, 0 0 2px #000;
       pointer-events: none;
     }
+
+    .donate-btn {
+      display: inline-block;
+      padding: 10px 28px;
+      font-size: 1.12em;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(90deg, #fd7e14, #f76707 60%, #f48f2c 100%);
+      border: none;
+      border-radius: 14px;
+      box-shadow: 0 2px 10px #fae2c2bb;
+      margin: 30px auto 30px auto;
+      cursor: pointer;
+      text-align: center;
+      transition: box-shadow 0.15s, background 0.2s;
+      outline: none;
+    }
+
+    .donate-btn:hover {
+      background: linear-gradient(90deg, #fb8500, #f9b53e 80%);
+      box-shadow: 0 2px 16px #f7b26788;
+    }
   </style>
 </head>
 
@@ -574,6 +656,17 @@
             </svg>
           </span>
           Updates</button>
+        <button class="prefs-cat-btn" data-cat="about">
+          <span class="sidebar-icon">
+            <!-- Info icon -->
+            <svg width="18" height="18" viewBox="0 0 20 20" fill="none">
+              <circle cx="10" cy="10" r="8" stroke="#3F97FF" stroke-width="2" />
+              <rect x="9" y="8" width="2" height="6" rx="1" fill="#3F97FF" />
+              <rect x="9" y="5" width="2" height="2" rx="1" fill="#3F97FF" />
+            </svg>
+          </span>
+          About
+        </button>
       </nav>
       <div class="prefs-content">
         <div class="prefs-category" id="cat-general">
@@ -582,14 +675,14 @@
             <div class="preference-row">
               <div class="preference-label">Launch at login</div>
               <div class="preference-control">
-                <input type="checkbox" id="launchAtLogin" name="launchAtLogin">
+                <input type="checkbox" id="launchAtLogin" class="switch" name="launchAtLogin">
               </div>
             </div>
             <div class="preference-row">
               <div class="preference-label">Show experimental features</div>
-              <div class="preference-control">
-                <input type="checkbox" id="showExperimental" name="showExperimental">
-                <span class="secondary-text">Restart required</span>
+              <div class="preference-control2">
+                <input type="checkbox" id="showExperimental" style="margin-top:16px" class="switch" name="showExperimental">
+                <span class="secondary-text" style="margin-top:4px;">Restart required</span>
               </div>
             </div>
           </div>
@@ -612,7 +705,7 @@
                   <input type="radio" name="defaultColor" value="#0000ff">
                   <span class="color-dot" style="background:#0000ff"></span>
                 </label>
-                 <label>
+                <label>
                   <input type="radio" name="defaultColor" value="#ffff00">
                   <span class="color-dot" style="background:#ffff00"></span>
                 </label>
@@ -707,16 +800,29 @@
             <div class="preference-row">
               <div class="preference-label">Check for new version on startup</div>
               <div class="preference-control">
-                <input type="checkbox" id="checkForUpdates" name="checkForUpdates">
+                <input type="checkbox" class="switch" id="checkForUpdates" name="checkForUpdates">
               </div>
             </div>
             <div class="preference-row">
-              <div class="preference-label"></div>
+              <div class="preference-label"><button class="check-now-btn" id="checkNowBtn">Check Now</button></div>
               <div class="preference-control">
-                <button class="check-now-btn" id="checkNowBtn">Check Now</button>
+
                 <span class="secondary-text" id="lastCheckText">Last checked: Never</span>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="prefs-category" id="cat-about" style="display:none">
+          <div style="display: flex; flex-direction: column; align-items: center; margin-top: 24px;">
+            <!-- Replace 'logo.png' with your actual logo path -->
+            <img src="/images/icon_256x256.png" alt="PresentInk Logo" style="width: 128px; height: 128px;">
+            <div style="font-size: 18px; font-weight: 600; margin-bottom: 4px;">PresentInk</div>
+            <div style="color: #a1a1a6; font-size: 13px; margin-bottom: 4px;">Version <span id="aboutVersion"></span>
+            </div>
+            <div style="color: #a1a1a6; font-size: 13px; text-align: center; margin-bottom: 12px;">
+              Copyright © 2025 Erwin van Hunen</div>
+            <button class="donate-btn" id="donateBtn">Donate ❤️</button>
+            <div style="color: #8e8e93; font-size: 12px;">Thank you for supporting PresentInk!</div>
           </div>
         </div>
       </div>

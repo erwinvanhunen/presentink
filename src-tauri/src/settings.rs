@@ -2,14 +2,6 @@ use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_store::StoreBuilder;
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct Shortcuts {
-    pub drawing: String,
-    pub text: String,
-    pub break_mode: String,
-    pub screenshot: String,
-    pub preferences: String,
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppSettings {
@@ -25,10 +17,20 @@ pub struct AppSettings {
     pub break_time: u32,
     #[serde(rename = "shortcuts")]
     pub shortcuts: Shortcuts,
-    #[serde(rename= "lastVersionCheck")]
+    #[serde(rename = "lastVersionCheck")]
     pub last_version_check: String,
     #[serde(rename = "versionCheck")]
     pub version_check: bool, // Optional field for version check
+    #[serde(rename = "defaultColor")]
+    pub default_color: String,
+}
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Shortcuts {
+    pub drawing: String,
+    pub text: String,
+    pub break_mode: String,
+    pub screenshot: String,
+    pub preferences: String,
 }
 
 impl Default for Shortcuts {
@@ -38,7 +40,7 @@ impl Default for Shortcuts {
             text: "Option+Shift+T".into(),
             break_mode: "Option+Shift+B".into(),
             screenshot: "Option+Shift+S".into(),
-            preferences: "Option+Shift+P".into()
+            preferences: "Option+Shift+P".into(),
         }
     }
 }
@@ -53,7 +55,8 @@ impl Default for AppSettings {
             break_time: 10,
             shortcuts: Shortcuts::default(),
             last_version_check: "0".into(), // Default date for last version check
-            version_check: true // Default to true for version checks
+            version_check: true,
+            default_color: "#ff0000".into()
         }
     }
 }

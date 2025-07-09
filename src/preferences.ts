@@ -668,6 +668,15 @@ function setupEventListeners() {
             radio.nextElementSibling?.classList.add('selected');
         }
     });
+
+    document.getElementById('donateBtn')?.addEventListener('click', () => {
+        invoke('open_url', { url: 'https://github.com/sponsors/erwinvanhunen' });
+    });
+    (invoke('get_version') as Promise<string>).then((v: string) => {
+        document.getElementById('aboutVersion')!.textContent = v;
+    }).catch(() => {
+        document.getElementById('aboutVersion')!.textContent = "";
+    });
 }
 
 function drawPenWidth(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, width: number) {
