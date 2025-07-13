@@ -20,6 +20,7 @@ const resetBreakShortcutBtn = document.getElementById('resetBreakShortcut') as H
 const resetScreenshotShortcutBtn = document.getElementById('resetScreenshotShortcut') as HTMLButtonElement;
 const checkNowBtn = document.getElementById('checkNowBtn') as HTMLButtonElement;
 const lastCheckText = document.getElementById('lastCheckText') as HTMLSpanElement;
+const breakTimeMessageInput = document.getElementById('breakTimeMessage') as HTMLInputElement;
 
 
 // Default shortcuts constant
@@ -234,6 +235,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     setupShortcutEventListeners();
     updateUI();
     markDefaultColorFromSettings(appSettings.defaultColor);
+    // Draw line and arrow preview on open
 
 });
 
@@ -579,8 +581,8 @@ function setupEventListeners() {
     const penWidthValue = document.getElementById('penWidthValue') as HTMLSpanElement;
     const breakTime = document.getElementById('breakTime') as HTMLInputElement;
     const breakTimeValue = document.getElementById('breakTimeValue') as HTMLSpanElement;
-    const arrowHead = document.getElementById('arrowHead') as HTMLInputElement;
-    const arrowHeadValue = document.getElementById('arrowHeadValue');
+    // const arrowHead = document.getElementById('arrowHead') as HTMLInputElement;
+    // const arrowHeadValue = document.getElementById('arrowHeadValue');
     const launchAtLogin = document.getElementById('launchAtLogin') as HTMLInputElement
     const showExperimental = document.getElementById('showExperimental') as HTMLInputElement;
     const versionCheck = document.getElementById('checkForUpdates') as HTMLInputElement;
@@ -593,15 +595,15 @@ function setupEventListeners() {
 
 
 
-    if (arrowHead && arrowHeadValue && arrowCtx && arrowCanvas && penWidth && penWidthValue && penWidthCtx && penWidthCanvas) {
-        arrowHead.oninput = () => {
-            if (arrowHeadValue) arrowHeadValue.textContent = arrowHead.value;
-            penWidthInt = parseInt(penWidth.value, 10) || 3; // Default to 3 if not a valid number
-            arrowHeadLengthInt = parseInt(arrowHead.value, 10) || 20; // Default to 20 if not a valid number
-            drawArrow(arrowCtx, arrowCanvas, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, penWidthInt, arrowHeadLengthInt);
-            updateSetting('arrowHeadLength', arrowHeadLengthInt);
-        };
-    }
+    // if (arrowHead && arrowHeadValue && arrowCtx && arrowCanvas && penWidth && penWidthValue && penWidthCtx && penWidthCanvas) {
+    //     arrowHead.oninput = () => {
+    //         if (arrowHeadValue) arrowHeadValue.textContent = arrowHead.value;
+    //         penWidthInt = parseInt(penWidth.value, 10) || 3; // Default to 3 if not a valid number
+    //         arrowHeadLengthInt = parseInt(arrowHead.value, 10) || 20; // Default to 20 if not a valid number
+    //         drawArrow(arrowCtx, arrowCanvas, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, penWidthInt, arrowHeadLengthInt);
+    //         updateSetting('arrowHeadLength', arrowHeadLengthInt);
+    //     };
+    // }
 
     if (breakTime && breakTimeValue) {
         breakTime.oninput = () => {
@@ -677,6 +679,12 @@ function setupEventListeners() {
     }).catch(() => {
         document.getElementById('aboutVersion')!.textContent = "";
     });
+
+    breakTimeMessageInput?.addEventListener('change', async () => {
+        appSettings.breakTimeMessage = breakTimeMessageInput.value;
+        await updateSetting('breakTimeMessage', breakTimeMessageInput.value);
+
+    });
 }
 
 function drawPenWidth(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, width: number) {
@@ -688,9 +696,22 @@ function drawPenWidth(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, 
     ctx.stroke();
 }
 
-function drawArrow(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, fromX: number, fromY: number, toX: number, toY: number, penWidth: number, arrowHeadLength: number) {
+function drawArrow(
+    ctx: CanvasRenderingContext2D,
+    canvas: HTMLCanvasElement,
+    fromX: number,
+    fromY: number,
+    toX: number,
+    toY: number,
+    penWidth: number,
+    _arrowHeadLength: number // unused for preview, kept for compatibility
+) {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const headlen = arrowHeadLength; // Arrowhead length
+
+    // Arrowhead length and width scale with penWidth
+    const headlen = Math.max(10, penWidth * 2.2); // length
+    const headWidth = Math.max(6, penWidth * 1.2); // width
+
     const dx = toX - fromX;
     const dy = toY - fromY;
     const angle = Math.atan2(dy, dx);
@@ -700,27 +721,27 @@ function drawArrow(ctx: CanvasRenderingContext2D, canvas: HTMLCanvasElement, fro
     const shaftY = toY - (headlen - 2) * Math.sin(angle);
 
     // Draw shaft
-    ctx.strokeStyle = strokeColor; // Use the selected stroke color
+    ctx.strokeStyle = strokeColor;
     ctx.lineWidth = penWidth;
-    ctx.lineCap = 'square'
+    ctx.lineCap = 'square';
     ctx.beginPath();
     ctx.moveTo(fromX, fromY);
     ctx.lineTo(shaftX, shaftY);
     ctx.stroke();
 
-    // Draw filled arrowhead 
-    const arrowX1 = toX - headlen * Math.cos(angle - Math.PI / 7);
-    const arrowY1 = toY - headlen * Math.sin(angle - Math.PI / 7);
+    // Draw filled arrowhead
+    const arrowX1 = toX - headlen * Math.cos(angle - Math.atan(headWidth / headlen));
+    const arrowY1 = toY - headlen * Math.sin(angle - Math.atan(headWidth / headlen));
 
-    const arrowX2 = toX - headlen * Math.cos(angle + Math.PI / 7);
-    const arrowY2 = toY - headlen * Math.sin(angle + Math.PI / 7);
+    const arrowX2 = toX - headlen * Math.cos(angle + Math.atan(headWidth / headlen));
+    const arrowY2 = toY - headlen * Math.sin(angle + Math.atan(headWidth / headlen));
 
     ctx.beginPath();
     ctx.moveTo(toX, toY);
     ctx.lineTo(arrowX1, arrowY1);
     ctx.lineTo(arrowX2, arrowY2);
     ctx.closePath();
-    ctx.fillStyle = strokeColor; // Use the selected fill color
+    ctx.fillStyle = strokeColor;
     ctx.fill();
 }
 
@@ -729,19 +750,19 @@ function updateUI() {
     const penWidthValue = document.getElementById('penWidthValue') as HTMLSpanElement;
     const breakTime = document.getElementById('breakTime') as HTMLInputElement;
     const breakTimeValue = document.getElementById('breakTimeValue') as HTMLSpanElement;
-    const arrowHead = document.getElementById('arrowHead') as HTMLInputElement;
-    const arrowHeadValue = document.getElementById('arrowHeadValue');
+    // const arrowHead = document.getElementById('arrowHead') as HTMLInputElement;
+    // const arrowHeadValue = document.getElementById('arrowHeadValue');
     const launchAtLogin = document.getElementById('launchAtLogin') as HTMLInputElement
     const showExperimental = document.getElementById('showExperimental') as HTMLInputElement;
     const versionCheck = document.getElementById('checkForUpdates') as HTMLInputElement;
     penWidthInt = appSettings.penWidth || 3;
-    arrowHeadLengthInt = appSettings.arrowHeadLength || 20;
+    // arrowHeadLengthInt = appSettings.arrowHeadLength || 20;
     penWidth.value = penWidthInt.toString();
     penWidthValue.textContent = penWidthInt.toString();
     breakTime.value = appSettings.breakTime ? appSettings.breakTime.toString() : '30';
     breakTimeValue.textContent = `${breakTime.value} min`;
-    arrowHead.value = arrowHeadLengthInt.toString();
-    if (arrowHeadValue) arrowHeadValue.textContent = arrowHead.value;
+    // arrowHead.value = arrowHeadLengthInt.toString();
+    // if (arrowHeadValue) arrowHeadValue.textContent = arrowHead.value;
     if (launchAtLogin) {
         launchAtLogin.checked = appSettings.launchOnStartup || false;
     }
@@ -780,6 +801,9 @@ function updateUI() {
     }
     if (arrowCtx && arrowCanvas) {
         drawArrow(arrowCtx, arrowCanvas, 0, arrowCanvas.height / 2, arrowCanvas.width, arrowCanvas.height / 2, penWidthInt, arrowHeadLengthInt);
+    }
+    if (breakTimeMessageInput && appSettings.breakTimeMessage) {
+        breakTimeMessageInput.value = appSettings.breakTimeMessage;
     }
 
     updateLastCheckDisplay();

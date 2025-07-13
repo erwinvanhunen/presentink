@@ -48,6 +48,10 @@ window.addEventListener('DOMContentLoaded', async () => {
         timerElem.textContent = "00:00";
         timerElem.style.visibility = 'hidden';
     }
+    if(appSettings.breakTimeMessage) {
+        const messageElem = document.getElementById('text') as HTMLDivElement;
+        messageElem.textContent = appSettings.breakTimeMessage;
+    }
 });
 
 function updateDisplay() {

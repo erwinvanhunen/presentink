@@ -681,7 +681,8 @@
             <div class="preference-row">
               <div class="preference-label">Show experimental features</div>
               <div class="preference-control2">
-                <input type="checkbox" id="showExperimental" style="margin-top:16px" class="switch" name="showExperimental">
+                <input type="checkbox" id="showExperimental" style="margin-top:16px" class="switch"
+                  name="showExperimental">
                 <span class="secondary-text" style="margin-top:4px;">Restart required</span>
               </div>
             </div>
@@ -728,10 +729,8 @@
               </div>
             </div>
             <div class="preference-row">
-              <div class="preference-label">Arrowhead length</div>
+              <div class="preference-label"></div>
               <div class="preference-control">
-                <input id="arrowHead" type="range" min="8" max="40" value="20">
-                <span class="value-label" id="arrowHeadValue">20 px</span>
                 <canvas class="arrow-preview" id="arrowPreview" width="60" height="28"></canvas>
               </div>
             </div>
@@ -745,6 +744,13 @@
               <div class="preference-control">
                 <input id="breakTime" type="range" min="1" max="60" value="10">
                 <span class="value-label" id="breakTimeValue">10 min</span>
+              </div>
+            </div>
+            <div class="preference-row">
+              <div class="preference-label">Break message</div>
+              <div class="preference-control">
+                <input id="breakTimeMessage" type="text" maxlength="80" style="width:180px;height:20px; background-color: #38383a; color: #ffffff; border: 1px solid #48484a; border-radius: 6px; padding: 8px; font-size: 13px;" 
+                  placeholder="Time for a break!">
               </div>
             </div>
           </div>

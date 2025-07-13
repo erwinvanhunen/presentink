@@ -23,6 +23,8 @@ pub struct AppSettings {
     pub version_check: bool, // Optional field for version check
     #[serde(rename = "defaultColor")]
     pub default_color: String,
+    #[serde(rename = "breakTimeMessage")]
+    pub break_time_message: String
 }
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Shortcuts {
@@ -56,7 +58,8 @@ impl Default for AppSettings {
             shortcuts: Shortcuts::default(),
             last_version_check: "0".into(), // Default date for last version check
             version_check: true,
-            default_color: "#ff0000".into()
+            default_color: "#ff0000".into(),
+            break_time_message: "Time for a break!".into(), // Default message for break time
         }
     }
 }

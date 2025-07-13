@@ -21,7 +21,6 @@ let prevX = 0, prevY = 0;
 let lineStartX = 0, lineStartY = 0;
 let mousePos = { x: 0, y: 0 };
 let penWidth = 3; // Default pen width
-let arrowHeadLength = 20; // Default arrow head length
 let hasMouseMoved = false;
 // let lastMouseX = window.innerWidth / 2;
 // let lastMouseY = window.innerHeight / 2;
@@ -43,7 +42,6 @@ if (document.readyState === "loading") {
 async function initializeOverlay() {
   appSettings = await getSettings();
   penWidth = appSettings.penWidth;
-  arrowHeadLength = appSettings.arrowHeadLength;
 
   const currentWindow = Window.getCurrent();
 
@@ -52,7 +50,6 @@ async function initializeOverlay() {
   await listen('start-drawing', async () => {
     appSettings = await getSettings();
     penWidth = appSettings.penWidth;
-    arrowHeadLength = appSettings.arrowHeadLength;
     invoke('change_tray_icon', {
       color: strokeColor,
       isDrawing: true
@@ -920,7 +917,10 @@ drawCanvas.onmouseleave = () => {
 window.addEventListener('contextmenu', e => e.preventDefault());
 
 function drawArrow(ctx: CanvasRenderingContext2D, fromX: number, fromY: number, toX: number, toY: number) {
-  const headlen = arrowHeadLength; // Arrowhead length
+  // Scale arrowhead length and width with penWidth
+  const headlen = Math.max(10, penWidth * 2.2); // Arrowhead length scales with penWidth
+  const headWidth = Math.max(6, penWidth * 1.2); // Arrowhead width scales with penWidth
+
   const dx = toX - fromX;
   const dy = toY - fromY;
   const angle = Math.atan2(dy, dx);
@@ -930,7 +930,7 @@ function drawArrow(ctx: CanvasRenderingContext2D, fromX: number, fromY: number, 
   const shaftY = toY - (headlen - 2) * Math.sin(angle);
 
   // Draw shaft
-  ctx.strokeStyle = strokeColor; // Use the selected stroke color
+  ctx.strokeStyle = strokeColor;
   ctx.lineWidth = penWidth;
   ctx.lineCap = 'round';
   ctx.beginPath();
@@ -938,12 +938,12 @@ function drawArrow(ctx: CanvasRenderingContext2D, fromX: number, fromY: number, 
   ctx.lineTo(shaftX, shaftY);
   ctx.stroke();
 
-  // Draw filled arrowhead 
-  const arrowX1 = toX - headlen * Math.cos(angle - Math.PI / 7);
-  const arrowY1 = toY - headlen * Math.sin(angle - Math.PI / 7);
+  // Draw filled arrowhead
+  const arrowX1 = toX - headlen * Math.cos(angle - Math.atan(headWidth / headlen));
+  const arrowY1 = toY - headlen * Math.sin(angle - Math.atan(headWidth / headlen));
 
-  const arrowX2 = toX - headlen * Math.cos(angle + Math.PI / 7);
-  const arrowY2 = toY - headlen * Math.sin(angle + Math.PI / 7);
+  const arrowX2 = toX - headlen * Math.cos(angle + Math.atan(headWidth / headlen));
+  const arrowY2 = toY - headlen * Math.sin(angle + Math.atan(headWidth / headlen));
 
   ctx.beginPath();
   ctx.moveTo(toX, toY);

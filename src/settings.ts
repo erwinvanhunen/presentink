@@ -1,10 +1,10 @@
 import { Store } from '@tauri-apps/plugin-store';
 export interface AppSettings {
   penWidth: number;
-  arrowHeadLength: number;
   launchOnStartup: boolean;
   showExperimentalFeatures: boolean;
   breakTime: number;
+  breakTimeMessage?: string; // Optional, can be added later
   penColor?: string; // Optional, can be added later
   versionCheck?: boolean; // Optional, can be added later
   lastVersionCheck?: string; // Optional, can be added later
@@ -20,10 +20,10 @@ export interface AppSettings {
 
 const defaultSettings: AppSettings = {
   penWidth: 3,
-  arrowHeadLength: 20,
   launchOnStartup: false,
   showExperimentalFeatures: false,
   breakTime: 10, // default to 10 minutes
+  breakTimeMessage: 'Time for a break!',
   penColor: '#ff0000', // Default pen color (red)
   versionCheck: true, // Default to true for version checks
   lastVersionCheck: '0',
