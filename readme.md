@@ -53,25 +53,17 @@ Lightweight, always accessible, and fully optimized for Mac.
 | <kbd>Up</kbd> | Increase line width    |
 | <kbd>Down</kbd> | Decrease line width    |
 
-## Auto Typing
-There is preliminary support for auto typing based upon a script, which uses the same format as the ZoomIt script format. E.g. it supports tags like [up],[down],[left],[right],[enter] and [end]. It uses a binary MacOS application to type, which is called PresentInkTyper, and you will be required to grant permissions to this application when using the auto typing functionality. You can load a script using the menu of PresentInk. Notice that this is an EARLY implementation and I've seen already some issues with cursor movement not working as correct. 
-## ⚙️ Development
+## Text Typer / Auto Typing
+There is preliminary support for auto typing based upon a script, which uses the same format as the ZoomIt script format. E.g. it supports tags like [up],[down],[left],[right],[enter] and [end]. Activate this functionality in the settings by turning on 'Experimental features'. Create a text file with your text, and separate the entries with [end].
 
-1. **Clone the repo:**
-    ```bash
-    git clone https://github.com/erwinvanhunen/presentink.git
-    cd presentink
-    ```
+```
+This is the first line. I will have to press the shortcut again to show the next line[end]
+I pressed the shortcut [pause:3] and I just paused 3 seconds[end]
+[up]Now I went a line up and continue to type[end]
+```
+Select the text file from the Text Typer menu. Move the cursor to a program where you can type text (PresentInk does not check that, it will simply start to type after you pressed the shortcut), and press the shortcut Option+Shift+T (or the one you configured in the settings).
 
-2. **Install dependencies:**
-    ```bash
-    npm install
-    ```
-
-3. **Start the app (dev mode):**
-    ```bash
-    npm start
-    ```
+The text will cycle back to the first line after the last entry has been 'typed'. 
 ---
 
 ## 🤝 Contributing
