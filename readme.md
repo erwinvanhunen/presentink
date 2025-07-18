@@ -87,7 +87,6 @@ MIT License
 
 ## 💡 Credits
 
-- Built with [Tauri](https://v2.tauri.app/)
 - Inspired by [ZoomIt](https://docs.microsoft.com/en-us/sysinternals/downloads/zoomit)
 
 ---
