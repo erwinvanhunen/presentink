@@ -515,7 +515,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 NSColor.blue: "TrayIconBlue",
                 NSColor.yellow: "TrayIconYellow",
                 NSColor.orange: "TrayIconOrange",
-                NSColor.systemPink: "TrayIconPink",
+                NSColor.init(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0): "TrayIconPink",
             ]
             if let iconName = colorIconMap.first(where: { $0.key == color })?
                 .value
@@ -560,7 +560,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             NSColor.blue: "TrayIconBlue",
             NSColor.yellow: "TrayIconYellow",
             NSColor.orange: "TrayIconOrange",
-            NSColor.systemPink: "TrayIconPink",
+            NSColor.init(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0): "TrayIconPink",
         ]
         // Find the closest match
         if let iconName = colorIconMap.first(where: { $0.key == color })?.value
