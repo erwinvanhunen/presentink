@@ -23,7 +23,7 @@ class DrawSettingsView: NSView {
     let colors: [NSColor] = [
         .red, .green, .blue,
         .yellow,
-        .orange, NSColor.init(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0),
+        .orange, .magenta
     ]
     var selectedColorIndex: Int = 3 {
         didSet { updateColorSelection() }

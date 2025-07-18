@@ -48,8 +48,8 @@ class Settings {
         "green": .green,
         "blue": .blue,
         "yellow": .yellow,
-        "pink": NSColor.init(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0),
-        "orange": .orange,
+        "pink": .magenta,
+        "orange": .orange
     ]
 
     var penWidth: Int {

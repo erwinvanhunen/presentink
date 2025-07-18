@@ -428,7 +428,16 @@ class DrawingView: NSView, NSTextFieldDelegate {
             )
             return
         }
-
+        if event.keyCode == 49 { // Space bar
+                if let screen = window?.screen ?? NSScreen.main {
+                    let center = CGPoint(
+                        x: screen.frame.midX,
+                        y: screen.frame.midY
+                    )
+                    CGWarpMouseCursorPosition(center)
+                }
+                return
+            }
         if event.modifierFlags.contains(.command),
             event.charactersIgnoringModifiers?.lowercased() == "z"
         {
@@ -496,7 +505,7 @@ class DrawingView: NSView, NSTextFieldDelegate {
             )
             Settings.shared.defaultColor = currentColor
         case "p":
-            currentColor = NSColor.init(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0)
+            currentColor = .magenta
             updateCursorForModifiers(event.modifierFlags)
             NotificationCenter.default.post(
                 name: NSNotification.Name("DrawingColorChanged"),

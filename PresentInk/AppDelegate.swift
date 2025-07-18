@@ -510,12 +510,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             let color = Settings.shared.defaultColor
             let colorIconMap: [NSColor: String] = [
-                NSColor.red: "TrayIconRed",
-                NSColor.green: "TrayIconGreen",
-                NSColor.blue: "TrayIconBlue",
-                NSColor.yellow: "TrayIconYellow",
-                NSColor.orange: "TrayIconOrange",
-                NSColor.init(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0): "TrayIconPink",
+                .red: "TrayIconRed",
+                .green: "TrayIconGreen",
+                .blue: "TrayIconBlue",
+                .yellow: "TrayIconYellow",
+                .orange: "TrayIconOrange",
+                .magenta: "TrayIconPink",
             ]
             if let iconName = colorIconMap.first(where: { $0.key == color })?
                 .value
@@ -555,12 +555,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func drawingColorChanged(_ notification: Notification) {
         guard let color = notification.object as? NSColor else { return }
         let colorIconMap: [NSColor: String] = [
-            NSColor.red: "TrayIconRed",
-            NSColor.green: "TrayIconGreen",
-            NSColor.blue: "TrayIconBlue",
-            NSColor.yellow: "TrayIconYellow",
-            NSColor.orange: "TrayIconOrange",
-            NSColor.init(red: 1.0, green: 0.0, blue: 1.0, alpha: 1.0): "TrayIconPink",
+            .red: "TrayIconRed",
+            .green: "TrayIconGreen",
+            .blue: "TrayIconBlue",
+            .yellow: "TrayIconYellow",
+            .orange: "TrayIconOrange",
+            .magenta: "TrayIconPink",
         ]
         // Find the closest match
         if let iconName = colorIconMap.first(where: { $0.key == color })?.value
