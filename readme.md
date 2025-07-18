@@ -90,5 +90,3 @@ MIT License
 - Inspired by [ZoomIt](https://docs.microsoft.com/en-us/sysinternals/downloads/zoomit)
 
 ---
-
-<p align="center"><img src="icons/presentink.iconset/icon_128x128.png" alt="PresentInk logo" width="64"></p>
