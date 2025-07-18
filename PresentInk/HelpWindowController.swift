@@ -133,7 +133,15 @@ class HelpWindowController: NSWindowController {
             shortcutRow(
                 keys: ["p"],
                 desc: "Change color to pink"
-            )
+            ),
+            shortcutRow(
+                keys: ["w"],
+                desc: "Activate whiteboard mode (draw on a white background)"
+            ),
+            shortcutRow(
+                keys: ["k"],
+                desc: "Activate blackboard mode (draw on a black background)"
+                )
         ]
         
         //        let textDesc = NSTextField(labelWithString:
