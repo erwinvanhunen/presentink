@@ -6,7 +6,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 
 ---
 
-![PresentInk Logo](icons/presentink.iconset/icon_128x128.png) <!-- Add your logo image here -->
+![PresentInk Logo](PresentInk/Assets.xcassets/logo256x256.imageset/icon_256x256.png) 
 
 ---
 
