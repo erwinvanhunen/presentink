@@ -229,10 +229,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         try FileManager.default.removeItem(at: destURL)
                     }
 
-                    screenRecorder!.convertMovToMp4(
-                        inputURL: tempURL,
-                        outputURL: destURL
-                    )
+//                    screenRecorder!.convertMovToMp4(
+//                        inputURL: tempURL,
+//                        outputURL: destURL
+//                    )
                     
                     try FileManager.default.moveItem(at: tempURL, to: destURL)
                     let content = UNMutableNotificationContent()
@@ -313,10 +313,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func startCountdownAndRecord(screenIndex: Int) {
-        print("Starting countdown for screen index: \(screenIndex)")
         if screenIndex != -1 {
             let screen = NSScreen.screens[screenIndex]
             countdownOverlay = CountdownOverlayWindowController(screen: screen)
+            if let window = countdownOverlay?.window {
+                window.setFrame(screen.frame, display: true)
+            }
             countdownOverlay?.showWindow(nil)
             countdownOverlay?.startCountdown { [weak self] in
                 self?.countdownOverlay?.close()
@@ -325,8 +327,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     await self?.startRecordingOnScreen(screenIndex: screenIndex)
                 }
             }
-        } else {
-
         }
     }
 
@@ -546,7 +546,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func statusBarButtonClicked(_ sender: Any?) {
-        print("Status bar button clicked: \(isRecording)")
         if isRecording {
             Task {
                 try? await screenRecorder?.stop()

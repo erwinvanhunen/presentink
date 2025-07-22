@@ -386,12 +386,6 @@ extension RecordMode {
                 AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
                 AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_709_2,
             ]
-        //        case .hevc_displayP3_HDR:
-        //            return [
-        //                AVVideoTransferFunctionKey: AVVideoTransferFunction_ITU_R_2100_HLG,
-        //                AVVideoColorPrimariesKey: AVVideoColorPrimaries_P3_D65,
-        //                AVVideoYCbCrMatrixKey: AVVideoYCbCrMatrix_ITU_R_2020,
-        //            ]
         }
     }
 
