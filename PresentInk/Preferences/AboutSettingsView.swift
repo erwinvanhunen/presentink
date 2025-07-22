@@ -22,6 +22,7 @@ class AboutSettingsView: NSView {
         labelWithString: "Copyright © 2025 Erwin van Hunen"
     )
     let donateButton = NSButton()
+    let buyMeACoffeeButton = NSButton()
     let thanksLabel = NSTextField(
         labelWithString: "Thank you for supporting PresentInk!"
     )
@@ -30,7 +31,6 @@ class AboutSettingsView: NSView {
         super.init(frame: frameRect)
         wantsLayer = true
 
-        // App icon
         appIcon.image = NSImage(named: "AppIcon")
         appIcon.translatesAutoresizingMaskIntoConstraints = false
         appIcon.wantsLayer = true
@@ -38,14 +38,22 @@ class AboutSettingsView: NSView {
         appIcon.layer?.masksToBounds = true
         appIcon.setContentHuggingPriority(.required, for: .vertical)
         appIcon.setContentHuggingPriority(.required, for: .horizontal)
-        appIcon.widthAnchor.constraint(equalToConstant: 256).isActive = true
-        appIcon.heightAnchor.constraint(equalToConstant: 256).isActive = true
-
+        appIcon.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        appIcon.heightAnchor.constraint(equalToConstant: 200).isActive = true
         addSubview(appIcon)
-        // Labels
+
+        // App name label
         appName.font = NSFont.boldSystemFont(ofSize: 22)
         appName.alignment = .center
         appName.textColor = .white
+        appName.translatesAutoresizingMaskIntoConstraints = false
+        addSubview(appName)
+
+        // Spacer for whitespace
+        let spacer = NSView()
+        spacer.translatesAutoresizingMaskIntoConstraints = false
+        spacer.heightAnchor.constraint(equalToConstant: 24).isActive = true  // adjust as needed
+        addSubview(spacer)
 
         versionLabel.font = NSFont.systemFont(ofSize: 15)
         versionLabel.alignment = .center
@@ -82,27 +90,70 @@ class AboutSettingsView: NSView {
             true
         donateButton.target = self
         donateButton.action = #selector(donateButtonClicked)
-        // Stack
+
+        // Buy Me A Coffee button
+        buyMeACoffeeButton.image = NSImage(named: "BuyMeACoffee")
+        buyMeACoffeeButton.isBordered = false
+        buyMeACoffeeButton.bezelStyle = .regularSquare
+        buyMeACoffeeButton.imagePosition = .imageOnly
+        buyMeACoffeeButton.target = self
+        buyMeACoffeeButton.action = #selector(buyMeACoffeeClicked)
+        buyMeACoffeeButton.translatesAutoresizingMaskIntoConstraints = false
+        buyMeACoffeeButton.setContentHuggingPriority(
+            .required,
+            for: .horizontal
+        )
+        buyMeACoffeeButton.setContentHuggingPriority(.required, for: .vertical)
+        buyMeACoffeeButton.widthAnchor.constraint(equalToConstant: 213)
+            .isActive = true
+        buyMeACoffeeButton.heightAnchor.constraint(equalToConstant: 60)
+            .isActive = true
+
+        //        // Create horizontal stack for buttons
+        //        let buttonStack = NSStackView(views: [buyMeACoffeeButton])
+        //        buttonStack.orientation = .horizontal
+        //        buttonStack.alignment = .centerY
+        //        buttonStack.spacing = 16
+        //        buttonStack.translatesAutoresizingMaskIntoConstraints = false
+
+        // Main stack
         let stack = NSStackView(views: [
-                appName,
-                versionLabel,
-                copyrightLabel,
-                donateButton,
-                thanksLabel,
-            ])
+            versionLabel,
+            copyrightLabel,
+            buyMeACoffeeButton,
+            thanksLabel,
+        ])
         stack.orientation = .vertical
         stack.alignment = .centerX
         stack.spacing = 12
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         addSubview(stack)
+
         NSLayoutConstraint.activate([
             appIcon.centerXAnchor.constraint(equalTo: centerXAnchor),
             appIcon.topAnchor.constraint(equalTo: topAnchor, constant: 0),
+
+            appName.centerXAnchor.constraint(equalTo: centerXAnchor),
+            appName.topAnchor.constraint(
+                equalTo: appIcon.bottomAnchor,
+                constant: 4
+            ),
+
+            spacer.centerXAnchor.constraint(equalTo: centerXAnchor),
+            spacer.topAnchor.constraint(equalTo: appName.bottomAnchor),
+            spacer.heightAnchor.constraint(equalToConstant: 8),  // reduced from 24
+
             stack.centerXAnchor.constraint(equalTo: centerXAnchor),
-            stack.topAnchor.constraint(equalTo: appIcon.bottomAnchor, constant: 12),
-            stack.leadingAnchor.constraint(greaterThanOrEqualTo: leadingAnchor, constant: 32),
-            stack.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -32),
+            stack.topAnchor.constraint(equalTo: spacer.bottomAnchor),
+            stack.leadingAnchor.constraint(
+                greaterThanOrEqualTo: leadingAnchor,
+                constant: 32
+            ),
+            stack.trailingAnchor.constraint(
+                lessThanOrEqualTo: trailingAnchor,
+                constant: -32
+            ),
             stack.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor),
         ])
     }
@@ -111,6 +162,13 @@ class AboutSettingsView: NSView {
         if let url = URL(string: "https://github.com/sponsors/erwinvanhunen") {
             NSWorkspace.shared.open(url)
         }
+    }
+
+    @objc private func buyMeACoffeeClicked() {
+        if let url = URL(string: "https://buymeacoffee.com/erwinvanhunen") {
+            NSWorkspace.shared.open(url)
+        }
+        self.window?.close()
     }
 
     required init?(coder: NSCoder) { fatalError() }
