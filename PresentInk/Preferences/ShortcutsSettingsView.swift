@@ -33,6 +33,8 @@ class ShortcutsSettingsView: NSView {
     )
     private let screenRecordingHotkeyField = HotkeyRecorderField()
 
+    private var resetButtons: [HotkeyType: NSButton] = [:]
+    
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
 
@@ -99,6 +101,7 @@ class ShortcutsSettingsView: NSView {
                 self.drawHotkeyField.keyCombo = Settings.shared.drawHotkey  // Revert
             } else {
                 Settings.shared.drawHotkey = combo
+                self.updateResetButtons()
             }
         }
 
@@ -109,6 +112,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenShotHotkey  // Revert
             } else {
                 Settings.shared.screenShotHotkey = combo
+                self.updateResetButtons()
             }
         }
 
@@ -119,6 +123,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.breakTimerHotkey  // Revert
             } else {
                 Settings.shared.breakTimerHotkey = combo
+                self.updateResetButtons()
             }
         }
 
@@ -129,6 +134,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.textTypeHotkey  // Revert
             } else {
                 Settings.shared.textTypeHotkey = combo
+                self.updateResetButtons()
             }
         }
 
@@ -139,30 +145,47 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey  // Revert
             } else {
                 Settings.shared.screenRecordingHotkey = combo
+                self.updateResetButtons()
             }
         }
+        
+        let drawReset = ResetButton(action: #selector(resetDrawHotkey), target: self)
+                let screenshotReset = ResetButton(action: #selector(resetScreenshotHotkey), target: self)
+                let breakTimerReset = ResetButton(action: #selector(resetBreakTimerHotkey), target: self)
+                let typeTextReset = ResetButton(action: #selector(resetTypeTextHotkey), target: self)
+                let screenRecordingReset = ResetButton(action: #selector(resetScreenRecordingHotkey), target: self)
+
+                resetButtons = [
+                    .draw: drawReset,
+                    .screenshot: screenshotReset,
+                    .breakTimer: breakTimerReset,
+                    .typeText: typeTextReset,
+                    .screenRecording: screenRecordingReset,
+                ]
+
+        
         // Create stack views for each shortcut row
-        let drawStack = NSStackView(views: [drawLabel, drawHotkeyField])
+        let drawStack = NSStackView(views: [drawLabel, drawHotkeyField, drawReset])
         drawStack.orientation = .horizontal
         drawStack.spacing = 16
         drawStack.alignment = .centerY
 
         let screenshotStack = NSStackView(views: [
-            screenshotLabel, screenshotHotkeyField,
+            screenshotLabel, screenshotHotkeyField, screenshotReset
         ])
         screenshotStack.orientation = .horizontal
         screenshotStack.spacing = 16
         screenshotStack.alignment = .centerY
 
         let breakTimerStack = NSStackView(views: [
-            breakTimerLabel, breakTimerHotkeyField,
+            breakTimerLabel, breakTimerHotkeyField, breakTimerReset
         ])
         breakTimerStack.orientation = .horizontal
         breakTimerStack.spacing = 16
         breakTimerStack.alignment = .centerY
 
         let screenRecordingStack = NSStackView(views: [
-            screenRecordingLabel, screenRecordingHotkeyField,
+            screenRecordingLabel, screenRecordingHotkeyField, screenRecordingReset
         ])
         screenRecordingStack.orientation = .horizontal
         screenRecordingStack.spacing = 16
@@ -179,7 +202,7 @@ class ShortcutsSettingsView: NSView {
             screenRecordingStack,
         ])
         let typeTextStack = NSStackView(views: [
-            typeTextLabel, typeTextHotkeyField,
+            typeTextLabel, typeTextHotkeyField, typeTextReset
         ])
         typeTextStack.orientation = .horizontal
         typeTextStack.spacing = 16
@@ -218,6 +241,40 @@ class ShortcutsSettingsView: NSView {
         ])
 
     }
+    
+    @objc private func resetDrawHotkey() {
+        Settings.shared.drawHotkey = SettingsKeyCombo(key: .d, modifiers: [.option, .shift])
+            drawHotkeyField.keyCombo = SettingsKeyCombo(key: .d, modifiers: [.option, .shift])
+            updateResetButtons()
+        }
+        @objc private func resetScreenshotHotkey() {
+            Settings.shared.screenShotHotkey = SettingsKeyCombo(key: .s, modifiers: [.option, .shift])
+            screenshotHotkeyField.keyCombo = SettingsKeyCombo(key: .s, modifiers: [.option, .shift])
+            updateResetButtons()
+        }
+        @objc private func resetBreakTimerHotkey() {
+            Settings.shared.breakTimerHotkey = SettingsKeyCombo(key: .b, modifiers: [.option, .shift])
+            breakTimerHotkeyField.keyCombo = SettingsKeyCombo(key: .b, modifiers: [.option, .shift])
+            updateResetButtons()
+        }
+        @objc private func resetTypeTextHotkey() {
+            Settings.shared.textTypeHotkey = SettingsKeyCombo(key: .t, modifiers: [.option, .shift])
+            typeTextHotkeyField.keyCombo = SettingsKeyCombo(key: .t, modifiers: [.option, .shift])
+            updateResetButtons()
+        }
+        @objc private func resetScreenRecordingHotkey() {
+            Settings.shared.screenRecordingHotkey = SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
+            screenRecordingHotkeyField.keyCombo = SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
+            updateResetButtons()
+        }
+    
+    private func updateResetButtons() {
+           resetButtons[.draw]?.isEnabled = Settings.shared.drawHotkey != SettingsKeyCombo(key: .d, modifiers: [.option, .shift])
+           resetButtons[.screenshot]?.isEnabled = Settings.shared.screenShotHotkey != SettingsKeyCombo(key: .s, modifiers: [.option, .shift])
+           resetButtons[.breakTimer]?.isEnabled = Settings.shared.breakTimerHotkey != SettingsKeyCombo(key: .b, modifiers: [.option, .shift])
+           resetButtons[.typeText]?.isEnabled = Settings.shared.textTypeHotkey != SettingsKeyCombo(key: .t, modifiers: [.option, .shift])
+           resetButtons[.screenRecording]?.isEnabled = Settings.shared.screenRecordingHotkey != SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
+       }
 
     private func loadSettings() {
         drawHotkeyField.keyCombo = Settings.shared.drawHotkey
@@ -226,6 +283,7 @@ class ShortcutsSettingsView: NSView {
         typeTextHotkeyField.keyCombo = Settings.shared.textTypeHotkey
         screenRecordingHotkeyField.keyCombo =
             Settings.shared.screenRecordingHotkey
+        updateResetButtons()
     }
 
     private enum HotkeyType {
@@ -421,4 +479,19 @@ class HotkeyRecorderField: NSView {
         let keyString = combo.key?.description ?? "?"
         textField.stringValue = modifierString + keyString.uppercased()
     }
+}
+
+class ResetButton: NSButton {
+    init(action: Selector, target: Any?) {
+        super.init(frame: .zero)
+        self.title = "Reset"
+        self.bezelStyle = .rounded
+        self.setButtonType(.momentaryPushIn)
+        self.target = target as AnyObject
+        self.action = action
+        self.translatesAutoresizingMaskIntoConstraints = false
+        self.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        self.heightAnchor.constraint(equalToConstant: 28).isActive = true
+    }
+    required init?(coder: NSCoder) { fatalError("init(coder:) has not been implemented") }
 }

@@ -10,7 +10,7 @@ import Foundation
 import ServiceManagement
 import HotKey
 
-struct SettingsKeyCombo: Codable {
+struct SettingsKeyCombo: Codable, Equatable {
     let keyRawValue: UInt32
     let modifiersRawValue: UInt
 
@@ -21,6 +21,12 @@ struct SettingsKeyCombo: Codable {
         self.keyRawValue = key?.carbonKeyCode ?? 0
         self.modifiersRawValue = modifiers.rawValue
     }
+    
+    public static func == (lhs: SettingsKeyCombo, rhs: SettingsKeyCombo) -> Bool {
+            return lhs.keyRawValue == rhs.keyRawValue &&
+                   lhs.modifiersRawValue == rhs.modifiersRawValue
+        }
+    
 }
 
 enum TypingSpeed: Int {
