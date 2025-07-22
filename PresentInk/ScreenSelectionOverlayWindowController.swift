@@ -4,6 +4,7 @@ class ScreenSelectionOverlayWindowController: NSWindowController {
     let screenIndex: Int
     let screen: NSScreen
     var onKeyPress: ((Int) -> Void)?
+    private var previousPresentationOptions: NSApplication.PresentationOptions?
 
     init(screen: NSScreen, index: Int) {
         self.screen = screen
@@ -15,24 +16,51 @@ class ScreenSelectionOverlayWindowController: NSWindowController {
             defer: false,
             screen: screen
         )
-        window.level = .screenSaver
+        window.level = .mainMenu + 1
         window.backgroundColor = .clear
         window.isOpaque = false
         window.ignoresMouseEvents = true
-        window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
+        window.collectionBehavior = [
+            .canJoinAllSpaces, .fullScreenAuxiliary, .fullScreenPrimary, .stationary
+        ]
+        window.makeKeyAndOrderFront(nil)
+        NSApp.activate(ignoringOtherApps: true)
+
+        // Save and set restrictive presentation options
+        previousPresentationOptions = NSApp.presentationOptions
+        NSApp.presentationOptions = [
+            .hideDock,
+            .hideMenuBar,
+            .disableProcessSwitching,
+            .disableForceQuit,
+            .disableSessionTermination,
+            .disableHideApplication
+        ]
+
         super.init(window: window)
         window.contentView = OverlayView(index: index)
-        window.makeKeyAndOrderFront(nil)
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if let number = Int(event.characters ?? ""), number == index {
+                self?.restorePresentationOptions()
                 self?.onKeyPress?(number)
                 return nil
             }
-            return event
+            if event.keyCode == 53 { // Escape
+                self?.restorePresentationOptions()
+                self?.onKeyPress?(0)
+                return nil
+            }
+            return nil // Block all other keys
         }
     }
 
     required init?(coder: NSCoder) { fatalError() }
+
+    private func restorePresentationOptions() {
+        if let previous = previousPresentationOptions {
+            NSApp.presentationOptions = previous
+        }
+    }
 
     class OverlayView: NSView {
         let index: Int
@@ -46,14 +74,14 @@ class ScreenSelectionOverlayWindowController: NSWindowController {
         override func draw(_ dirtyRect: NSRect) {
             super.draw(dirtyRect)
             let number = "\(index)"
-            let message = "Press \(index) to record this screen"
+            let message = "Press \(index) to record this screen. Press Esc to cancel."
             let numberAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 200, weight: .bold),
-                .foregroundColor: NSColor.white
+                .foregroundColor: NSColor.white,
             ]
             let messageAttrs: [NSAttributedString.Key: Any] = [
                 .font: NSFont.systemFont(ofSize: 40, weight: .medium),
-                .foregroundColor: NSColor.white
+                .foregroundColor: NSColor.white,
             ]
             let numberSize = number.size(withAttributes: numberAttrs)
             let messageSize = message.size(withAttributes: messageAttrs)

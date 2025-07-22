@@ -1,3 +1,11 @@
+//
+//  CountdownOverlayWindowController.swift
+//  PresentInk
+//
+//  Created by Erwin van Hunen on 2025-07-21.
+//
+
+
 import Cocoa
 
 class CountdownOverlayWindowController: NSWindowController {

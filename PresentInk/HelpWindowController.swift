@@ -116,6 +116,12 @@ class HelpWindowController: NSWindowController {
                 ),
                 desc: "Start a break timer"
             ),
+            shortcutRow(
+                keys: HelpWindowController.getKeyModifiers(
+                    keyCombo: Settings.shared.screenRecordingHotkey
+                ),
+                desc: "Start a screen recording"
+            ),
         ]
         let drawShortCuts: [NSStackView] = [
             shortcutRow(

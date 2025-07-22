@@ -38,6 +38,7 @@ class Settings {
     private let screenShotHotkeyKey = "screenShotHotkey"
     private let breakTimerHotkeyKey = "breakTimerHotkey"
     private let textTypeHotkeyKey = "textTypeHotkey"
+    private let screenRecordingHotkeyKey = "screenRecordingHotkey"
     private let checkForUpdatesOnStartupKey = "checkForUpdatesOnStartup"
     private let lastUpdateCheckKey = "lastUpdateCheck"
     private let typeSpeedIndexKey = "typingSpeedIndex"
@@ -80,7 +81,6 @@ class Settings {
                let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
                 return combo
             }
-            // Default: Option+Shift+D
             return SettingsKeyCombo(key: Key.d, modifiers: [.option, .shift])
         }
         set {
@@ -97,7 +97,6 @@ class Settings {
                let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
                 return combo
             }
-            // Default: Option+Shift+D
             return SettingsKeyCombo(key: Key.s, modifiers: [.option, .shift])
         }
         set {
@@ -108,13 +107,28 @@ class Settings {
         }
     }
     
+    var screenRecordingHotkey: SettingsKeyCombo {
+        get {
+            if let data = UserDefaults.standard.data(forKey: screenRecordingHotkeyKey),
+               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+                return combo
+            }
+            return SettingsKeyCombo(key: Key.r, modifiers: [.option, .shift])
+        }
+        set {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(newValue) {
+                UserDefaults.standard.set(encoded, forKey: screenRecordingHotkeyKey)
+            }
+        }
+    }
+    
     var breakTimerHotkey: SettingsKeyCombo {
         get {
             if let data = UserDefaults.standard.data(forKey: breakTimerHotkeyKey),
                let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
                 return combo
             }
-            // Default: Option+Shift+D
             return SettingsKeyCombo(key: Key.b, modifiers: [.option, .shift])
         }
         set {

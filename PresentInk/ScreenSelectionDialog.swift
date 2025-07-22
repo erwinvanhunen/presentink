@@ -1,3 +1,4 @@
+// Add this class somewhere in your project
 import Cocoa
 
 class ScreenSelectionDialog {
@@ -7,14 +8,12 @@ class ScreenSelectionDialog {
         alert.informativeText = "Choose which screen you want to record."
         alert.alertStyle = .informational
 
-        // Add a button for each screen
         for (index, screen) in screens.enumerated() {
             let screenDesc = screen.localizedName.isEmpty ? "Screen \(index + 1)" : screen.localizedName
             alert.addButton(withTitle: screenDesc)
         }
         alert.addButton(withTitle: "Cancel")
 
-        // Present the alert modally
         let response = alert.runModal()
         if response == .alertFirstButtonReturn {
             onScreenSelected(0)

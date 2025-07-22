@@ -28,6 +28,11 @@ class ShortcutsSettingsView: NSView {
     private let typeTextLabel = NSTextField(labelWithString: "Type text:")
     private let typeTextHotkeyField = HotkeyRecorderField()
 
+    private let screenRecordingLabel = NSTextField(
+        labelWithString: "Screen Recording:"
+    )
+    private let screenRecordingHotkeyField = HotkeyRecorderField()
+
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
 
@@ -74,10 +79,17 @@ class ShortcutsSettingsView: NSView {
         // Configure hotkey fields
         [
             drawHotkeyField, screenshotHotkeyField, breakTimerHotkeyField,
-            typeTextHotkeyField,
+            typeTextHotkeyField, screenRecordingHotkeyField,
         ].forEach { field in
             field.heightAnchor.constraint(equalToConstant: 28).isActive = true
             field.widthAnchor.constraint(equalToConstant: 180).isActive = true
+        }
+        
+        [
+            drawLabel, screenshotLabel, breakTimerLabel,
+            typeTextLabel, screenRecordingLabel,
+        ].forEach { field in
+            field.widthAnchor.constraint(equalToConstant: 120).isActive = true
         }
 
         // Set up targets with conflict checking
@@ -120,6 +132,15 @@ class ShortcutsSettingsView: NSView {
             }
         }
 
+        screenRecordingHotkeyField.onHotkeyChanged = { combo in
+            if self.isHotkeyConflict(combo, excluding: .screenRecording) {
+                self.showConflictAlert()
+                self.screenRecordingHotkeyField.keyCombo =
+                    Settings.shared.screenRecordingHotkey  // Revert
+            } else {
+                Settings.shared.screenRecordingHotkey = combo
+            }
+        }
         // Create stack views for each shortcut row
         let drawStack = NSStackView(views: [drawLabel, drawHotkeyField])
         drawStack.orientation = .horizontal
@@ -140,6 +161,13 @@ class ShortcutsSettingsView: NSView {
         breakTimerStack.spacing = 16
         breakTimerStack.alignment = .centerY
 
+        let screenRecordingStack = NSStackView(views: [
+            screenRecordingLabel, screenRecordingHotkeyField,
+        ])
+        screenRecordingStack.orientation = .horizontal
+        screenRecordingStack.spacing = 16
+        screenRecordingStack.alignment = .centerY
+
         // Main vertical stack
         let mainStack = NSStackView(views: [
             titleLabel,
@@ -148,6 +176,7 @@ class ShortcutsSettingsView: NSView {
             drawStack,
             screenshotStack,
             breakTimerStack,
+            screenRecordingStack,
         ])
         let typeTextStack = NSStackView(views: [
             typeTextLabel, typeTextHotkeyField,
@@ -158,7 +187,7 @@ class ShortcutsSettingsView: NSView {
         mainStack.addArrangedSubview(typeTextStack)
 
         typeTextStack.isHidden = !Settings.shared.showExperimentalFeatures
-        
+
         mainStack.orientation = .vertical
         mainStack.alignment = .leading
         mainStack.spacing = 12
@@ -181,10 +210,11 @@ class ShortcutsSettingsView: NSView {
             ),
 
             // Make label columns align
-            drawLabel.widthAnchor.constraint(equalToConstant: 100),
-            screenshotLabel.widthAnchor.constraint(equalToConstant: 100),
-            breakTimerLabel.widthAnchor.constraint(equalToConstant: 100),
-            typeTextLabel.widthAnchor.constraint(equalToConstant: 100),
+//            drawLabel.widthAnchor.constraint(equalToConstant: 120),
+//            screenshotLabel.widthAnchor.constraint(equalToConstant: 120),
+//            breakTimerLabel.widthAnchor.constraint(equalToConstant: 120),
+//            typeTextLabel.widthAnchor.constraint(equalToConstant: 120),
+//            screenRecordingLabel.widthAnchor.constraint(equalToConstant: 120),
         ])
 
     }
@@ -194,10 +224,12 @@ class ShortcutsSettingsView: NSView {
         screenshotHotkeyField.keyCombo = Settings.shared.screenShotHotkey
         breakTimerHotkeyField.keyCombo = Settings.shared.breakTimerHotkey
         typeTextHotkeyField.keyCombo = Settings.shared.textTypeHotkey
+        screenRecordingHotkeyField.keyCombo =
+            Settings.shared.screenRecordingHotkey
     }
 
     private enum HotkeyType {
-        case draw, screenshot, breakTimer, typeText
+        case draw, screenshot, breakTimer, typeText, screenRecording
     }
 
     private func isHotkeyConflict(
@@ -211,24 +243,35 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenShotHotkey,
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.textTypeHotkey,
+                    Settings.shared.screenRecordingHotkey,
                 ]
             case .screenshot:
                 return [
                     Settings.shared.drawHotkey,
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.textTypeHotkey,
+                    Settings.shared.screenRecordingHotkey,
                 ]
             case .breakTimer:
                 return [
                     Settings.shared.drawHotkey,
                     Settings.shared.screenShotHotkey,
                     Settings.shared.textTypeHotkey,
+                    Settings.shared.screenRecordingHotkey,
                 ]
             case .typeText:
                 return [
                     Settings.shared.drawHotkey,
                     Settings.shared.screenShotHotkey,
                     Settings.shared.breakTimerHotkey,
+                    Settings.shared.screenRecordingHotkey,
+                ]
+            case .screenRecording:
+                return [
+                    Settings.shared.drawHotkey,
+                    Settings.shared.screenShotHotkey,
+                    Settings.shared.breakTimerHotkey,
+                    Settings.shared.textTypeHotkey,
                 ]
             }
         }()

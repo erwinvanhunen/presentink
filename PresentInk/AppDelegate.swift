@@ -26,9 +26,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hotkeyBreak: HotKey?
     var hotkeyTextType: HotKey?
     var textType: TextTyper?
+    var hotkeyRecording: HotKey?
     var selectedTextfile: String?
     var selectedText: [String] = []
     var currentTextIndex: Int = 0
+    var isRecording: Bool = false
+    var screenRecorder: ScreenRecorder?
+    var screenRecorderUrl: URL?
+    var screenSelectionOverlays: [ScreenSelectionOverlayWindowController] = []
+    var countdownOverlay: CountdownOverlayWindowController?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         if !Settings.shared.launchAtLogin {
@@ -99,7 +105,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSNotification.Name("HotkeyRecordingStopped"),
             object: nil
         )
-        NotificationCenter.default.addObserver(self, selector: #selector(experimentalFeaturesToggled), name: NSNotification.Name("experimentalFeaturesToggled"), object: nil)
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(experimentalFeaturesToggled),
+            name: NSNotification.Name("experimentalFeaturesToggled"),
+            object: nil
+        )
     }
 
     private func setupHotkeys() {
@@ -107,6 +118,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyScreenshot = nil
         hotkeyBreak = nil
         hotkeyTextType = nil
+        hotkeyRecording = nil
         hotkeyDraw = HotKey(
             key: Settings.shared.drawHotkey.key ?? .d,
             modifiers: Settings.shared.drawHotkey.modifiers
@@ -125,6 +137,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             modifiers: Settings.shared.textTypeHotkey.modifiers
         )
 
+        hotkeyRecording = HotKey(
+            key: Settings.shared.screenRecordingHotkey.key ?? .r,
+            modifiers: Settings.shared.screenRecordingHotkey.modifiers
+        )
+
         hotkeyDraw?.keyDownHandler = { [weak self] in
             self?.toggleDrawing()
         }
@@ -137,6 +154,162 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyTextType?.keyDownHandler = { [weak self] in
             self?.typeTextAction()
         }
+        hotkeyRecording?.keyDownHandler = { [weak self] in
+            Task.detached {
+                await self?.recordScreenAction()
+            }
+        }
+    }
+
+    func setRecordingTrayIcon(_ recording: Bool) {
+        DispatchQueue.main.async {
+            if let button = self.statusItem.button {
+                if recording {
+                    let symbolConfig = NSImage.SymbolConfiguration(
+                        paletteColors: [.red])
+                    let symbolImage = NSImage(
+                        systemSymbolName: "stop.circle",
+                        accessibilityDescription: nil
+                    )!
+                    .withSymbolConfiguration(symbolConfig)!
+                    button.image = symbolImage
+                } else {
+                    button.image = NSImage(named: "TrayIconDefault")
+                }
+            }
+        }
+    }
+
+    @objc func recordScreenMenuAction() {
+        Task.detached {
+            await self.recordScreenAction()
+        }
+    }
+    
+    @objc func recordScreenAction() async {
+        if isRecording == false {
+            await MainActor.run {
+                let screens = NSScreen.screens
+                ScreenSelectionDialog.present(for: screens) {
+                    [weak self] selectedIndex in
+                    guard let self = self, let index = selectedIndex else {
+                        return
+                    }
+                    self.startCountdownAndRecord(screenIndex: index)
+                }
+            }
+        } else {
+            do {
+                try await screenRecorder!.stop()
+                isRecording = false
+                setRecordingTrayIcon(false)
+                await finishRecording()
+            } catch {
+                print("Error during recording:", error)
+            }
+        }
+    }
+
+    func finishRecording() async {
+        guard let tempURL = screenRecorderUrl else { return }
+        await MainActor.run {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyy-MM-dd-HHmm"
+            let dateString = formatter.string(from: Date())
+            let savePanel = NSSavePanel()
+            savePanel.allowedContentTypes = [.movie]
+            savePanel.nameFieldStringValue =
+                "screen recording \(dateString).mp4"
+            savePanel.title = "Save Screen Recording"
+            let response = savePanel.runModal()
+            if response == .OK, let destURL = savePanel.url {
+                do {
+                    if FileManager.default.fileExists(atPath: destURL.path) {
+                        try FileManager.default.removeItem(at: destURL)
+                    }
+
+                    screenRecorder!.convertMovToMp4(
+                        inputURL: tempURL,
+                        outputURL: destURL
+                    ) { success, error in
+                        if success {
+                            print("MP4 saved at \(destURL)")
+                        } else {
+                            print(
+                                "Export failed: \(error?.localizedDescription ?? "Unknown error")"
+                            )
+                        }
+                    }
+                    //                    try FileManager.default.moveItem(at: tempURL, to: destURL)
+                    print("Saved recording to \(destURL)")
+                } catch {
+                    print("Failed to save recording: \(error)")
+                }
+            } else {
+                print("User cancelled save. Temp file at \(tempURL)")
+                // Optionally, delete temp file
+                try? FileManager.default.removeItem(at: tempURL)
+            }
+        }
+    }
+
+    @MainActor
+    func startRecordingOnScreen(screenIndex: Int) async {
+        // Ask user for save location
+        let tempURL = FileManager.default.temporaryDirectory
+            .appendingPathComponent(UUID().uuidString + ".mov")
+        screenRecorderUrl = tempURL
+
+        do {
+            guard CGPreflightScreenCaptureAccess() else {
+                throw RecordingError("No screen capture permission")
+            }
+
+            let screen = NSScreen.screens[screenIndex]
+            let displayID =
+                screen.deviceDescription[
+                    NSDeviceDescriptionKey("NSScreenNumber")
+                ] as! CGDirectDisplayID
+
+            print(
+                "start recording on display ID: \(displayID), \(CGMainDisplayID())"
+            )
+            screenRecorder = try await ScreenRecorder(
+                url: screenRecorderUrl!,
+                displayID: displayID,
+                cropRect: nil,
+                mode: .h264_sRGB
+            )
+            isRecording = true
+            setRecordingTrayIcon(true)
+            try await screenRecorder!.start()
+
+        } catch {
+            print("Error during recording:", error)
+        }
+    }
+
+    func removeScreenSelectionOverlays() {
+        screenSelectionOverlays.forEach { $0.close() }
+        screenSelectionOverlays.removeAll()
+    }
+
+    func startCountdownAndRecord(screenIndex: Int) {
+        print("Starting countdown for screen index: \(screenIndex)")
+        if screenIndex != -1 {
+            let screen = NSScreen.screens[screenIndex]
+            countdownOverlay = CountdownOverlayWindowController(screen: screen)
+            countdownOverlay?.showWindow(nil)
+            countdownOverlay?.startCountdown { [weak self] in
+                self?.countdownOverlay?.close()
+                self?.countdownOverlay = nil
+                Task { @MainActor in
+                    await self?.startRecordingOnScreen(screenIndex: screenIndex)
+                }
+            }
+        } else {
+
+        }
     }
 
     @objc func hotkeyRecordingStarted() {
@@ -144,25 +317,28 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyScreenshot?.isPaused = true
         hotkeyBreak?.isPaused = true
         hotkeyTextType?.isPaused = true
+        hotkeyRecording?.isPaused = true
     }
 
     @objc func hotkeyRecordingStopped() {
         setupHotkeys()
         setupStatusMenu()
     }
-    
+
     @objc func experimentalFeaturesToggled() {
         setupStatusMenu()
     }
 
     func setupStatusMenu() {
         statusMenu = NSMenu()
-
+        
         // Get hotkey settings
         let drawHotkey = Settings.shared.drawHotkey
         let screenshotHotkey = Settings.shared.screenShotHotkey
         let breakTimerHotkey = Settings.shared.breakTimerHotkey
         let typeTextHotkey = Settings.shared.textTypeHotkey
+        let screenRecordingHotkey = Settings.shared.screenRecordingHotkey
+        
         let drawItem = NSMenuItem(
             title: "Draw",
             action: #selector(drawAction),
@@ -170,7 +346,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         drawItem.keyEquivalentModifierMask = drawHotkey.modifiers
         statusMenu.addItem(drawItem)
-
+        
         let breakItem = NSMenuItem(
             title: "Break Time",
             action: #selector(breakTimeAction),
@@ -178,7 +354,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         breakItem.keyEquivalentModifierMask = breakTimerHotkey.modifiers
         statusMenu.addItem(breakItem)
-
+        
         let screenshotItem = NSMenuItem(
             title: "Screenshot",
             action: #selector(screenshotAction),
@@ -186,7 +362,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         screenshotItem.keyEquivalentModifierMask = screenshotHotkey.modifiers
         statusMenu.addItem(screenshotItem)
-
+        
+        let screenRecordingItem = NSMenuItem(
+            title: "Record screen",
+            action: #selector(recordScreenMenuAction),
+            keyEquivalent: screenRecordingHotkey.key?.description.lowercased() ?? "r"
+        )
+        screenRecordingItem.keyEquivalentModifierMask = screenRecordingHotkey.modifiers
+        statusMenu.addItem(screenRecordingItem)
+                
         let typeTextMenu = NSMenu(title: "Type Text")
         typeTextMenu.addItem(
             NSMenuItem(
@@ -214,15 +398,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         typeTextMenuItem.isEnabled = false
         typeTextMenu.addItem(typeTextMenuItem)
 
-       
-
         let typeTextItem = NSMenuItem(
             title: "Text Typer",
             action: nil,
             keyEquivalent: ""
         )
         typeTextItem.submenu = typeTextMenu
-        if(Settings.shared.showExperimentalFeatures) {
+        if Settings.shared.showExperimentalFeatures {
             statusMenu.addItem(typeTextItem)
         }
 
@@ -253,9 +435,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func typeTextAction() {
-        if(Settings.shared.showExperimentalFeatures) {
+        if Settings.shared.showExperimentalFeatures {
             var delay: useconds_t = 50000
-            
+
             guard !selectedText.isEmpty else { return }
             switch Settings.shared.typingSpeed {
             case .slow:
@@ -344,6 +526,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func statusBarButtonClicked(_ sender: Any?) {
+        print("Status bar button clicked: \(isRecording)")
+        if isRecording {
+            Task {
+                try? await screenRecorder?.stop()
+                isRecording = false
+                setRecordingTrayIcon(false)
+                await finishRecording()
+            }
+            return
+        }
+
         overlayControllers.forEach {
             $0.window?.ignoresMouseEvents = true
         }
