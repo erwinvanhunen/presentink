@@ -7,6 +7,7 @@
 
 import Cocoa
 import ScreenCaptureKit
+import UserNotifications
 
 //class ScreenShotWindowController: NSWindowController {
 //    private let screen: NSScreen
@@ -811,6 +812,18 @@ class SelectionView: NSView {
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.writeObjects([image])
+        let content = UNMutableNotificationContent()
+        content.title = "Screenshot copied"
+        content.body =
+            "Screenshot copied to clipboard"
+        content.sound = .default
+
+        let request = UNNotificationRequest(
+            identifier: UUID().uuidString,
+            content: content,
+            trigger: nil
+        )
+        UNUserNotificationCenter.current().add(request)
         NotificationCenter.default.post(
             name: NSNotification.Name("CloseScreenshotWindows"),
             object: nil
@@ -829,6 +842,18 @@ class SelectionView: NSView {
 
         do {
             try pngData.write(to: url)
+            let content = UNMutableNotificationContent()
+            content.title = "Screenshot Saved"
+            content.body =
+                "Screenshot saved to \(url.lastPathComponent)"
+            content.sound = .default
+
+            let request = UNNotificationRequest(
+                identifier: UUID().uuidString,
+                content: content,
+                trigger: nil
+            )
+            UNUserNotificationCenter.current().add(request)
             print("Screenshot saved to: \(url.path)")
         } catch {
             print("Failed to save screenshot: \(error)")

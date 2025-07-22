@@ -13,13 +13,6 @@ import VideoToolbox
 enum RecordMode {
     case h264_sRGB
     case hevc_displayP3
-
-    // I haven't gotten HDR recording working yet.
-    // The commented out code is my best attempt, but still results in "blown out whites".
-    //
-    // Any tips are welcome!
-    // - Tom
-    //    case hevc_displayP3_HDR
 }
 
 class ScreenRecorder {
@@ -40,7 +33,7 @@ class ScreenRecorder {
     ) async throws {
 
         // Create AVAssetWriter for a QuickTime movie file
-        self.assetWriter = try AVAssetWriter(url: url, fileType: .mov)
+        self.assetWriter = try AVAssetWriter(url: url, fileType: .mp4)
 
         // MARK: AVAssetWriter setup
 
@@ -225,8 +218,7 @@ class ScreenRecorder {
 
     public func convertMovToMp4(
         inputURL: URL,
-        outputURL: URL,
-        completion: @escaping (Bool, Error?) -> Void
+        outputURL: URL
     ) {
 
         let asset = AVURLAsset(url: inputURL)
@@ -236,17 +228,11 @@ class ScreenRecorder {
                 presetName: AVAssetExportPresetHighestQuality
             )
         else {
-            completion(
-                false,
-                NSError(domain: "ExportSession", code: -1, userInfo: nil)
-            )
             return
         }
         Task.detached {
             try await exportSession.export(to: outputURL, as: .mp4)
         }
-        //            try await exportSession.export(to: outputURL, as: .mp4)
-
     }
 
     private class StreamOutput: NSObject, SCStreamOutput {

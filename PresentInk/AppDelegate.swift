@@ -2,6 +2,7 @@ import ApplicationServices
 import Cocoa
 import HotKey
 @preconcurrency import ScreenCaptureKit
+import UserNotifications
 
 extension AppDelegate {
     func hasAccessibilityRights() -> Bool {
@@ -185,7 +186,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             await self.recordScreenAction()
         }
     }
-    
+
     @objc func recordScreenAction() async {
         if isRecording == false {
             await MainActor.run {
@@ -231,19 +232,36 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     screenRecorder!.convertMovToMp4(
                         inputURL: tempURL,
                         outputURL: destURL
-                    ) { success, error in
-                        if success {
-                            print("MP4 saved at \(destURL)")
-                        } else {
-                            print(
-                                "Export failed: \(error?.localizedDescription ?? "Unknown error")"
-                            )
-                        }
-                    }
-                    //                    try FileManager.default.moveItem(at: tempURL, to: destURL)
-                    print("Saved recording to \(destURL)")
+                    )
+                    
+                    try FileManager.default.moveItem(at: tempURL, to: destURL)
+                    let content = UNMutableNotificationContent()
+                    content.title = "Screen Recording Saved"
+                    content.body =
+                        "Recording saved to \(destURL.lastPathComponent)"
+                    content.sound = .default
+
+                    let request = UNNotificationRequest(
+                        identifier: UUID().uuidString,
+                        content: content,
+                        trigger: nil
+                    )
+                    UNUserNotificationCenter.current().add(request)
+
                 } catch {
-                    print("Failed to save recording: \(error)")
+                    let content = UNMutableNotificationContent()
+                    content.title = "Screen Recording Failed"
+                    content.body =
+                    "Failed to save recording: \(error.localizedDescription)"
+                    content.sound = .default
+
+                    let request = UNNotificationRequest(
+                        identifier: UUID().uuidString,
+                        content: content,
+                        trigger: nil
+                    )
+
+                    UNUserNotificationCenter.current().add(request)
                 }
             } else {
                 print("User cancelled save. Temp file at \(tempURL)")
@@ -331,14 +349,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func setupStatusMenu() {
         statusMenu = NSMenu()
-        
+
         // Get hotkey settings
         let drawHotkey = Settings.shared.drawHotkey
         let screenshotHotkey = Settings.shared.screenShotHotkey
         let breakTimerHotkey = Settings.shared.breakTimerHotkey
         let typeTextHotkey = Settings.shared.textTypeHotkey
         let screenRecordingHotkey = Settings.shared.screenRecordingHotkey
-        
+
         let drawItem = NSMenuItem(
             title: "Draw",
             action: #selector(drawAction),
@@ -346,7 +364,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         drawItem.keyEquivalentModifierMask = drawHotkey.modifiers
         statusMenu.addItem(drawItem)
-        
+
         let breakItem = NSMenuItem(
             title: "Break Time",
             action: #selector(breakTimeAction),
@@ -354,7 +372,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         breakItem.keyEquivalentModifierMask = breakTimerHotkey.modifiers
         statusMenu.addItem(breakItem)
-        
+
         let screenshotItem = NSMenuItem(
             title: "Screenshot",
             action: #selector(screenshotAction),
@@ -362,15 +380,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         screenshotItem.keyEquivalentModifierMask = screenshotHotkey.modifiers
         statusMenu.addItem(screenshotItem)
-        
+
         let screenRecordingItem = NSMenuItem(
             title: "Record screen",
             action: #selector(recordScreenMenuAction),
-            keyEquivalent: screenRecordingHotkey.key?.description.lowercased() ?? "r"
+            keyEquivalent: screenRecordingHotkey.key?.description.lowercased()
+                ?? "r"
         )
-        screenRecordingItem.keyEquivalentModifierMask = screenRecordingHotkey.modifiers
+        screenRecordingItem.keyEquivalentModifierMask =
+            screenRecordingHotkey.modifiers
         statusMenu.addItem(screenRecordingItem)
-                
+
         let typeTextMenu = NSMenu(title: "Type Text")
         typeTextMenu.addItem(
             NSMenuItem(
