@@ -4,6 +4,7 @@ class ScreenRecordCroppedView: NSView {
     var onSelectionComplete: ((CGRect) -> Void)?
     var onCancel: (() -> Void)?
 
+    private var showIntroText: Bool = true
     private var screen: NSScreen
     private var isSelecting = false
     private var startPoint: NSPoint = NSPoint.zero
@@ -30,7 +31,7 @@ class ScreenRecordCroppedView: NSView {
         bar.layer?.cornerRadius = 18
         bar.translatesAutoresizingMaskIntoConstraints = false
 
-        startButton = makeIconButton(symbolName: "record.circle.fill", action: #selector(startRecording), color: .red)
+        startButton = makeIconButton(symbolName: "record.circle.fill", action: #selector(startRecording), color: .white)
         cancelButton = makeIconButton(symbolName: "xmark.square.fill", action: #selector(cancelSelection))
 
         let stack = NSStackView(views: [startButton, cancelButton])
@@ -196,7 +197,7 @@ class ScreenRecordCroppedView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         if buttonBar.isHidden && !currentRect.isEmpty {
-            NSColor.systemRed.setStroke()
+            NSColor.systemBlue.setStroke()
             let borderPath = NSBezierPath(rect: currentRect)
             borderPath.lineWidth = 3.0
             borderPath.stroke()
@@ -214,8 +215,41 @@ class ScreenRecordCroppedView: NSView {
             }
         }
         positionButtonBar()
+        if showIntroText && !isSelecting {
+               drawIntroText()
+           }
     }
 
+    private func drawIntroText() {
+        let introText = """
+            Drag to select an area. Press Esc to cancel.
+            """
+            let attributes: [NSAttributedString.Key: Any] = [
+            .font: NSFont.systemFont(ofSize: 18, weight: .medium),
+            .foregroundColor: NSColor.white,
+            .backgroundColor: NSColor.clear
+        ]
+        let size = introText.size(withAttributes: attributes)
+        let textRect = NSRect(
+            x: (bounds.width - size.width) / 2,
+            y: (bounds.height - size.height) / 2,
+            width: size.width + 40,
+            height: size.height + 32
+        )
+        NSColor(
+            calibratedRed: 156 / 255,
+            green: 204 / 255,
+            blue: 0 / 255,
+            alpha: 1
+        ).setFill()
+        NSBezierPath(roundedRect: textRect, xRadius: 8, yRadius: 8).fill()
+        let textOrigin = NSPoint(
+                x: textRect.midX - size.width / 2,
+                y: textRect.midY - size.height / 2
+            )
+            introText.draw(at: textOrigin, withAttributes: attributes)
+    }
+    
     private func drawResizeHandles() {
         let handles = getResizeHandleRects()
         NSColor.systemBlue.setFill()
@@ -323,6 +357,7 @@ class ScreenRecordCroppedView: NSView {
     override func mouseDown(with event: NSEvent) {
         let point = convert(event.locationInWindow, from: nil)
         if !currentRect.isEmpty {
+            showIntroText = false
             resizeHandle = getResizeHandleAtPoint(point)
             if resizeHandle != .none && resizeHandle != .buttonBar && resizeHandle != .center {
                 isResizing = true
