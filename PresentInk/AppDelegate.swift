@@ -18,6 +18,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var overlayControllers: [OverlayWindowController] = []
     var breakTimerControllers: [BreakTimerWindowController] = []
     var screenshotControllers: [ScreenShotWindowController] = []
+    var rectangleSelectionOverlayControllers: [ScreenRecordRectangleController] = []
     var splashController: SplashWindowController?
     var breakTimerController: BreakTimerWindowController?
     var settingsWindowController: SettingsWindowController?
@@ -28,6 +29,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hotkeyTextType: HotKey?
     var textType: TextTyper?
     var hotkeyRecording: HotKey?
+    var hotkeyRectangleRecording: HotKey?
     var selectedTextfile: String?
     var selectedText: [String] = []
     var currentTextIndex: Int = 0
@@ -142,6 +144,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             key: Settings.shared.screenRecordingHotkey.key ?? .r,
             modifiers: Settings.shared.screenRecordingHotkey.modifiers
         )
+        
+        hotkeyRectangleRecording = HotKey(
+            key: Settings.shared.screenRecordingRectangleHotkey.key ?? .r,
+            modifiers: Settings.shared.screenRecordingRectangleHotkey.modifiers
+        )
 
         hotkeyDraw?.keyDownHandler = { [weak self] in
             self?.toggleDrawing()
@@ -160,6 +167,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 await self?.recordScreenAction()
             }
         }
+        
+        hotkeyRectangleRecording?.keyDownHandler = { [weak self] in
+            self?.startRectRecordingFlow()
+        }
     }
 
     func setRecordingTrayIcon(_ recording: Bool) {
@@ -169,7 +180,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     let symbolConfig = NSImage.SymbolConfiguration(
                         paletteColors: [.red])
                     let symbolImage = NSImage(
-                        systemSymbolName: "stop.circle",
+                        systemSymbolName: "record.circle.fill",
                         accessibilityDescription: nil
                     )!
                     .withSymbolConfiguration(symbolConfig)!
@@ -214,6 +225,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func finishRecording() async {
         guard let tempURL = screenRecorderUrl else { return }
         await MainActor.run {
+            self.closeAllRectangleSelectionOverlayWindows()
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd-HHmm"
             let dateString = formatter.string(from: Date())
@@ -271,9 +283,41 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    func startRectRecordingFlow() {
+        for screen in NSScreen.screens {
+            let controller = ScreenRecordRectangleController(screen: screen)
+            controller.onSelection = { [weak self] screen, rect in
+                // Enable click-through on all rectangle overlays
+                self?.rectangleSelectionOverlayControllers.forEach { controller in
+                    controller.enableClickThrough()
+                    if let selectionView = controller.window?.contentView as? ScreenRecordRectangleView {
+                        selectionView.switchToRecordingMode()
+                    }
+                }
+                self?.startCountdownAndRecord(screen: screen, cropRect: rect)
+            }
+            controller.onCancel = { [weak self] in
+                self?.closeAllRectangleSelectionOverlayWindows()
+            }
+            controller.showWindow(nil)
+            rectangleSelectionOverlayControllers.append(controller)
+        }
+    }
+    
     @MainActor
-    func startRecordingOnScreen(screenIndex: Int) async {
-        // Ask user for save location
+    func startRecordingOnScreen(screenIndex: Int, cropRect: CGRect? = nil) async {
+        
+        let screen = NSScreen.screens[screenIndex]
+    
+        await startRecordingOnScreen(
+            screen: screen,
+            cropRect: cropRect)
+    }
+    
+    @MainActor
+    func startRecordingOnScreen(screen : NSScreen, cropRect: CGRect? = nil) async {
+       
+        print("Crop selection rect:", cropRect ?? "nil")
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString + ".mov")
         screenRecorderUrl = tempURL
@@ -283,19 +327,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 throw RecordingError("No screen capture permission")
             }
 
-            let screen = NSScreen.screens[screenIndex]
             let displayID =
                 screen.deviceDescription[
                     NSDeviceDescriptionKey("NSScreenNumber")
                 ] as! CGDirectDisplayID
 
-            print(
-                "start recording on display ID: \(displayID), \(CGMainDisplayID())"
-            )
+          
             screenRecorder = try await ScreenRecorder(
                 url: screenRecorderUrl!,
                 displayID: displayID,
-                cropRect: nil,
+                cropRect: cropRect,
                 mode: .h264_sRGB
             )
             isRecording = true
@@ -312,9 +353,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         screenSelectionOverlays.removeAll()
     }
 
-    func startCountdownAndRecord(screenIndex: Int) {
+    
+    func startCountdownAndRecord(screenIndex: Int, cropRect: CGRect? = nil) {
         if screenIndex != -1 {
             let screen = NSScreen.screens[screenIndex]
+            startCountdownAndRecord(screen: screen, cropRect: cropRect)
+        }
+    }
+    
+    
+    func startCountdownAndRecord(screen: NSScreen, cropRect: CGRect? = nil) {
+       
             countdownOverlay = CountdownOverlayWindowController(screen: screen)
             if let window = countdownOverlay?.window {
                 window.setFrame(screen.frame, display: true)
@@ -324,10 +373,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.countdownOverlay?.close()
                 self?.countdownOverlay = nil
                 Task { @MainActor in
-                    await self?.startRecordingOnScreen(screenIndex: screenIndex)
+                    await self?.startRecordingOnScreen(screen: screen, cropRect: cropRect)
                 }
             }
-        }
+    
     }
 
     @objc func hotkeyRecordingStarted() {
@@ -543,6 +592,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc private func closeAllScreenshotWindows() {
         screenshotControllers.forEach { $0.close() }
         screenshotControllers.removeAll()
+    }
+    
+    @objc private func closeAllRectangleSelectionOverlayWindows() {
+        rectangleSelectionOverlayControllers.forEach { $0.close() }
+        rectangleSelectionOverlayControllers.removeAll()
     }
 
     @objc func statusBarButtonClicked(_ sender: Any?) {

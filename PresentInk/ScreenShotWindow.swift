@@ -9,22 +9,6 @@ import Cocoa
 import ScreenCaptureKit
 import UserNotifications
 
-//class ScreenShotWindowController: NSWindowController {
-//    private let screen: NSScreen
-//
-//    init(screen: NSScreen) {
-//        self.screen = screen
-//        let window = ScreenShotWindow(screen: screen)
-//        super.init(window: window)
-//        self.window?.title = "Select Area"
-//        self.window?.makeKeyAndOrderFront(nil)
-//    }
-//
-//    required init?(coder: NSCoder) {
-//        fatalError("init(coder:) has not been implemented")
-//    }
-//}
-
 class ScreenShotWindow: NSWindow {
     var selectionView: SelectionView!
     private let screenRef: NSScreen

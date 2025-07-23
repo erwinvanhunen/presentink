@@ -45,6 +45,7 @@ class Settings {
     private let breakTimerHotkeyKey = "breakTimerHotkey"
     private let textTypeHotkeyKey = "textTypeHotkey"
     private let screenRecordingHotkeyKey = "screenRecordingHotkey"
+    private let screenRecordingRectangleHotkeyKey = "screenRecordingRectangleHotkey"
     private let checkForUpdatesOnStartupKey = "checkForUpdatesOnStartup"
     private let lastUpdateCheckKey = "lastUpdateCheck"
     private let typeSpeedIndexKey = "typingSpeedIndex"
@@ -125,6 +126,22 @@ class Settings {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
                 UserDefaults.standard.set(encoded, forKey: screenRecordingHotkeyKey)
+            }
+        }
+    }
+    
+    var screenRecordingRectangleHotkey: SettingsKeyCombo {
+        get {
+            if let data = UserDefaults.standard.data(forKey: screenRecordingRectangleHotkeyKey),
+               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+                return combo
+            }
+            return SettingsKeyCombo(key: Key.r, modifiers: [.control, .shift])
+        }
+        set {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(newValue) {
+                UserDefaults.standard.set(encoded, forKey: screenRecordingRectangleHotkeyKey)
             }
         }
     }
