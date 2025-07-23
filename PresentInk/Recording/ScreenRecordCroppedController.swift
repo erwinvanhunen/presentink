@@ -8,12 +8,12 @@
 
 import Cocoa
 
-class ScreenRecordRectangleController: NSWindowController, NSWindowDelegate {
+class ScreenRecordCroppedController: NSWindowController, NSWindowDelegate {
     var onSelection: ((NSScreen, CGRect) -> Void)?
     var onCancel: (() -> Void)?
     
     convenience init(screen: NSScreen) {
-        let window = ScreenRecordRectangleWindow(screen: screen)
+        let window = ScreenRecordCroppedWindow(screen: screen)
         self.init(window: window)
         
         if let selectionView = window.selectionView {
@@ -41,7 +41,7 @@ class ScreenRecordRectangleController: NSWindowController, NSWindowDelegate {
         window?.level = .screenSaver
         window?.ignoresMouseEvents = false
         
-        if let selectionView = (window as? ScreenRecordRectangleWindow)?.selectionView {
+        if let selectionView = (window as? ScreenRecordCroppedWindow)?.selectionView {
                window?.makeFirstResponder(selectionView)
            }
     }

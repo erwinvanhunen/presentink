@@ -18,8 +18,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var overlayControllers: [OverlayWindowController] = []
     var breakTimerControllers: [BreakTimerWindowController] = []
     var screenshotControllers: [ScreenShotWindowController] = []
-    var rectangleSelectionOverlayControllers:
-        [ScreenRecordRectangleController] = []
+    var croppedSelectionOverlayControllers:
+        [ScreenRecordCroppedController] = []
     var splashController: SplashWindowController?
     var breakTimerController: BreakTimerWindowController?
     var settingsWindowController: SettingsWindowController?
@@ -30,7 +30,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var hotkeyTextType: HotKey?
     var textType: TextTyper?
     var hotkeyRecording: HotKey?
-    var hotkeyRectangleRecording: HotKey?
+    var hotkeyCroppedRecording: HotKey?
     var selectedTextfile: String?
     var selectedText: [String] = []
     var currentTextIndex: Int = 0
@@ -146,9 +146,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             modifiers: Settings.shared.screenRecordingHotkey.modifiers
         )
 
-        hotkeyRectangleRecording = HotKey(
-            key: Settings.shared.screenRecordingRectangleHotkey.key ?? .r,
-            modifiers: Settings.shared.screenRecordingRectangleHotkey.modifiers
+        hotkeyCroppedRecording = HotKey(
+            key: Settings.shared.screenRecordingCroppedHotkey.key ?? .r,
+            modifiers: Settings.shared.screenRecordingCroppedHotkey.modifiers
         )
 
         hotkeyDraw?.keyDownHandler = { [weak self] in
@@ -168,7 +168,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 await self?.recordScreenAction()
             }
         }
-        hotkeyRectangleRecording?.keyDownHandler = { [weak self] in
+        hotkeyCroppedRecording?.keyDownHandler = { [weak self] in
             self?.startRectRecordingFlow()
         }
       
@@ -198,6 +198,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             await self.recordScreenAction()
         }
     }
+    
+    @objc func recordScreenCroppedMenuAction() {
+        startRectRecordingFlow()
+    }
 
     @objc func recordScreenAction() async {
         if isRecording == false {
@@ -226,7 +230,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func finishRecording() async {
         guard let tempURL = screenRecorderUrl else { return }
         await MainActor.run {
-            self.closeAllRectangleSelectionOverlayWindows()
+            self.closeAllCroppedSelectionOverlayWindows()
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyy-MM-dd-HHmm"
             let dateString = formatter.string(from: Date())
@@ -286,14 +290,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func startRectRecordingFlow() {
         for screen in NSScreen.screens {
-            let controller = ScreenRecordRectangleController(screen: screen)
+            let controller = ScreenRecordCroppedController(screen: screen)
             controller.onSelection = { [weak self] screen, rect in
                 // Enable click-through on all rectangle overlays
-                self?.rectangleSelectionOverlayControllers.forEach {
+                self?.croppedSelectionOverlayControllers.forEach {
                     controller in
                     controller.enableClickThrough()
                     if let selectionView = controller.window?.contentView
-                        as? ScreenRecordRectangleView
+                        as? ScreenRecordCroppedView
                     {
                         selectionView.switchToRecordingMode()
                     }
@@ -301,10 +305,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.startCountdownAndRecord(screen: screen, cropRect: rect)
             }
             controller.onCancel = { [weak self] in
-                self?.closeAllRectangleSelectionOverlayWindows()
+                self?.closeAllCroppedSelectionOverlayWindows()
             }
             controller.showWindow(nil)
-            rectangleSelectionOverlayControllers.append(controller)
+            croppedSelectionOverlayControllers.append(controller)
         }
     }
 
@@ -447,8 +451,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let breakTimerHotkey = Settings.shared.breakTimerHotkey
         let typeTextHotkey = Settings.shared.textTypeHotkey
         let screenRecordingHotkey = Settings.shared.screenRecordingHotkey
-        let screenRecordingRectangleHotkey =
-            Settings.shared.screenRecordingRectangleHotkey
+        let screenRecordingCroppedHotkey =
+            Settings.shared.screenRecordingCroppedHotkey
         
         let drawItem = NSMenuItem(
             title: "Draw",
@@ -487,16 +491,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         
         recordingMenu.addItem(screenRecordingItem)
         
-        let screenRecordingRectangleItem = NSMenuItem(
+        let screenRecordingCroppedMenuItem = NSMenuItem(
             title: "Record cropped",
-            action: #selector(recordScreenMenuAction),
-            keyEquivalent: screenRecordingRectangleHotkey.key?.description.lowercased()
+            action: #selector(recordScreenCroppedMenuAction),
+            keyEquivalent: screenRecordingCroppedHotkey.key?.description.lowercased()
             ?? "r"
         )
-        screenRecordingRectangleItem.keyEquivalentModifierMask =
-        screenRecordingRectangleHotkey.modifiers
+        screenRecordingCroppedMenuItem.keyEquivalentModifierMask =
+        screenRecordingCroppedHotkey.modifiers
         
-        recordingMenu.addItem(screenRecordingRectangleItem)
+        recordingMenu.addItem(screenRecordingCroppedMenuItem)
         
         let recordingMenuItem = NSMenuItem(
             title: "Screen Recording",
@@ -660,9 +664,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         screenshotControllers.removeAll()
     }
 
-    @objc private func closeAllRectangleSelectionOverlayWindows() {
-        rectangleSelectionOverlayControllers.forEach { $0.close() }
-        rectangleSelectionOverlayControllers.removeAll()
+    @objc private func closeAllCroppedSelectionOverlayWindows() {
+        croppedSelectionOverlayControllers.forEach { $0.close() }
+        croppedSelectionOverlayControllers.removeAll()
     }
 
     @objc func statusBarButtonClicked(_ sender: Any?) {

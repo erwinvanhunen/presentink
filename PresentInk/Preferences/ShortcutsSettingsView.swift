@@ -164,9 +164,9 @@ class ShortcutsSettingsView: NSView {
             ) {
                 self.showConflictAlert()
                 self.screenRecordingRectangleHotkeyField.keyCombo =
-                    Settings.shared.screenRecordingRectangleHotkey  // Revert
+                    Settings.shared.screenRecordingCroppedHotkey  // Revert
             } else {
-                Settings.shared.screenRecordingRectangleHotkey = combo
+                Settings.shared.screenRecordingCroppedHotkey = combo
                 self.updateResetButtons()
             }
         }
@@ -347,7 +347,7 @@ class ShortcutsSettingsView: NSView {
         updateResetButtons()
     }
     @objc private func resetScreenRecordingRectangleHotkey() {
-        Settings.shared.screenRecordingRectangleHotkey = SettingsKeyCombo(
+        Settings.shared.screenRecordingCroppedHotkey = SettingsKeyCombo(
             key: .r,
             modifiers: [.control, .shift]
         )
@@ -375,7 +375,7 @@ class ShortcutsSettingsView: NSView {
             Settings.shared.screenRecordingHotkey
             != SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
         resetButtons[.screenRecordingRectangle]?.isEnabled =
-            Settings.shared.screenRecordingRectangleHotkey
+            Settings.shared.screenRecordingCroppedHotkey
             != SettingsKeyCombo(key: .r, modifiers: [.control, .shift])
     }
 
@@ -387,7 +387,7 @@ class ShortcutsSettingsView: NSView {
         screenRecordingHotkeyField.keyCombo =
             Settings.shared.screenRecordingHotkey
         screenRecordingRectangleHotkeyField.keyCombo =
-            Settings.shared.screenRecordingRectangleHotkey
+            Settings.shared.screenRecordingCroppedHotkey
         updateResetButtons()
     }
 
@@ -403,7 +403,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingRectangleHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
                 ]
             case .screenshot:
                 return [
@@ -411,7 +411,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingRectangleHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
                 ]
             case .breakTimer:
                 return [
@@ -419,7 +419,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenShotHotkey,
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingRectangleHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
                 ]
             case .typeText:
                 return [
@@ -427,7 +427,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenShotHotkey,
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingRectangleHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
                 ]
             case .screenRecording:
                 return [
@@ -435,7 +435,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenShotHotkey,
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingRectangleHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
                 ]
             case .screenRecordingRectangle:
                 return [

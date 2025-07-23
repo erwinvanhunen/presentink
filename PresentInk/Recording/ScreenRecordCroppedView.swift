@@ -1,6 +1,6 @@
 import Cocoa
 
-class ScreenRecordRectangleView: NSView {
+class ScreenRecordCroppedView: NSView {
     var onSelectionComplete: ((CGRect) -> Void)?
     var onCancel: (() -> Void)?
 

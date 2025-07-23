@@ -1,7 +1,7 @@
 import Cocoa
 
-class ScreenRecordRectangleWindow: NSWindow {
-    var selectionView: ScreenRecordRectangleView?
+class ScreenRecordCroppedWindow: NSWindow {
+    var selectionView: ScreenRecordCroppedView?
     
     init(screen: NSScreen) {
         let screenRect = screen.frame
@@ -21,7 +21,7 @@ class ScreenRecordRectangleWindow: NSWindow {
         // Move window to the correct screen
         self.setFrame(screenRect, display: true)
         
-        selectionView = ScreenRecordRectangleView(frame: screenRect, screen: screen)
+        selectionView = ScreenRecordCroppedView(frame: screenRect, screen: screen)
         self.contentView = selectionView
         
         DispatchQueue.main.async {
