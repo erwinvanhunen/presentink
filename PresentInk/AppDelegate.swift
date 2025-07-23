@@ -18,7 +18,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var overlayControllers: [OverlayWindowController] = []
     var breakTimerControllers: [BreakTimerWindowController] = []
     var screenshotControllers: [ScreenShotWindowController] = []
-    var rectangleSelectionOverlayControllers: [ScreenRecordRectangleController] = []
+    var rectangleSelectionOverlayControllers:
+        [ScreenRecordRectangleController] = []
     var splashController: SplashWindowController?
     var breakTimerController: BreakTimerWindowController?
     var settingsWindowController: SettingsWindowController?
@@ -144,7 +145,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             key: Settings.shared.screenRecordingHotkey.key ?? .r,
             modifiers: Settings.shared.screenRecordingHotkey.modifiers
         )
-        
+
         hotkeyRectangleRecording = HotKey(
             key: Settings.shared.screenRecordingRectangleHotkey.key ?? .r,
             modifiers: Settings.shared.screenRecordingRectangleHotkey.modifiers
@@ -167,10 +168,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 await self?.recordScreenAction()
             }
         }
-        
         hotkeyRectangleRecording?.keyDownHandler = { [weak self] in
             self?.startRectRecordingFlow()
         }
+      
     }
 
     func setRecordingTrayIcon(_ recording: Bool) {
@@ -241,11 +242,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                         try FileManager.default.removeItem(at: destURL)
                     }
 
-//                    screenRecorder!.convertMovToMp4(
-//                        inputURL: tempURL,
-//                        outputURL: destURL
-//                    )
-                    
+                    //                    screenRecorder!.convertMovToMp4(
+                    //                        inputURL: tempURL,
+                    //                        outputURL: destURL
+                    //                    )
+
                     try FileManager.default.moveItem(at: tempURL, to: destURL)
                     let content = UNMutableNotificationContent()
                     content.title = "Screen Recording Saved"
@@ -264,7 +265,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     let content = UNMutableNotificationContent()
                     content.title = "Screen Recording Failed"
                     content.body =
-                    "Failed to save recording: \(error.localizedDescription)"
+                        "Failed to save recording: \(error.localizedDescription)"
                     content.sound = .default
 
                     let request = UNNotificationRequest(
@@ -288,9 +289,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             let controller = ScreenRecordRectangleController(screen: screen)
             controller.onSelection = { [weak self] screen, rect in
                 // Enable click-through on all rectangle overlays
-                self?.rectangleSelectionOverlayControllers.forEach { controller in
+                self?.rectangleSelectionOverlayControllers.forEach {
+                    controller in
                     controller.enableClickThrough()
-                    if let selectionView = controller.window?.contentView as? ScreenRecordRectangleView {
+                    if let selectionView = controller.window?.contentView
+                        as? ScreenRecordRectangleView
+                    {
                         selectionView.switchToRecordingMode()
                     }
                 }
@@ -303,20 +307,58 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             rectangleSelectionOverlayControllers.append(controller)
         }
     }
-    
+
+    private func activateWindow(windowID: CGWindowID) {
+        // Get the process ID (PID) for the window
+        guard
+            let windowList = CGWindowListCopyWindowInfo(
+                [.optionIncludingWindow],
+                windowID
+            ) as? [[String: Any]],
+            let windowDict = windowList.first,
+            let pid = windowDict[kCGWindowOwnerPID as String] as? Int32
+        else {
+            return
+        }
+
+        // Create NSRunningApplication from PID and activate it
+        if let app = NSRunningApplication(processIdentifier: pid) {
+            app.activate(options: [.activateAllWindows])
+        }
+    }
+
+    private func convertWindowBoundsToScreenCoordinates(_ windowBounds: CGRect)
+        -> CGRect
+    {
+        // macOS window coordinates have origin at bottom-left
+        // Screen coordinates have origin at top-left
+        guard let mainScreen = NSScreen.main else { return windowBounds }
+
+        let screenHeight = mainScreen.frame.height
+        return CGRect(
+            x: windowBounds.origin.x,
+            y: screenHeight - windowBounds.origin.y - windowBounds.height,
+            width: windowBounds.width,
+            height: windowBounds.height
+        )
+    }
+
     @MainActor
-    func startRecordingOnScreen(screenIndex: Int, cropRect: CGRect? = nil) async {
-        
+    func startRecordingOnScreen(screenIndex: Int, cropRect: CGRect? = nil) async
+    {
+
         let screen = NSScreen.screens[screenIndex]
-    
+
         await startRecordingOnScreen(
             screen: screen,
-            cropRect: cropRect)
+            cropRect: cropRect
+        )
     }
-    
+
     @MainActor
-    func startRecordingOnScreen(screen : NSScreen, cropRect: CGRect? = nil) async {
-       
+    func startRecordingOnScreen(screen: NSScreen, cropRect: CGRect? = nil) async
+    {
+
         print("Crop selection rect:", cropRect ?? "nil")
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString + ".mov")
@@ -332,7 +374,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     NSDeviceDescriptionKey("NSScreenNumber")
                 ] as! CGDirectDisplayID
 
-          
             screenRecorder = try await ScreenRecorder(
                 url: screenRecorderUrl!,
                 displayID: displayID,
@@ -353,30 +394,31 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         screenSelectionOverlays.removeAll()
     }
 
-    
     func startCountdownAndRecord(screenIndex: Int, cropRect: CGRect? = nil) {
         if screenIndex != -1 {
             let screen = NSScreen.screens[screenIndex]
             startCountdownAndRecord(screen: screen, cropRect: cropRect)
         }
     }
-    
-    
+
     func startCountdownAndRecord(screen: NSScreen, cropRect: CGRect? = nil) {
-       
-            countdownOverlay = CountdownOverlayWindowController(screen: screen)
-            if let window = countdownOverlay?.window {
-                window.setFrame(screen.frame, display: true)
+
+        countdownOverlay = CountdownOverlayWindowController(screen: screen)
+        if let window = countdownOverlay?.window {
+            window.setFrame(screen.frame, display: true)
+        }
+        countdownOverlay?.showWindow(nil)
+        countdownOverlay?.startCountdown { [weak self] in
+            self?.countdownOverlay?.close()
+            self?.countdownOverlay = nil
+            Task { @MainActor in
+                await self?.startRecordingOnScreen(
+                    screen: screen,
+                    cropRect: cropRect
+                )
             }
-            countdownOverlay?.showWindow(nil)
-            countdownOverlay?.startCountdown { [weak self] in
-                self?.countdownOverlay?.close()
-                self?.countdownOverlay = nil
-                Task { @MainActor in
-                    await self?.startRecordingOnScreen(screen: screen, cropRect: cropRect)
-                }
-            }
-    
+        }
+
     }
 
     @objc func hotkeyRecordingStarted() {
@@ -398,14 +440,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func setupStatusMenu() {
         statusMenu = NSMenu()
-
+        
         // Get hotkey settings
         let drawHotkey = Settings.shared.drawHotkey
         let screenshotHotkey = Settings.shared.screenShotHotkey
         let breakTimerHotkey = Settings.shared.breakTimerHotkey
         let typeTextHotkey = Settings.shared.textTypeHotkey
         let screenRecordingHotkey = Settings.shared.screenRecordingHotkey
-
+        let screenRecordingRectangleHotkey =
+            Settings.shared.screenRecordingRectangleHotkey
+        
         let drawItem = NSMenuItem(
             title: "Draw",
             action: #selector(drawAction),
@@ -413,7 +457,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         drawItem.keyEquivalentModifierMask = drawHotkey.modifiers
         statusMenu.addItem(drawItem)
-
+        
         let breakItem = NSMenuItem(
             title: "Break Time",
             action: #selector(breakTimeAction),
@@ -421,7 +465,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         breakItem.keyEquivalentModifierMask = breakTimerHotkey.modifiers
         statusMenu.addItem(breakItem)
-
+        
         let screenshotItem = NSMenuItem(
             title: "Screenshot",
             action: #selector(screenshotAction),
@@ -429,16 +473,38 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         screenshotItem.keyEquivalentModifierMask = screenshotHotkey.modifiers
         statusMenu.addItem(screenshotItem)
-
+        
+        let recordingMenu = NSMenu(title: "Record Screen")
+        
         let screenRecordingItem = NSMenuItem(
             title: "Record screen",
             action: #selector(recordScreenMenuAction),
             keyEquivalent: screenRecordingHotkey.key?.description.lowercased()
-                ?? "r"
+            ?? "r"
         )
         screenRecordingItem.keyEquivalentModifierMask =
-            screenRecordingHotkey.modifiers
-        statusMenu.addItem(screenRecordingItem)
+        screenRecordingHotkey.modifiers
+        
+        recordingMenu.addItem(screenRecordingItem)
+        
+        let screenRecordingRectangleItem = NSMenuItem(
+            title: "Record cropped",
+            action: #selector(recordScreenMenuAction),
+            keyEquivalent: screenRecordingRectangleHotkey.key?.description.lowercased()
+            ?? "r"
+        )
+        screenRecordingRectangleItem.keyEquivalentModifierMask =
+        screenRecordingRectangleHotkey.modifiers
+        
+        recordingMenu.addItem(screenRecordingRectangleItem)
+        
+        let recordingMenuItem = NSMenuItem(
+            title: "Screen Recording",
+            action: nil,
+            keyEquivalent: ""
+        )
+        recordingMenuItem.submenu = recordingMenu
+        statusMenu.addItem(recordingMenuItem)
 
         let typeTextMenu = NSMenu(title: "Type Text")
         typeTextMenu.addItem(
@@ -593,7 +659,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         screenshotControllers.forEach { $0.close() }
         screenshotControllers.removeAll()
     }
-    
+
     @objc private func closeAllRectangleSelectionOverlayWindows() {
         rectangleSelectionOverlayControllers.forEach { $0.close() }
         rectangleSelectionOverlayControllers.removeAll()

@@ -29,11 +29,11 @@ class ShortcutsSettingsView: NSView {
     private let typeTextHotkeyField = HotkeyRecorderField()
 
     private let screenRecordingLabel = NSTextField(
-        labelWithString: "Screen Recording:"
+        labelWithString: "Record Screen:"
     )
     private let screenRecordingHotkeyField = HotkeyRecorderField()
     private let screenRecordingRectangleLabel = NSTextField(
-        labelWithString: "Screen Recording Selection:"
+        labelWithString: "Record Cropped:"
     )
     private let screenRecordingRectangleHotkeyField = HotkeyRecorderField()
 
