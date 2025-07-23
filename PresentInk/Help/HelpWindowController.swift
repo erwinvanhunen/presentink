@@ -122,6 +122,12 @@ class HelpWindowController: NSWindowController {
                 ),
                 desc: "Start a screen recording"
             ),
+            shortcutRow(
+                keys: HelpWindowController.getKeyModifiers(
+                    keyCombo: Settings.shared.screenRecordingCroppedHotkey
+                ),
+                desc: "Start a screen recording of a selected area"
+            ),
         ]
         let drawShortCuts: [NSStackView] = [
             shortcutRow(
@@ -218,6 +224,14 @@ class HelpWindowController: NSWindowController {
         scrollView.documentView = contentStack
 
         window.contentView = scrollView
+
+        DispatchQueue.main.async {
+            if let documentView = scrollView.documentView {
+                let topPoint = NSPoint(x: 0, y: documentView.bounds.height - scrollView.contentView.bounds.height)
+                scrollView.contentView.scroll(to: topPoint)
+                scrollView.reflectScrolledClipView(scrollView.contentView)
+            }
+        }
         self.init(window: window)
     }
 
