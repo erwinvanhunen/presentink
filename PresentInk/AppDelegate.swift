@@ -837,9 +837,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     .currentLineWidth = CGFloat(Settings.shared.penWidth)
                 (controller.window?.contentView as? DrawingView)?.currentColor =
                     Settings.shared.defaultColor
-                controller.window?.makeFirstResponder(
-                    controller.window?.contentView
-                )
+                (controller.window?.contentView as? DrawingView)?
+                    .penCursor?.set()
+                controller.window?.makeKeyAndOrderFront(nil)
+                           controller.window?.orderFrontRegardless()
+                           NSApp.activate(ignoringOtherApps: true)
+                           
+                           if let contentView = controller.window?.contentView {
+                               controller.window?.makeFirstResponder(contentView)
+                               // Force cursor update after becoming first responder
+                               DispatchQueue.main.async {
+                                   (contentView as? DrawingView)?.penCursor?.set()
+                                   NSCursor.setHiddenUntilMouseMoves(false)
+                               }
+                           }
+              
                 return controller
             }
             overlayIsActive = true

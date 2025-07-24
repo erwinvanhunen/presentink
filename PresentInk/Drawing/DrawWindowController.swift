@@ -47,7 +47,6 @@ class DrawWindowController: NSWindowController {
         }
         drawingView?.needsDisplay = true
     }
-                    
 }
 
 class DrawWindow: NSWindow {

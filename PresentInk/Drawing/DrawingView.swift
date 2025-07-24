@@ -49,7 +49,8 @@ class DrawingView: NSView, NSTextFieldDelegate {
     }
 
     override func resetCursorRects() {
-        super.resetCursorRects()
+//        super.resetCursorRects()
+        discardCursorRects()
         if isEditingText, let container = textContainer {
             let borderRect = container.frame
             addCursorRect(borderRect, cursor: NSCursor.openHand)
@@ -546,9 +547,10 @@ class DrawingView: NSView, NSTextFieldDelegate {
                     Settings.shared.penWidth = Int(currentLineWidth)
                     updateCursorForModifiers(event.modifierFlags)
                     needsDisplay = true
-                } else {
-                    super.keyDown(with: event)
                 }
+//                 else {
+//                    super.keyDown(with: event)
+//                }
             }
         }
     }

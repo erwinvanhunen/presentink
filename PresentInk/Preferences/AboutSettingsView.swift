@@ -9,8 +9,7 @@ class AboutSettingsView: NSView {
         return NSTextField(labelWithString: "Version \(version)")
     }()
     let copyrightLabel = NSTextField(labelWithString: "Copyright © 2025 Erwin van Hunen")
-    let donateButton = NSButton()
-    let buyMeACoffeeButton = NSButton()
+  
     let thanksLabel = NSTextField(labelWithString: "Thank you for supporting PresentInk!")
 
     override init(frame frameRect: NSRect) {
@@ -21,10 +20,6 @@ class AboutSettingsView: NSView {
         appIcon.image = NSImage(named: "AppIcon")
         appIcon.translatesAutoresizingMaskIntoConstraints = false
         appIcon.wantsLayer = true
-//        appIcon.layer?.cornerRadius = 24
-//        appIcon.layer?.masksToBounds = true
-//        appIcon.widthAnchor.constraint(equalToConstant: 200).isActive = true
-//        appIcon.heightAnchor.constraint(equalToConstant: 200).isActive = true
 
         spacer.translatesAutoresizingMaskIntoConstraints = false
                 spacer.heightAnchor.constraint(equalToConstant: 20).isActive = true
@@ -46,54 +41,7 @@ class AboutSettingsView: NSView {
         thanksLabel.alignment = .center
         thanksLabel.textColor = NSColor(white: 1, alpha: 0.7)
 
-        // Donate button
-//        donateButton.title = "Donate ❤️"
-//        donateButton.font = NSFont.boldSystemFont(ofSize: 17)
-//        donateButton.bezelStyle = .regularSquare
-//        donateButton.isBordered = false
-//        donateButton.wantsLayer = true
-//        donateButton.layer?.backgroundColor = NSColor(calibratedRed: 1, green: 0.45, blue: 0.18, alpha: 1).cgColor
-//        donateButton.layer?.cornerRadius = 16
-//        donateButton.contentTintColor = .white
-//        donateButton.layer?.shadowColor = NSColor(calibratedRed: 1, green: 0.7, blue: 0.3, alpha: 0.7).cgColor
-//        donateButton.layer?.shadowOpacity = 1
-//        donateButton.layer?.shadowRadius = 10
-//        donateButton.layer?.shadowOffset = CGSize(width: 0, height: 0)
-//        donateButton.setContentHuggingPriority(.required, for: .horizontal)
-//        donateButton.setContentHuggingPriority(.required, for: .vertical)
-//        donateButton.widthAnchor.constraint(equalToConstant: 160).isActive = true
-//        donateButton.heightAnchor.constraint(equalToConstant: 44).isActive = true
-//        donateButton.target = self
-//        donateButton.action = #selector(donateButtonClicked)
-
-        // Buy Me A Coffee button
-        buyMeACoffeeButton.image = NSImage(named: "BuyMeACoffee")
-        buyMeACoffeeButton.isBordered = false
-        buyMeACoffeeButton.bezelStyle = .regularSquare
-        buyMeACoffeeButton.imagePosition = .imageOnly
-        buyMeACoffeeButton.target = self
-        buyMeACoffeeButton.action = #selector(buyMeACoffeeClicked)
-        buyMeACoffeeButton.translatesAutoresizingMaskIntoConstraints = false
-        buyMeACoffeeButton.setContentHuggingPriority(.required, for: .horizontal)
-        buyMeACoffeeButton.setContentHuggingPriority(.required, for: .vertical)
-        buyMeACoffeeButton.widthAnchor.constraint(equalToConstant: 213).isActive = true
-        buyMeACoffeeButton.heightAnchor.constraint(equalToConstant: 60).isActive = true
-
-        // Cursor for buyMeACoffeeButton
-        let trackingArea = NSTrackingArea(
-            rect: buyMeACoffeeButton.bounds,
-            options: [.mouseEnteredAndExited, .activeAlways, .inVisibleRect],
-            owner: self,
-            userInfo: nil
-        )
-        buyMeACoffeeButton.addTrackingArea(trackingArea)
-
-        // Button stack
-//        let buttonStack = NSStackView(views: [donateButton, buyMeACoffeeButton])
-//        buttonStack.orientation = .horizontal
-//        buttonStack.alignment = .centerY
-//        buttonStack.spacing = 16
-
+        let buyMeACoffeeButton = ClickImageButton(image: NSImage(named: "BuyMeACoffee")!, width: 200, height: 56, action: #selector(buyMeACoffeeClicked), target: self)
         // Main vertical stack
         let stack = NSStackView(views: [
             appIcon,
@@ -119,18 +67,6 @@ class AboutSettingsView: NSView {
             stack.topAnchor.constraint(greaterThanOrEqualTo: topAnchor, constant: 16),
             stack.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -16)
         ])
-    }
-
-    override func resetCursorRects() {
-        super.resetCursorRects()
-        let buttonRect = convert(buyMeACoffeeButton.bounds, from: buyMeACoffeeButton)
-        addCursorRect(buttonRect, cursor: .pointingHand)
-    }
-
-    @objc private func donateButtonClicked() {
-        if let url = URL(string: "https://github.com/sponsors/erwinvanhunen") {
-            NSWorkspace.shared.open(url)
-        }
     }
 
     @objc private func buyMeACoffeeClicked() {
