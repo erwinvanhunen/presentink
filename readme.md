@@ -28,7 +28,6 @@ Lightweight, always accessible, and fully optimized for Mac.
 ## 🚀 Installation
 
 1. [Download the latest release](https://github.com/erwinvanhunen/presentink/releases)  
-   *(or clone this repo and run locally; see “Development” below)*
 
 2. **Run the app.**  
    You’ll find the PresentInk icon in your macOS menu bar. Click it for settings, help, or to quit.
@@ -41,6 +40,8 @@ Lightweight, always accessible, and fully optimized for Mac.
 |-------------------------------------|-------------------------------|
 | <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>D</kdb>     | Toggle drawing mode         |
 | <kbd>Option</kbd> + <kbd>Shift</kbd> + <kbd>S</kdb>     | Take a screenshot         |
+| <kbd>Option</kbd> + <kbd>Shift</kdb> + <kdb>B</kdb>                     | Start break timer     |
+| <kbd>Option</kbd> + <kbd>Shift</kdb> + <kdb>R</kdb>                     | Start a full screen recording    |
  <kbd>Esc</kdb>     | Leave drawing mode or breaktimer if active        |
 | <kbd>Shift</kbd>     | Draw straight lines            |
 | <kbd>Cmd</kbd> + <kbd>Shift</kbd>      | Draw arrows mode              |
@@ -49,7 +50,7 @@ Lightweight, always accessible, and fully optimized for Mac.
 | <kbd>E</kdb> | Clear all drawings but stay in draw mode |
 | <kbd>Cmd</kbd> + <kbd>Z</kbd>      | Undo last action              |
 | <kbd>Right-click</kbd>              | Exit drawing mode             |
-| <kbd>Option</kbd> + <kbd>Shift</kdb> + <kdb>B</kdb>                     | Start break timer     |
+
 | <kbd>Up</kbd> | Increase line width    |
 | <kbd>Down</kbd> | Decrease line width    |
 
@@ -64,29 +65,14 @@ I pressed the shortcut [pause:3] and I just paused 3 seconds[end]
 Select the text file from the Text Typer menu. Move the cursor to a program where you can type text (PresentInk does not check that, it will simply start to type after you pressed the shortcut), and press the shortcut Option+Shift+T (or the one you configured in the settings).
 
 The text will cycle back to the first line after the last entry has been 'typed'. 
----
 
-## 🤝 Contributing
-
-Pull requests and suggestions are welcome!  
-For major changes, please open an issue first to discuss what you’d like to change.
-
-- Fork the repo
-- Create a new branch (`git checkout -b feature/my-feature`)
-- Commit your changes
-- Push to your fork and open a pull request
-
----
 
 ## 📄 License
 
 MIT License  
 © 2025 Erwin van Hunen
 
----
 
 ## 💡 Credits
 
 - Inspired by [ZoomIt](https://docs.microsoft.com/en-us/sysinternals/downloads/zoomit)
-
----
