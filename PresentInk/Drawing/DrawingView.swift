@@ -49,7 +49,7 @@ class DrawingView: NSView, NSTextFieldDelegate {
     }
 
     override func resetCursorRects() {
-//        super.resetCursorRects()
+        //        super.resetCursorRects()
         discardCursorRects()
         if isEditingText, let container = textContainer {
             let borderRect = container.frame
@@ -334,8 +334,7 @@ class DrawingView: NSView, NSTextFieldDelegate {
             }
         }
 
-        if(drawMode == .marker)
-        {
+        if drawMode == .marker {
             currentColor.withAlphaComponent(0.3).set()
             currentPath?.lineWidth = max(12, currentLineWidth * 2)
         } else {
@@ -429,16 +428,16 @@ class DrawingView: NSView, NSTextFieldDelegate {
             )
             return
         }
-        if event.keyCode == 49 { // Space bar
-                if let screen = window?.screen ?? NSScreen.main {
-                    let center = CGPoint(
-                        x: screen.frame.midX,
-                        y: screen.frame.midY
-                    )
-                    CGWarpMouseCursorPosition(center)
-                }
-                return
+        if event.keyCode == 49 {  // Space bar
+            if let screen = window?.screen ?? NSScreen.main {
+                let center = CGPoint(
+                    x: screen.frame.midX,
+                    y: screen.frame.midY
+                )
+                CGWarpMouseCursorPosition(center)
             }
+            return
+        }
         if event.modifierFlags.contains(.command),
             event.charactersIgnoringModifiers?.lowercased() == "z"
         {
@@ -548,9 +547,9 @@ class DrawingView: NSView, NSTextFieldDelegate {
                     updateCursorForModifiers(event.modifierFlags)
                     needsDisplay = true
                 }
-//                 else {
-//                    super.keyDown(with: event)
-//                }
+                //                 else {
+                //                    super.keyDown(with: event)
+                //                }
             }
         }
     }
@@ -990,5 +989,4 @@ class DrawingView: NSView, NSTextFieldDelegate {
         isEditingText = false
         drawMode = .freehand
     }
-
 }
