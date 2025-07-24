@@ -1,6 +1,6 @@
 //
 //  ScreenShotController.swift
-//  PresentInker
+//  PresentInk
 //
 //  Created by Erwin van Hunen on 2025-07-11.
 //
@@ -9,13 +9,8 @@ import Cocoa
 
 class ScreenShotWindowController: NSWindowController, NSWindowDelegate {
     convenience init(screen: NSScreen) {
-        //        let screenRect = screen.visibleFrame
         let window = ScreenShotWindow(screen: screen)
         self.init(window: window)
-        //        let selectionView = SelectionView(frame: window.contentRect(forFrameRect: screenRect), screen: screen)
-        //        window.contentView = selectionView
-        //        window.makeFirstResponder(selectionView)
-        
     }
 
     override func windowDidLoad() {

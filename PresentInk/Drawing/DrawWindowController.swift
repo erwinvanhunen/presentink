@@ -1,9 +1,9 @@
 import Cocoa
 
-class OverlayWindowController: NSWindowController {
+class DrawWindowController: NSWindowController {
     convenience init(screen: NSScreen) {
         let screenRect = screen.visibleFrame
-        let window = OverlayWindow(contentRect: screenRect)
+        let window = DrawWindow(contentRect: screenRect)
         self.init(window: window)
         let drawingView = DrawingView(frame: window.contentRect(forFrameRect: screenRect))
         drawingView.currentLineWidth = CGFloat(Settings.shared.penWidth)
@@ -50,7 +50,7 @@ class OverlayWindowController: NSWindowController {
                     
 }
 
-class OverlayWindow: NSWindow {
+class DrawWindow: NSWindow {
     init(contentRect: NSRect) {
         super.init(contentRect: contentRect,
                    styleMask: [.borderless],

@@ -38,7 +38,7 @@ class ScreenSelectionOverlayWindowController: NSWindowController {
         ]
 
         super.init(window: window)
-        window.contentView = OverlayView(index: index)
+        window.contentView = ScreenSelectionOverlayView(index: index)
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] event in
             if let number = Int(event.characters ?? ""), number == index {
                 self?.restorePresentationOptions()
@@ -62,7 +62,7 @@ class ScreenSelectionOverlayWindowController: NSWindowController {
         }
     }
 
-    class OverlayView: NSView {
+    class ScreenSelectionOverlayView: NSView {
         let index: Int
         init(index: Int) {
             self.index = index

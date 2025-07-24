@@ -15,11 +15,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var statusItem: NSStatusItem!
     var statusMenu: NSMenu!
     var overlayIsActive = false
-    var overlayControllers: [OverlayWindowController] = []
+    var drawWindowControllers: [DrawWindowController] = []
     var breakTimerControllers: [BreakTimerWindowController] = []
     var screenshotControllers: [ScreenShotWindowController] = []
-    var croppedSelectionOverlayControllers:
-        [ScreenRecordCroppedController] = []
+    var croppedSelectionOverlayControllers: [ScreenRecordCroppedController] = []
     var splashController: SplashWindowController?
     var breakTimerController: BreakTimerWindowController?
     var settingsWindowController: SettingsWindowController?
@@ -37,8 +36,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var isRecording: Bool = false
     var screenRecorder: ScreenRecorder?
     var screenRecorderUrl: URL?
-    var screenSelectionOverlays: [ScreenSelectionOverlayWindowController] = []
-    var countdownOverlay: CountdownOverlayWindowController?
+    var screenSelectionOverlayControllers:
+        [ScreenSelectionOverlayWindowController] = []
+    var countdownOverlayController: CountdownOverlayWindowController?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         if !Settings.shared.launchAtLogin {
@@ -73,51 +73,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupHotkeys()
 
         setupStatusMenu()
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(exitDrawingMode),
-            name: NSNotification.Name("ExitDrawingMode"),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(drawingColorChanged(_:)),
-            name: NSNotification.Name("DrawingColorChanged"),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(closeAllBreakTimers),
-            name: NSNotification.Name("CloseBreakTimers"),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(closeAllScreenshotWindows),
-            name: NSNotification.Name("CloseScreenshotWindows"),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(hotkeyRecordingStarted),
-            name: NSNotification.Name("HotkeyRecordingStarted"),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(hotkeyRecordingStopped),
-            name: NSNotification.Name("HotkeyRecordingStopped"),
-            object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self,
-            selector: #selector(experimentalFeaturesToggled),
-            name: NSNotification.Name("experimentalFeaturesToggled"),
-            object: nil
-        )
+
+        setupObservers()
     }
 
-    private func setupHotkeys() {
+    fileprivate func setupHotkeys() {
         hotkeyDraw = nil
         hotkeyScreenshot = nil
         hotkeyBreak = nil
@@ -171,7 +131,52 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyCroppedRecording?.keyDownHandler = { [weak self] in
             self?.startRectRecordingFlow()
         }
-      
+
+    }
+
+    fileprivate func setupObservers() {
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(exitDrawingMode),
+            name: NSNotification.Name("ExitDrawingMode"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(drawingColorChanged(_:)),
+            name: NSNotification.Name("DrawingColorChanged"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(closeAllBreakTimers),
+            name: NSNotification.Name("CloseBreakTimers"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(closeAllScreenshotWindows),
+            name: NSNotification.Name("CloseScreenshotWindows"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(hotkeyRecordingStarted),
+            name: NSNotification.Name("HotkeyRecordingStarted"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(hotkeyRecordingStopped),
+            name: NSNotification.Name("HotkeyRecordingStopped"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(experimentalFeaturesToggled),
+            name: NSNotification.Name("experimentalFeaturesToggled"),
+            object: nil
+        )
     }
 
     func setRecordingTrayIcon(_ recording: Bool) {
@@ -198,7 +203,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             await self.recordScreenAction()
         }
     }
-    
+
     @objc func recordScreenCroppedMenuAction() {
         startRectRecordingFlow()
     }
@@ -312,47 +317,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func activateWindow(windowID: CGWindowID) {
-        // Get the process ID (PID) for the window
-        guard
-            let windowList = CGWindowListCopyWindowInfo(
-                [.optionIncludingWindow],
-                windowID
-            ) as? [[String: Any]],
-            let windowDict = windowList.first,
-            let pid = windowDict[kCGWindowOwnerPID as String] as? Int32
-        else {
-            return
-        }
-
-        // Create NSRunningApplication from PID and activate it
-        if let app = NSRunningApplication(processIdentifier: pid) {
-            app.activate(options: [.activateAllWindows])
-        }
-    }
-
-    private func convertWindowBoundsToScreenCoordinates(_ windowBounds: CGRect)
-        -> CGRect
-    {
-        // macOS window coordinates have origin at bottom-left
-        // Screen coordinates have origin at top-left
-        guard let mainScreen = NSScreen.main else { return windowBounds }
-
-        let screenHeight = mainScreen.frame.height
-        return CGRect(
-            x: windowBounds.origin.x,
-            y: screenHeight - windowBounds.origin.y - windowBounds.height,
-            width: windowBounds.width,
-            height: windowBounds.height
-        )
-    }
-
     @MainActor
     func startRecordingOnScreen(screenIndex: Int, cropRect: CGRect? = nil) async
     {
-
         let screen = NSScreen.screens[screenIndex]
-
         await startRecordingOnScreen(
             screen: screen,
             cropRect: cropRect
@@ -362,8 +330,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @MainActor
     func startRecordingOnScreen(screen: NSScreen, cropRect: CGRect? = nil) async
     {
-
-        print("Crop selection rect:", cropRect ?? "nil")
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString + ".mov")
         screenRecorderUrl = tempURL
@@ -394,8 +360,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func removeScreenSelectionOverlays() {
-        screenSelectionOverlays.forEach { $0.close() }
-        screenSelectionOverlays.removeAll()
+        screenSelectionOverlayControllers.forEach { $0.close() }
+        screenSelectionOverlayControllers.removeAll()
     }
 
     func startCountdownAndRecord(screenIndex: Int, cropRect: CGRect? = nil) {
@@ -407,14 +373,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     func startCountdownAndRecord(screen: NSScreen, cropRect: CGRect? = nil) {
 
-        countdownOverlay = CountdownOverlayWindowController(screen: screen)
-        if let window = countdownOverlay?.window {
+        countdownOverlayController = CountdownOverlayWindowController(
+            screen: screen
+        )
+        if let window = countdownOverlayController?.window {
             window.setFrame(screen.frame, display: true)
         }
-        countdownOverlay?.showWindow(nil)
-        countdownOverlay?.startCountdown { [weak self] in
-            self?.countdownOverlay?.close()
-            self?.countdownOverlay = nil
+        countdownOverlayController?.showWindow(nil)
+        countdownOverlayController?.startCountdown { [weak self] in
+            self?.countdownOverlayController?.close()
+            self?.countdownOverlayController = nil
             Task { @MainActor in
                 await self?.startRecordingOnScreen(
                     screen: screen,
@@ -442,9 +410,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusMenu()
     }
 
-    func setupStatusMenu() {
+    fileprivate func setupStatusMenu() {
         statusMenu = NSMenu()
-        
+
         // Get hotkey settings
         let drawHotkey = Settings.shared.drawHotkey
         let screenshotHotkey = Settings.shared.screenShotHotkey
@@ -453,7 +421,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let screenRecordingHotkey = Settings.shared.screenRecordingHotkey
         let screenRecordingCroppedHotkey =
             Settings.shared.screenRecordingCroppedHotkey
-        
+
         let drawItem = NSMenuItem(
             title: "Draw",
             action: #selector(drawAction),
@@ -461,7 +429,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         drawItem.keyEquivalentModifierMask = drawHotkey.modifiers
         statusMenu.addItem(drawItem)
-        
+
         let breakItem = NSMenuItem(
             title: "Break Time",
             action: #selector(breakTimeAction),
@@ -469,7 +437,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         breakItem.keyEquivalentModifierMask = breakTimerHotkey.modifiers
         statusMenu.addItem(breakItem)
-        
+
         let screenshotItem = NSMenuItem(
             title: "Screenshot",
             action: #selector(screenshotAction),
@@ -477,31 +445,32 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         screenshotItem.keyEquivalentModifierMask = screenshotHotkey.modifiers
         statusMenu.addItem(screenshotItem)
-        
+
         let recordingMenu = NSMenu(title: "Record Screen")
-        
+
         let screenRecordingItem = NSMenuItem(
             title: "Record screen",
             action: #selector(recordScreenMenuAction),
             keyEquivalent: screenRecordingHotkey.key?.description.lowercased()
-            ?? "r"
+                ?? "r"
         )
         screenRecordingItem.keyEquivalentModifierMask =
-        screenRecordingHotkey.modifiers
-        
+            screenRecordingHotkey.modifiers
+
         recordingMenu.addItem(screenRecordingItem)
-        
+
         let screenRecordingCroppedMenuItem = NSMenuItem(
             title: "Record cropped",
             action: #selector(recordScreenCroppedMenuAction),
-            keyEquivalent: screenRecordingCroppedHotkey.key?.description.lowercased()
-            ?? "r"
+            keyEquivalent: screenRecordingCroppedHotkey.key?.description
+                .lowercased()
+                ?? "r"
         )
         screenRecordingCroppedMenuItem.keyEquivalentModifierMask =
-        screenRecordingCroppedHotkey.modifiers
-        
+            screenRecordingCroppedHotkey.modifiers
+
         recordingMenu.addItem(screenRecordingCroppedMenuItem)
-        
+
         let recordingMenuItem = NSMenuItem(
             title: "Screen Recording",
             action: nil,
@@ -599,7 +568,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    func waitForAllKeysReleased() {
+    fileprivate func waitForAllKeysReleased() {
         // Check all key codes (0...127)
         while (0...127).contains(where: {
             CGEventSource.keyState(.combinedSessionState, key: CGKeyCode($0))
@@ -680,7 +649,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
-        overlayControllers.forEach {
+        drawWindowControllers.forEach {
             $0.window?.ignoresMouseEvents = true
         }
 
@@ -689,11 +658,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             button.performClick(nil)
             DispatchQueue.main.async {
                 self.statusItem.menu = nil
-                if let overlayWindow =
-                    (NSApp.windows.first { $0 is OverlayWindow })
-                    as? OverlayWindow
+                if let drawWindow =
+                    (NSApp.windows.first { $0 is DrawWindow })
+                    as? DrawWindow
                 {
-                    overlayWindow.ignoresMouseEvents = false
+                    drawWindow.ignoresMouseEvents = false
                 }
             }
         }
@@ -831,13 +800,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func toggleDrawing() {
         if overlayIsActive {
             statusItem.button?.image = NSImage(named: "TrayIconDefault")
-            overlayControllers.forEach {
+            drawWindowControllers.forEach {
                 ($0.window?.contentView as? DrawingView)?.resetToDefaultCursor()
             }
 
             // Close all overlays
-            overlayControllers.forEach { $0.close() }
-            overlayControllers.removeAll()
+            drawWindowControllers.forEach { $0.close() }
+            drawWindowControllers.removeAll()
             overlayIsActive = false
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
                 NSCursor.setHiddenUntilMouseMoves(false)
@@ -861,8 +830,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 statusItem.button?.image = NSImage(named: "TrayIconDefault")
             }
             // Create an overlay for each screen
-            overlayControllers = NSScreen.screens.map { screen in
-                let controller = OverlayWindowController(screen: screen)
+            drawWindowControllers = NSScreen.screens.map { screen in
+                let controller = DrawWindowController(screen: screen)
                 controller.showWindow(nil)
                 (controller.window?.contentView as? DrawingView)?
                     .currentLineWidth = CGFloat(Settings.shared.penWidth)
@@ -903,7 +872,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         {
             statusItem.button?.image = NSImage(named: iconName)
         }
-        overlayControllers.forEach {
+        drawWindowControllers.forEach {
             ($0.window?.contentView as? DrawingView)?.currentColor = color
         }
     }
@@ -915,104 +884,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 return  // Already checked today
             }
         }
-        guard
-            let url = URL(
-                string:
-                    "https://api.github.com/repos/erwinvanhunen/presentink/releases/latest"
-            )
-        else {
-            return
-        }
+        UpdateChecker.checkForUpdates { result in
+            DispatchQueue.main.async {
 
-        var request = URLRequest(url: url)
-        request.setValue(
-            "PresentInker/1.0 (macOS)",
-            forHTTPHeaderField: "User-Agent"
-        )
-
-        let task = URLSession.shared.dataTask(with: request) {
-            data,
-            response,
-            error in
-            guard let data = data,
-                let release = try? JSONDecoder().decode(
-                    GitHubRelease.self,
-                    from: data
-                )
-            else {
-                return
-            }
-
-            let currentVersion =
-                Bundle.main.object(
-                    forInfoDictionaryKey: "CFBundleShortVersionString"
-                ) as? String ?? "1.0.0"
-            let latestVersion = release.tagName.trimmingCharacters(
-                in: CharacterSet(charactersIn: "v")
-            )
-
-            if self.isNewerVersion(
-                latest: latestVersion,
-                current: currentVersion
-            ) {
-                DispatchQueue.main.async {
-                    self.showStartupUpdateAlert(
-                        latestVersion: latestVersion,
-                        currentVersion: currentVersion,
-                        downloadURL: release.htmlUrl
-                    )
+                switch result {
+                case .success(let updateInfo):
+                    if updateInfo.hasUpdate {
+                        UpdateChecker.showStartupUpdateAlert(
+                            latestVersion: updateInfo.latestVersion,
+                            currentVersion: updateInfo.currentVersion,
+                            downloadURL: updateInfo.downloadURL
+                        )
+                    }
+                case .failure(_):
+                    break
                 }
             }
-
-            // Update last check date
-            Settings.shared.lastUpdateCheck = Date()
         }
 
-        task.resume()
+        // Update last check date
+        Settings.shared.lastUpdateCheck = Date()
+
     }
-
-    private func isNewerVersion(latest: String, current: String) -> Bool {
-        let latestComponents = latest.components(separatedBy: ".").compactMap {
-            Int($0)
-        }
-        let currentComponents = current.components(separatedBy: ".").compactMap
-        { Int($0) }
-
-        let maxCount = max(latestComponents.count, currentComponents.count)
-
-        for i in 0..<maxCount {
-            let latestVersion =
-                i < latestComponents.count ? latestComponents[i] : 0
-            let currentVersion =
-                i < currentComponents.count ? currentComponents[i] : 0
-
-            if latestVersion > currentVersion {
-                return true
-            } else if latestVersion < currentVersion {
-                return false
-            }
-        }
-
-        return false
-    }
-
-    private func showStartupUpdateAlert(
-        latestVersion: String,
-        currentVersion: String,
-        downloadURL: URL
-    ) {
-        let alert = NSAlert()
-        alert.messageText = "Update Available"
-        alert.informativeText =
-            "PresentInker version \(latestVersion) is available. You are currently using version \(currentVersion)."
-        alert.alertStyle = .informational
-        alert.addButton(withTitle: "Download")
-        alert.addButton(withTitle: "Remind Me Later")
-
-        let response = alert.runModal()
-        if response == .alertFirstButtonReturn {
-            NSWorkspace.shared.open(downloadURL)
-        }
-    }
-
 }

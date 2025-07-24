@@ -216,25 +216,6 @@ class ScreenRecorder {
         await assetWriter.finishWriting()
     }
 
-    public func convertMovToMp4(
-        inputURL: URL,
-        outputURL: URL
-    ) {
-
-        let asset = AVURLAsset(url: inputURL)
-        guard
-            let exportSession = AVAssetExportSession(
-                asset: asset,
-                presetName: AVAssetExportPresetHighestQuality
-            )
-        else {
-            return
-        }
-        Task.detached {
-            try await exportSession.export(to: outputURL, as: .mp4)
-        }
-    }
-
     private class StreamOutput: NSObject, SCStreamOutput {
         let videoInput: AVAssetWriterInput
         var sessionStarted = false

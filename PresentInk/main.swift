@@ -1,6 +1,6 @@
 //
 //  main.swift
-//  PresentInker
+//  PresentInk
 //
 //  Created by Erwin van Hunen on 2025-07-12.
 //
