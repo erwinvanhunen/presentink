@@ -803,8 +803,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             drawWindowControllers.forEach {
                 ($0.window?.contentView as? DrawingView)?.resetToDefaultCursor()
             }
-
-            // Close all overlays
             drawWindowControllers.forEach { $0.close() }
             drawWindowControllers.removeAll()
             overlayIsActive = false
@@ -822,44 +820,42 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 .orange: "TrayIconOrange",
                 .magenta: "TrayIconPink",
             ]
-            if let iconName = colorIconMap.first(where: { $0.key == color })?
-                .value
-            {
+            if let iconName = colorIconMap.first(where: { $0.key == color })?.value {
                 statusItem.button?.image = NSImage(named: iconName)
             } else {
                 statusItem.button?.image = NSImage(named: "TrayIconDefault")
             }
-            // Create an overlay for each screen
             drawWindowControllers = NSScreen.screens.map { screen in
                 let controller = DrawWindowController(screen: screen)
                 controller.showWindow(nil)
-                (controller.window?.contentView as? DrawingView)?
-                    .currentLineWidth = CGFloat(Settings.shared.penWidth)
-                (controller.window?.contentView as? DrawingView)?.currentColor =
-                    Settings.shared.defaultColor
-                (controller.window?.contentView as? DrawingView)?
-                    .penCursor?.set()
+                if let drawingView = controller.window?.contentView as? DrawingView {
+                    drawingView.currentLineWidth = CGFloat(Settings.shared.penWidth)
+                    drawingView.currentColor = Settings.shared.defaultColor
+                    drawingView.penCursor?.set()
+                }
                 controller.window?.makeKeyAndOrderFront(nil)
-                           controller.window?.orderFrontRegardless()
-                           NSApp.activate(ignoringOtherApps: true)
-                           
-                           if let contentView = controller.window?.contentView {
-                               controller.window?.makeFirstResponder(contentView)
-                               // Force cursor update after becoming first responder
-                               DispatchQueue.main.async {
-                                   (contentView as? DrawingView)?.penCursor?.set()
-                                   NSCursor.setHiddenUntilMouseMoves(false)
-                               }
-                           }
-              
+                controller.window?.orderFrontRegardless()
                 return controller
             }
             overlayIsActive = true
+
+            // Find the screen under the mouse
+            let mouseLocation = NSEvent.mouseLocation
+            if let currentScreen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }),
+               let controller = drawWindowControllers.first(where: { $0.window?.screen == currentScreen }),
+               let contentView = controller.window?.contentView {
+                controller.window?.makeFirstResponder(contentView)
+                DispatchQueue.main.async {
+                    (contentView as? DrawingView)?.penCursor?.set()
+                    NSCursor.setHiddenUntilMouseMoves(false)
+                }
+            }
         }
         if let drawItem = statusMenu.item(withTitle: "Draw") {
             drawItem.state = overlayIsActive ? .on : .off
         }
     }
+    
     @objc func quitApp() {
         NSApplication.shared.terminate(nil)
     }
