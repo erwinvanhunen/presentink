@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 #vite.config.ts
 PresentInk.xcodeproj/project.xcworkspace/xcuserdata/*
+package/*.dmg
+package/*.zip
+package/*.app

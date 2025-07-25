@@ -8,7 +8,7 @@ class DrawWindowController: NSWindowController {
         let drawingView = DrawingView(frame: window.contentRect(forFrameRect: screenRect))
         drawingView.currentLineWidth = CGFloat(Settings.shared.penWidth)
         window.contentView = drawingView
-        window.makeFirstResponder(drawingView)
+//        window.makeFirstResponder(drawingView)
         
         NotificationCenter.default.addObserver(
             self,
@@ -64,8 +64,8 @@ class DrawWindow: NSWindow {
         self.titleVisibility = .hidden
         self.titlebarAppearsTransparent = true
         self.setFrame(contentRect, display: true)
-        self.makeKeyAndOrderFront(nil)
-        self.orderFrontRegardless()
+//        self.makeKeyAndOrderFront(nil)
+//        self.orderFrontRegardless()
     }
     override var canBecomeKey: Bool { return true }
     override var canBecomeMain: Bool { return true }
