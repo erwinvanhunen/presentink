@@ -8,7 +8,7 @@ class DrawWindowController: NSWindowController {
         let drawingView = DrawingView(frame: window.contentRect(forFrameRect: screenRect))
         drawingView.currentLineWidth = CGFloat(Settings.shared.penWidth)
         window.contentView = drawingView
-//        window.makeFirstResponder(drawingView)
+        window.makeFirstResponder(drawingView)
         
         NotificationCenter.default.addObserver(
             self,

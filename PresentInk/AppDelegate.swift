@@ -833,8 +833,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     drawingView.currentColor = Settings.shared.defaultColor
                     drawingView.penCursor?.set()
                 }
-                controller.window?.makeKeyAndOrderFront(nil)
-                controller.window?.orderFrontRegardless()
                 return controller
             }
             overlayIsActive = true
@@ -845,6 +843,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                let controller = drawWindowControllers.first(where: { $0.window?.screen == currentScreen }),
                let contentView = controller.window?.contentView {
                 controller.window?.makeFirstResponder(contentView)
+                controller.window?.level = .mainMenu
+                controller.window?.makeKeyAndOrderFront(nil)
+                controller.window?.makeMain()
+                NSApp.activate(ignoringOtherApps: true)
+//                controller.window?.orderFrontRegardless()
+                
                 DispatchQueue.main.async {
                     (contentView as? DrawingView)?.penCursor?.set()
                     NSCursor.setHiddenUntilMouseMoves(false)
