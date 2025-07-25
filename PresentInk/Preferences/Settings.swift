@@ -50,6 +50,7 @@ class Settings {
     private let lastUpdateCheckKey = "lastUpdateCheck"
     private let typeSpeedIndexKey = "typingSpeedIndex"
     private let showExperimentalFeaturesKey = "showExperimentalFeatures"
+    private let spotlightHotkeyKey = "spotlightHotkey"
     
     private let supportedColors: [String: NSColor] = [
         "red": .red,
@@ -174,6 +175,22 @@ class Settings {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
                 UserDefaults.standard.set(encoded, forKey: textTypeHotkeyKey)
+            }
+        }
+    }
+    
+    var spotlightHotkey: SettingsKeyCombo {
+        get {
+            if let data = UserDefaults.standard.data(forKey: spotlightHotkeyKey),
+               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+                return combo
+            }
+            return SettingsKeyCombo(key: Key.f, modifiers: [.option, .shift])
+        }
+        set {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(newValue) {
+                UserDefaults.standard.set(encoded, forKey: spotlightHotkeyKey)
             }
         }
     }

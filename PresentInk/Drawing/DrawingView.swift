@@ -20,6 +20,8 @@ class DrawingView: NSView, NSTextFieldDelegate {
     var committedTexts: [(NSAttributedString, NSPoint)] = []
     var textDragOffset: NSPoint = NSPoint.zero
     var fullBoardMode: FullBoardMode = .none
+    var redoStack: [(PathType, NSColor, CGFloat)] = []
+
     enum DrawMode {
         case straightLine
         case freehand
@@ -438,14 +440,22 @@ class DrawingView: NSView, NSTextFieldDelegate {
             }
             return
         }
-        if event.modifierFlags.contains(.command),
-            event.charactersIgnoringModifiers?.lowercased() == "z"
-        {
-            if !paths.isEmpty {
-                paths.removeLast()
-                needsDisplay = true
+        if event.charactersIgnoringModifiers?.lowercased() == "z" {
+            if event.modifierFlags.contains([.command, .shift]) {
+                if !redoStack.isEmpty {
+                    let redoItem = redoStack.removeLast()
+                    paths.append(redoItem)
+                    needsDisplay = true
+                }
+                return
+            } else if event.modifierFlags.contains(.command) {
+                if !paths.isEmpty {
+                    let last = paths.removeLast()
+                    redoStack.append(last)
+                    needsDisplay = true
+                }
+                return
             }
-            return
         }
 
         if isEditingText {

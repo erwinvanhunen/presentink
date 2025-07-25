@@ -163,6 +163,7 @@ class HelpWindowController: NSWindowController {
             ),
             shortcutRow(keys: ["T"], desc: "Add text"),
             shortcutRow(keys: ["Cmd", "Z"], desc: "Undo last drawing"),
+            shortcutRow(keys: ["Cmd", "Shift", "Z"], desc: "Redo last drawing"),
             shortcutRow(
                 keys: ["r"],
                 desc: "Change color to red",

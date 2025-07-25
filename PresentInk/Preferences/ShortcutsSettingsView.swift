@@ -32,16 +32,21 @@ class ShortcutsSettingsView: NSView {
         labelWithString: "Record Screen:"
     )
     private let screenRecordingHotkeyField = HotkeyRecorderField()
-    private let screenRecordingRectangleLabel = NSTextField(
+
+    private let screenRecordingCroppedLabel = NSTextField(
         labelWithString: "Record Cropped:"
     )
-    private let screenRecordingRectangleHotkeyField = HotkeyRecorderField()
+    private let screenRecordingCroppedHotkeyField = HotkeyRecorderField()
+
+    private let spotlightHotKeyField = HotkeyRecorderField()
+
+    private let spotlightLabel = NSTextField(labelWithString: "Spotlight:")
 
     private var resetButtons: [HotkeyType: NSButton] = [:]
 
     private enum HotkeyType {
         case draw, screenshot, breakTimer, typeText, screenRecording,
-            screenRecordingRectangle
+            screenRecordingCropped, spotlight
     }
 
     override init(frame frameRect: NSRect) {
@@ -84,7 +89,7 @@ class ShortcutsSettingsView: NSView {
         // Configure labels
         [
             drawLabel, screenshotLabel, breakTimerLabel, screenRecordingLabel,
-            screenRecordingRectangleLabel, typeTextLabel,
+            screenRecordingCroppedLabel, spotlightLabel, typeTextLabel,
         ].forEach {
             label in
             label.font = NSFont.systemFont(ofSize: 13)
@@ -97,6 +102,7 @@ class ShortcutsSettingsView: NSView {
         [
             drawHotkeyField, screenshotHotkeyField, breakTimerHotkeyField,
             typeTextHotkeyField, screenRecordingHotkeyField,
+            spotlightHotKeyField,
         ].forEach { field in
             field.heightAnchor.constraint(equalToConstant: 28).isActive = true
             field.widthAnchor.constraint(equalToConstant: 180).isActive = true
@@ -157,16 +163,30 @@ class ShortcutsSettingsView: NSView {
             }
         }
 
-        screenRecordingRectangleHotkeyField.onHotkeyChanged = { combo in
+        screenRecordingCroppedHotkeyField.onHotkeyChanged = { combo in
             if self.isHotkeyConflict(
                 combo,
-                excluding: .screenRecordingRectangle
+                excluding: .screenRecordingCropped
             ) {
                 self.showConflictAlert()
-                self.screenRecordingRectangleHotkeyField.keyCombo =
+                self.screenRecordingCroppedHotkeyField.keyCombo =
                     Settings.shared.screenRecordingCroppedHotkey  // Revert
             } else {
                 Settings.shared.screenRecordingCroppedHotkey = combo
+                self.updateResetButtons()
+            }
+        }
+
+        spotlightHotKeyField.onHotkeyChanged = { combo in
+            if self.isHotkeyConflict(
+                combo,
+                excluding: .spotlight
+            ) {
+                self.showConflictAlert()
+                self.spotlightHotKeyField.keyCombo =
+                    Settings.shared.spotlightHotkey  // Revert
+            } else {
+                Settings.shared.spotlightHotkey = combo
                 self.updateResetButtons()
             }
         }
@@ -191,7 +211,10 @@ class ShortcutsSettingsView: NSView {
             action: #selector(resetScreenRecordingRectangleHotkey),
             target: self
         )
-
+        let spotlightReset = ResetButton(
+            action: #selector(resetSpotlightHotkey),
+            target: self
+        )
         let typeTextReset = ResetButton(
             action: #selector(resetTypeTextHotkey),
             target: self
@@ -202,7 +225,8 @@ class ShortcutsSettingsView: NSView {
             .screenshot: screenshotReset,
             .breakTimer: breakTimerReset,
             .screenRecording: screenRecordingReset,
-            .screenRecordingRectangle: screenRecordingRectangleReset,
+            .screenRecordingCropped: screenRecordingRectangleReset,
+            .spotlight: spotlightReset,
         ]
         if Settings.shared.showExperimentalFeatures {
             resetButtons[.typeText] = typeTextReset
@@ -239,13 +263,19 @@ class ShortcutsSettingsView: NSView {
         screenRecordingStack.alignment = .centerY
 
         let screenRecordingRectangleStack = NSStackView(views: [
-            screenRecordingRectangleLabel, screenRecordingRectangleHotkeyField,
+            screenRecordingCroppedLabel, screenRecordingCroppedHotkeyField,
             screenRecordingRectangleReset,
         ])
         screenRecordingRectangleStack.orientation = .horizontal
         screenRecordingRectangleStack.spacing = 16
         screenRecordingRectangleStack.alignment = .centerY
 
+        let spotlightStack = NSStackView(views: [
+            spotlightLabel, spotlightHotKeyField, spotlightReset,
+        ])
+        spotlightStack.orientation = .horizontal
+        spotlightStack.spacing = 16
+        spotlightStack.alignment = .centerY
         // Main vertical stack
         let mainStack = NSStackView(views: [
             titleLabel,
@@ -256,6 +286,7 @@ class ShortcutsSettingsView: NSView {
             breakTimerStack,
             screenRecordingStack,
             screenRecordingRectangleStack,
+            spotlightStack,
         ])
         let typeTextStack = NSStackView(views: [
             typeTextLabel, typeTextHotkeyField, typeTextReset,
@@ -351,9 +382,21 @@ class ShortcutsSettingsView: NSView {
             key: .r,
             modifiers: [.control, .shift]
         )
-        screenRecordingRectangleHotkeyField.keyCombo = SettingsKeyCombo(
+        screenRecordingCroppedHotkeyField.keyCombo = SettingsKeyCombo(
             key: .r,
             modifiers: [.control, .shift]
+        )
+        updateResetButtons()
+    }
+
+    @objc private func resetSpotlightHotkey() {
+        Settings.shared.spotlightHotkey = SettingsKeyCombo(
+            key: .f,
+            modifiers: [.option, .shift]
+        )
+        spotlightHotKeyField.keyCombo = SettingsKeyCombo(
+            key: .f,
+            modifiers: [.option, .shift]
         )
         updateResetButtons()
     }
@@ -374,9 +417,12 @@ class ShortcutsSettingsView: NSView {
         resetButtons[.screenRecording]?.isEnabled =
             Settings.shared.screenRecordingHotkey
             != SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
-        resetButtons[.screenRecordingRectangle]?.isEnabled =
+        resetButtons[.screenRecordingCropped]?.isEnabled =
             Settings.shared.screenRecordingCroppedHotkey
             != SettingsKeyCombo(key: .r, modifiers: [.control, .shift])
+        resetButtons[.spotlight]?.isEnabled =
+            Settings.shared.spotlightHotkey
+            != SettingsKeyCombo(key: .f, modifiers: [.option, .shift])
     }
 
     private func loadSettings() {
@@ -386,8 +432,9 @@ class ShortcutsSettingsView: NSView {
         typeTextHotkeyField.keyCombo = Settings.shared.textTypeHotkey
         screenRecordingHotkeyField.keyCombo =
             Settings.shared.screenRecordingHotkey
-        screenRecordingRectangleHotkeyField.keyCombo =
+        screenRecordingCroppedHotkeyField.keyCombo =
             Settings.shared.screenRecordingCroppedHotkey
+        spotlightHotKeyField.keyCombo = Settings.shared.spotlightHotkey
         updateResetButtons()
     }
 
@@ -404,6 +451,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.spotlightHotkey,
                 ]
             case .screenshot:
                 return [
@@ -412,6 +460,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.spotlightHotkey,
                 ]
             case .breakTimer:
                 return [
@@ -420,6 +469,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.spotlightHotkey,
                 ]
             case .typeText:
                 return [
@@ -428,6 +478,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.spotlightHotkey,
                 ]
             case .screenRecording:
                 return [
@@ -436,14 +487,27 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.spotlightHotkey,
+
                 ]
-            case .screenRecordingRectangle:
+            case .screenRecordingCropped:
                 return [
                     Settings.shared.drawHotkey,
                     Settings.shared.screenShotHotkey,
                     Settings.shared.breakTimerHotkey,
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
+                    Settings.shared.spotlightHotkey,
+
+                ]
+            case .spotlight:
+                return [
+                    Settings.shared.drawHotkey,
+                    Settings.shared.screenShotHotkey,
+                    Settings.shared.breakTimerHotkey,
+                    Settings.shared.textTypeHotkey,
+                    Settings.shared.screenRecordingHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
                 ]
             }
         }()

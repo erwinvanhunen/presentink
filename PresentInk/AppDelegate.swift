@@ -23,6 +23,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var breakTimerController: BreakTimerWindowController?
     var settingsWindowController: SettingsWindowController?
     var helpWindowController: HelpWindowController?
+    var spotlightOverlayWindow: SpotlightOverlayWindow?
     var hotkeyDraw: HotKey?
     var hotkeyScreenshot: HotKey?
     var hotkeyBreak: HotKey?
@@ -30,6 +31,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var textType: TextTyper?
     var hotkeyRecording: HotKey?
     var hotkeyCroppedRecording: HotKey?
+    var hotkeySpotlight: HotKey?
     var selectedTextfile: String?
     var selectedText: [String] = []
     var currentTextIndex: Int = 0
@@ -83,6 +85,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyBreak = nil
         hotkeyTextType = nil
         hotkeyRecording = nil
+        hotkeyCroppedRecording = nil
+        hotkeySpotlight = nil
+
         hotkeyDraw = HotKey(
             key: Settings.shared.drawHotkey.key ?? .d,
             modifiers: Settings.shared.drawHotkey.modifiers
@@ -111,6 +116,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             modifiers: Settings.shared.screenRecordingCroppedHotkey.modifiers
         )
 
+        hotkeySpotlight = HotKey(
+            key: Settings.shared.spotlightHotkey.key ?? .f,
+            modifiers: Settings.shared.spotlightHotkey.modifiers
+        )
+
         hotkeyDraw?.keyDownHandler = { [weak self] in
             self?.toggleDrawing()
         }
@@ -130,6 +140,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         hotkeyCroppedRecording?.keyDownHandler = { [weak self] in
             self?.startRectRecordingFlow()
+        }
+        hotkeySpotlight?.keyDownHandler = { [weak self] in
+            self?.toggleSpotlightMode()
         }
 
     }
@@ -175,6 +188,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self,
             selector: #selector(experimentalFeaturesToggled),
             name: NSNotification.Name("experimentalFeaturesToggled"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(clearSpotlightOverlays),
+            name: NSNotification.Name("ClearSpotlightOverlays"),
             object: nil
         )
     }
@@ -297,7 +316,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         for screen in NSScreen.screens {
             let controller = ScreenRecordCroppedController(screen: screen)
             controller.onSelection = { [weak self] screen, rect in
-                // Enable click-through on all rectangle overlays
+                // Enable click-through on all cropped overlays
                 self?.croppedSelectionOverlayControllers.forEach {
                     controller in
                     controller.enableClickThrough()
@@ -410,6 +429,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupStatusMenu()
     }
 
+    @objc func clearSpotlightOverlays() {
+        if let existingWindow = spotlightOverlayWindow {
+            existingWindow.close()
+        }
+        spotlightOverlayWindow = nil
+    }
+
     fileprivate func setupStatusMenu() {
         statusMenu = NSMenu()
 
@@ -421,7 +447,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let screenRecordingHotkey = Settings.shared.screenRecordingHotkey
         let screenRecordingCroppedHotkey =
             Settings.shared.screenRecordingCroppedHotkey
-
+        let spotlightHotkey = Settings.shared.spotlightHotkey
+        
         let drawItem = NSMenuItem(
             title: "Draw",
             action: #selector(drawAction),
@@ -445,6 +472,14 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         screenshotItem.keyEquivalentModifierMask = screenshotHotkey.modifiers
         statusMenu.addItem(screenshotItem)
+        
+        let spotlightItem = NSMenuItem(
+            title: "Spotlight",
+            action: #selector(toggleSpotlightMode),
+            keyEquivalent: spotlightHotkey.key?.description.lowercased() ?? "f"
+        )
+        spotlightItem.keyEquivalentModifierMask = spotlightHotkey.modifiers
+        statusMenu.addItem(spotlightItem)
 
         let recordingMenu = NSMenu(title: "Record Screen")
 
@@ -820,7 +855,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 .orange: "TrayIconOrange",
                 .magenta: "TrayIconPink",
             ]
-            if let iconName = colorIconMap.first(where: { $0.key == color })?.value {
+            if let iconName = colorIconMap.first(where: { $0.key == color })?
+                .value
+            {
                 statusItem.button?.image = NSImage(named: iconName)
             } else {
                 statusItem.button?.image = NSImage(named: "TrayIconDefault")
@@ -828,8 +865,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             drawWindowControllers = NSScreen.screens.map { screen in
                 let controller = DrawWindowController(screen: screen)
                 controller.showWindow(nil)
-                if let drawingView = controller.window?.contentView as? DrawingView {
-                    drawingView.currentLineWidth = CGFloat(Settings.shared.penWidth)
+                if let drawingView = controller.window?.contentView
+                    as? DrawingView
+                {
+                    drawingView.currentLineWidth = CGFloat(
+                        Settings.shared.penWidth
+                    )
                     drawingView.currentColor = Settings.shared.defaultColor
                     drawingView.penCursor?.set()
                 }
@@ -839,16 +880,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
             // Find the screen under the mouse
             let mouseLocation = NSEvent.mouseLocation
-            if let currentScreen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }),
-               let controller = drawWindowControllers.first(where: { $0.window?.screen == currentScreen }),
-               let contentView = controller.window?.contentView {
+            if let currentScreen = NSScreen.screens.first(where: {
+                NSMouseInRect(mouseLocation, $0.frame, false)
+            }),
+                let controller = drawWindowControllers.first(where: {
+                    $0.window?.screen == currentScreen
+                }),
+                let contentView = controller.window?.contentView
+            {
                 controller.window?.makeFirstResponder(contentView)
                 controller.window?.level = .mainMenu
                 controller.window?.makeKeyAndOrderFront(nil)
                 controller.window?.makeMain()
                 NSApp.activate(ignoringOtherApps: true)
-//                controller.window?.orderFrontRegardless()
-                
+                //                controller.window?.orderFrontRegardless()
+
                 DispatchQueue.main.async {
                     (contentView as? DrawingView)?.penCursor?.set()
                     NSCursor.setHiddenUntilMouseMoves(false)
@@ -859,7 +905,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             drawItem.state = overlayIsActive ? .on : .off
         }
     }
-    
+
     @objc func quitApp() {
         NSApplication.shared.terminate(nil)
     }
@@ -917,5 +963,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Update last check date
         Settings.shared.lastUpdateCheck = Date()
 
+    }
+
+    @objc func toggleSpotlightMode() {
+        // Toggle: if flashlight is active, close it
+        if let existingWindow = spotlightOverlayWindow {
+            (existingWindow.contentView as? SpotlightOverlayView)?
+                .closeWithAnimation()
+            if let spotlightItem = statusMenu.item(withTitle: "Spotlight") {
+                spotlightItem.state = .off
+            }
+            return
+        }
+
+        // Start flashlight mode
+        let mouseLocation = NSEvent.mouseLocation
+        guard
+            let currentScreen = NSScreen.screens.first(where: {
+                NSMouseInRect(mouseLocation, $0.frame, false)
+            })
+        else {
+            // Fallback to main screen if mouse screen not found
+            guard let screen = NSScreen.main else { return }
+            startSpotlightOnScreen(screen)
+            return
+        }
+
+        startSpotlightOnScreen(currentScreen)
+        if let spotlightItem = statusMenu.item(withTitle: "Spotlight") {
+            spotlightItem.state = .on
+        }
+    }
+
+    private func startSpotlightOnScreen(_ screen: NSScreen) {
+        let window = SpotlightOverlayWindow(screen: screen)
+        let view = SpotlightOverlayView(frame: screen.frame)
+        window.contentView = view
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        window.level = .mainMenu
+        window.isReleasedWhenClosed = false
+        spotlightOverlayWindow = window
     }
 }
