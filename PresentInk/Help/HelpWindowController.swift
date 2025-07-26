@@ -139,6 +139,12 @@ class HelpWindowController: NSWindowController {
                 ),
                 desc: "Start a screen recording of a selected area"
             ),
+            shortcutRow(
+                keys: HelpWindowController.getKeyModifiers(
+                    keyCombo: Settings.shared.spotlightHotkey
+                ),
+                desc: "Start a spotlight"
+            ),
         ]
         let drawShortCuts: [NSStackView] = [
             shortcutRow(

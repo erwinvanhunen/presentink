@@ -79,7 +79,9 @@ class SpotlightOverlayView: NSView {
             let easedProgress = 1.0 - pow(1.0 - progress, 3.0)
             self.currentRadius = 5 + (self.flashlightRadius - 5) * easedProgress
 
-            self.needsDisplay = true
+            DispatchQueue.main.async {
+                       self.needsDisplay = true
+                   }
 
             if currentFrame >= totalFrames {
                 self.currentRadius = self.flashlightRadius
