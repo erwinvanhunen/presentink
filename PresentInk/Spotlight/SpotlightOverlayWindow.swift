@@ -23,7 +23,7 @@ class SpotlightOverlayWindow: NSWindow {
         self.hasShadow = false
         self.acceptsMouseMovedEvents = true
     }
-    
+
     override var canBecomeKey: Bool {
         return true
     }
@@ -50,12 +50,12 @@ class SpotlightOverlayView: NSView {
         super.viewDidMoveToWindow()
         setupTrackingArea()
         updateMouseLocation()
-        
+
         DispatchQueue.main.async { [weak self] in
             self?.window?.makeKeyAndOrderFront(nil)
             self?.window?.makeFirstResponder(self)
         }
-        
+
         startGrowAnimation()
     }
 
@@ -67,7 +67,10 @@ class SpotlightOverlayView: NSView {
         let totalFrames = Int(animationDuration / frameDuration)
         var currentFrame = 0
 
-        animationTimer = Timer.scheduledTimer(withTimeInterval: frameDuration, repeats: true) { [weak self] timer in
+        animationTimer = Timer.scheduledTimer(
+            withTimeInterval: frameDuration,
+            repeats: true
+        ) { [weak self] timer in
             guard let self = self else {
                 timer.invalidate()
                 return
@@ -75,13 +78,13 @@ class SpotlightOverlayView: NSView {
 
             currentFrame += 1
             let progress = CGFloat(currentFrame) / CGFloat(totalFrames)
-            
+
             let easedProgress = 1.0 - pow(1.0 - progress, 3.0)
             self.currentRadius = 5 + (self.flashlightRadius - 5) * easedProgress
 
             DispatchQueue.main.async {
-                       self.needsDisplay = true
-                   }
+                self.needsDisplay = true
+            }
 
             if currentFrame >= totalFrames {
                 self.currentRadius = self.flashlightRadius
@@ -98,7 +101,10 @@ class SpotlightOverlayView: NSView {
         let totalFrames = Int(animationDuration / frameDuration)
         var currentFrame = 0
 
-        animationTimer = Timer.scheduledTimer(withTimeInterval: frameDuration, repeats: true) { [weak self] timer in
+        animationTimer = Timer.scheduledTimer(
+            withTimeInterval: frameDuration,
+            repeats: true
+        ) { [weak self] timer in
             guard let self = self else {
                 timer.invalidate()
                 return
@@ -106,7 +112,7 @@ class SpotlightOverlayView: NSView {
 
             currentFrame += 1
             let progress = CGFloat(currentFrame) / CGFloat(totalFrames)
-            
+
             // Fade out the dark overlay
             self.overlayAlpha = 0.7 * (1.0 - progress)
 
@@ -114,10 +120,13 @@ class SpotlightOverlayView: NSView {
 
             if currentFrame >= totalFrames {
                 timer.invalidate()
-                NotificationCenter.default.post(name: NSNotification.Name("ClearSpotlightOverlays"), object: nil)
-                
-//                self.window?.close()
-                
+                NotificationCenter.default.post(
+                    name: NSNotification.Name("ClearSpotlightOverlays"),
+                    object: nil
+                )
+
+                //                self.window?.close()
+
             }
         }
     }
@@ -128,39 +137,42 @@ class SpotlightOverlayView: NSView {
     }
 
     override func keyDown(with event: NSEvent) {
-        if event.keyCode == 53 { // Escape key
+        if event.keyCode == 53 {  // Escape key
             closeWithAnimation()
             return
         }
         super.keyDown(with: event)
     }
-    
+
     override func scrollWheel(with event: NSEvent) {
         guard !isClosing else { return }
-            let delta = event.scrollingDeltaY
-            let minRadius: CGFloat = 50
-            let maxRadius: CGFloat = 400
+        let delta = event.scrollingDeltaY
+        let minRadius: CGFloat = 50
+        let maxRadius: CGFloat = 400
 
-            // Increase or decrease radius
-            flashlightRadius = max(minRadius, min(maxRadius, flashlightRadius + delta))
-            currentRadius = flashlightRadius
-            DispatchQueue.main.async {
-                self.needsDisplay = true
-            }
+        // Increase or decrease radius
+        flashlightRadius = max(
+            minRadius,
+            min(maxRadius, flashlightRadius + delta)
+        )
+        currentRadius = flashlightRadius
+        DispatchQueue.main.async {
+            self.needsDisplay = true
+        }
     }
 
     private func setupTrackingArea() {
         if let trackingArea = trackingArea {
             removeTrackingArea(trackingArea)
         }
-        
+
         trackingArea = NSTrackingArea(
             rect: bounds,
             options: [.activeAlways, .mouseMoved, .mouseEnteredAndExited],
             owner: self,
             userInfo: nil
         )
-        
+
         if let trackingArea = trackingArea {
             addTrackingArea(trackingArea)
         }
@@ -194,20 +206,22 @@ class SpotlightOverlayView: NSView {
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
         guard let ctx = NSGraphicsContext.current?.cgContext else { return }
-        
+
         // Draw dark overlay with animated alpha
         ctx.setFillColor(NSColor.black.withAlphaComponent(overlayAlpha).cgColor)
         ctx.fill(bounds)
-        
+
         // Only draw the clear circle if not fully faded
         if overlayAlpha > 0 {
             ctx.setBlendMode(.clear)
-            ctx.addEllipse(in: CGRect(
-                x: mouseLocation.x - currentRadius,
-                y: mouseLocation.y - currentRadius,
-                width: currentRadius * 2,
-                height: currentRadius * 2
-            ))
+            ctx.addEllipse(
+                in: CGRect(
+                    x: mouseLocation.x - currentRadius,
+                    y: mouseLocation.y - currentRadius,
+                    width: currentRadius * 2,
+                    height: currentRadius * 2
+                )
+            )
             ctx.fillPath()
             ctx.setBlendMode(.normal)
         }
