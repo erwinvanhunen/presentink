@@ -19,25 +19,44 @@ class ScreenRecordCroppedView: NSView {
 
     private var startButton: NSButton!
     private var cancelButton: NSButton!
-
+    private var introTextAlpha: CGFloat = 0.0
     enum ResizeHandle {
-        case none, topLeft, topRight, bottomLeft, bottomRight, top, bottom, left, right, center, buttonBar
+        case none, topLeft, topRight, bottomLeft, bottomRight, top, bottom,
+            left, right, center, buttonBar
     }
 
     private lazy var buttonBar: NSView = {
         let bar = NSView()
         bar.wantsLayer = true
-        bar.layer?.backgroundColor = NSColor(calibratedRed: 156 / 255, green: 204 / 255, blue: 0 / 255, alpha: 0.9).cgColor
+        bar.layer?.backgroundColor =
+            NSColor(
+                red: 0.0,
+                green: 148 / 255,
+                blue: 1,
+                alpha: 1
+            ).cgColor
         bar.layer?.cornerRadius = 18
         bar.translatesAutoresizingMaskIntoConstraints = false
 
-        startButton = makeIconButton(symbolName: "record.circle.fill", action: #selector(startRecording), color: .white)
-        cancelButton = makeIconButton(symbolName: "xmark.square.fill", action: #selector(cancelSelection))
+        startButton = makeIconButton(
+            symbolName: "record.circle.fill",
+            action: #selector(startRecording),
+            color: .white
+        )
+        cancelButton = makeIconButton(
+            symbolName: "xmark.square.fill",
+            action: #selector(cancelSelection)
+        )
 
         let stack = NSStackView(views: [startButton, cancelButton])
         stack.orientation = .horizontal
         stack.spacing = 24
-        stack.edgeInsets = NSEdgeInsets(top: 12, left: 18, bottom: 12, right: 18)
+        stack.edgeInsets = NSEdgeInsets(
+            top: 12,
+            left: 18,
+            bottom: 12,
+            right: 18
+        )
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         bar.addSubview(stack)
@@ -50,7 +69,7 @@ class ScreenRecordCroppedView: NSView {
         bar.isHidden = true
         return bar
     }()
-    
+
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool {
         return true
     }
@@ -61,6 +80,7 @@ class ScreenRecordCroppedView: NSView {
         setupTrackingArea()
         _ = buttonBar
         addSubview(buttonBar)
+        fadeInIntroText()
     }
 
     required init?(coder: NSCoder) {
@@ -72,7 +92,7 @@ class ScreenRecordCroppedView: NSView {
     override func becomeFirstResponder() -> Bool {
         return true
     }
-    
+
     override func resetCursorRects() {
         print("Resetting cursor rects")
         addCursorRect(buttonBar.frame, cursor: .arrow)
@@ -95,21 +115,25 @@ class ScreenRecordCroppedView: NSView {
             addCursorRect(currentRect, cursor: .arrow)
         }
     }
-    
+
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
         window?.makeFirstResponder(self)
     }
 
-//    override func keyDown(with event: NSEvent) {
-//        if event.keyCode == 53 {  // Escape key
-//            cancelSelection()
-//        } else {
-//            super.keyDown(with: event)
-//        }
-//    }
+    //    override func keyDown(with event: NSEvent) {
+    //        if event.keyCode == 53 {  // Escape key
+    //            cancelSelection()
+    //        } else {
+    //            super.keyDown(with: event)
+    //        }
+    //    }
 
-    private func makeIconButton(symbolName: String, action: Selector, color: NSColor = NSColor.white) -> NSButton {
+    private func makeIconButton(
+        symbolName: String,
+        action: Selector,
+        color: NSColor = NSColor.white
+    ) -> NSButton {
         let button = NSButton()
         button.bezelStyle = .regularSquare
         button.isBordered = false
@@ -121,8 +145,14 @@ class ScreenRecordCroppedView: NSView {
         button.action = action
         button.refusesFirstResponder = true
 
-        let config = NSImage.SymbolConfiguration(pointSize: 18, weight: .regular)
-        button.image = NSImage(systemSymbolName: symbolName, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+        let config = NSImage.SymbolConfiguration(
+            pointSize: 18,
+            weight: .regular
+        )
+        button.image = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: nil
+        )?.withSymbolConfiguration(config)
         button.imagePosition = .imageOnly
         button.contentTintColor = color
         button.translatesAutoresizingMaskIntoConstraints = false
@@ -134,29 +164,28 @@ class ScreenRecordCroppedView: NSView {
 
         return button
     }
-    
+
     override func performKeyEquivalent(with event: NSEvent) -> Bool {
         if event.type == .keyDown {
-           if event.keyCode == 53 {  // Escape key
+            if event.keyCode == 53 {  // Escape key
 
                 cancelSelection()
-                
+
                 return true
             }
         }
         return super.performKeyEquivalent(with: event)
     }
-    
+
     override func keyDown(with event: NSEvent) {
         switch event.keyCode {
-        
+
         case 53:  // Escape
             cancelSelection()
         default:
             super.keyDown(with: event)
         }
     }
-
 
     private func setupTrackingArea() {
         let trackingArea = NSTrackingArea(
@@ -190,7 +219,11 @@ class ScreenRecordCroppedView: NSView {
         buttonBar.frame = NSRect(origin: barOrigin, size: barSize)
         buttonBar.layoutSubtreeIfNeeded()
         if buttonBar.superview != nil {
-            superview?.addSubview(buttonBar, positioned: .above, relativeTo: nil)
+            superview?.addSubview(
+                buttonBar,
+                positioned: .above,
+                relativeTo: nil
+            )
         }
     }
 
@@ -215,19 +248,19 @@ class ScreenRecordCroppedView: NSView {
             }
         }
         positionButtonBar()
-        if showIntroText && !isSelecting {
-               drawIntroText()
-           }
+        if showIntroText {
+            drawIntroText()
+        }
     }
 
     private func drawIntroText() {
         let introText = """
             Drag to select an area. Press Esc to cancel.
             """
-            let attributes: [NSAttributedString.Key: Any] = [
+        let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 18, weight: .medium),
-            .foregroundColor: NSColor.white,
-            .backgroundColor: NSColor.clear
+            .foregroundColor: NSColor.white.withAlphaComponent(introTextAlpha),
+            .backgroundColor: NSColor.clear,
         ]
         let size = introText.size(withAttributes: attributes)
         let textRect = NSRect(
@@ -237,19 +270,69 @@ class ScreenRecordCroppedView: NSView {
             height: size.height + 32
         )
         NSColor(
-            calibratedRed: 156 / 255,
-            green: 204 / 255,
-            blue: 0 / 255,
-            alpha: 1
+            red: 0.0,
+            green: 148 / 255,
+            blue: 1,
+            alpha: introTextAlpha
         ).setFill()
         NSBezierPath(roundedRect: textRect, xRadius: 8, yRadius: 8).fill()
         let textOrigin = NSPoint(
-                x: textRect.midX - size.width / 2,
-                y: textRect.midY - size.height / 2
-            )
-            introText.draw(at: textOrigin, withAttributes: attributes)
+            x: textRect.midX - size.width / 2,
+            y: textRect.midY - size.height / 2
+        )
+        introText.draw(at: textOrigin, withAttributes: attributes)
     }
     
+    private func fadeInIntroText() {
+        showIntroText = true
+        introTextAlpha = 0.0
+        let duration: TimeInterval = 0.2
+        let frameDuration: TimeInterval = 1 / 60.0
+        let totalFrames = Int(duration / frameDuration)
+        var currentFrame = 0
+
+        Timer.scheduledTimer(withTimeInterval: frameDuration, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            currentFrame += 1
+            let progress = CGFloat(currentFrame) / CGFloat(totalFrames)
+            self.introTextAlpha = min(progress, 1.0)
+            self.needsDisplay = true
+            if currentFrame >= totalFrames {
+                timer.invalidate()
+                self.introTextAlpha = 1.0
+                self.needsDisplay = true
+            }
+        }
+    }
+
+    private func fadeOutIntroText() {
+        let duration: TimeInterval = 0.2
+        let frameDuration: TimeInterval = 0.5 / 60.0
+        let totalFrames = Int(duration / frameDuration)
+        var currentFrame = 0
+
+        Timer.scheduledTimer(withTimeInterval: frameDuration, repeats: true) {
+            [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            currentFrame += 1
+            let progress = CGFloat(currentFrame) / CGFloat(totalFrames)
+            self.introTextAlpha = 1.0 - progress
+            self.needsDisplay = true
+            if currentFrame >= totalFrames {
+                timer.invalidate()
+                self.showIntroText = false
+                self.introTextAlpha = 1.0
+                self.needsDisplay = true
+            }
+        }
+    }
+
     private func drawResizeHandles() {
         let handles = getResizeHandleRects()
         NSColor.systemBlue.setFill()
@@ -321,7 +404,7 @@ class ScreenRecordCroppedView: NSView {
         for (handle, rect) in handles {
             if rect.contains(point) { return handle }
         }
-        if(currentRect.contains(point)) {
+        if currentRect.contains(point) {
             return .center
         }
         return .none
@@ -332,7 +415,10 @@ class ScreenRecordCroppedView: NSView {
         case .topLeft:
             return NSCursor.frameResize(position: .topLeft, directions: .all)
         case .bottomRight:
-            return NSCursor.frameResize(position: .bottomRight, directions: .all)
+            return NSCursor.frameResize(
+                position: .bottomRight,
+                directions: .all
+            )
         case .topRight:
             return NSCursor.frameResize(position: .topRight, directions: .all)
         case .bottomLeft:
@@ -355,19 +441,27 @@ class ScreenRecordCroppedView: NSView {
     }
 
     override func mouseDown(with event: NSEvent) {
+        if showIntroText {
+            fadeOutIntroText()
+        }
         let point = convert(event.locationInWindow, from: nil)
         if !currentRect.isEmpty {
-            showIntroText = false
+        
             resizeHandle = getResizeHandleAtPoint(point)
-            if resizeHandle != .none && resizeHandle != .buttonBar && resizeHandle != .center {
+            if resizeHandle != .none && resizeHandle != .buttonBar
+                && resizeHandle != .center
+            {
                 isResizing = true
                 return
             }
             // Check for move (inside rect, not on handle)
             if currentRect.contains(point) {
-                
+
                 isMoving = true
-                moveOffset = NSPoint(x: point.x - currentRect.origin.x, y: point.y - currentRect.origin.y)
+                moveOffset = NSPoint(
+                    x: point.x - currentRect.origin.x,
+                    y: point.y - currentRect.origin.y
+                )
                 return
             }
         }
@@ -386,11 +480,20 @@ class ScreenRecordCroppedView: NSView {
             resizeRectangle(to: point)
         } else if isMoving {
             // Move the rectangle, keeping the same size
-            let newOrigin = NSPoint(x: point.x - moveOffset.x, y: point.y - moveOffset.y)
+            let newOrigin = NSPoint(
+                x: point.x - moveOffset.x,
+                y: point.y - moveOffset.y
+            )
             // Clamp to bounds
             var clampedOrigin = newOrigin
-            clampedOrigin.x = max(0, min(clampedOrigin.x, bounds.width - currentRect.width))
-            clampedOrigin.y = max(0, min(clampedOrigin.y, bounds.height - currentRect.height))
+            clampedOrigin.x = max(
+                0,
+                min(clampedOrigin.x, bounds.width - currentRect.width)
+            )
+            clampedOrigin.y = max(
+                0,
+                min(clampedOrigin.y, bounds.height - currentRect.height)
+            )
             currentRect.origin = clampedOrigin
         } else if isDragging {
             currentRect = NSRect(

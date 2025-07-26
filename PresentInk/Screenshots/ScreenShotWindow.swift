@@ -63,7 +63,7 @@ class ScreenShotWindow: NSWindow {
             name: NSNotification.Name("CloseScreenshotWindows"),
             object: nil
         )
-
+        
     }
 
     deinit {
@@ -102,6 +102,7 @@ class SelectionView: NSView {
     private var lastMousePoint: NSPoint = .zero
     private let screen: NSScreen
     private let handleSize: CGFloat = 8
+    private var introTextAlpha: CGFloat = 0.0
 
     var onSelectionComplete: ((NSRect) -> Void)?
 
@@ -176,12 +177,12 @@ class SelectionView: NSView {
         let bar = NSView()
         bar.wantsLayer = true
         bar.layer?.backgroundColor =
-            NSColor(
-                calibratedRed: 156 / 255,
-                green: 204 / 255,
-                blue: 0 / 255,
-                alpha: 0.9
-            ).cgColor
+        NSColor(
+            red: 0.0,
+            green: 148 / 255,
+            blue: 1,
+            alpha: 1
+        ).cgColor
         bar.layer?.cornerRadius = 18
         bar.translatesAutoresizingMaskIntoConstraints = false
         let copyButton = makeIconButton(
@@ -252,6 +253,7 @@ class SelectionView: NSView {
     init(frame frameRect: NSRect, screen: NSScreen) {
         self.screen = screen
         super.init(frame: frameRect)
+        fadeInIntroText()
     }
 
     required init?(coder: NSCoder) {
@@ -264,7 +266,9 @@ class SelectionView: NSView {
 
         switch state {
         case .none:
-            showIntroText = false
+            if showIntroText {
+                fadeOutIntroText()
+            }
             startPoint = point
             selectionRect = NSRect(origin: point, size: .zero)
             state = .selecting
@@ -558,9 +562,9 @@ class SelectionView: NSView {
             }
         }
         positionButtonBar()
-        if showIntroText && state == .none {
-               drawIntroText()
-           }
+        if showIntroText /*&& state == .none */ {
+              drawIntroText()
+        }
     }
 
     @objc private func copyAction() {
@@ -569,14 +573,15 @@ class SelectionView: NSView {
         }
     }
     
+    // Update drawIntroText to use alpha
     private func drawIntroText() {
         let introText = """
             Drag to select an area. Press Esc to cancel.
             Press Cmd+C to copy, Cmd+S to save.
             """
-            let attributes: [NSAttributedString.Key: Any] = [
+        let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 18, weight: .medium),
-            .foregroundColor: NSColor.white,
+            .foregroundColor: NSColor.white.withAlphaComponent(introTextAlpha),
             .backgroundColor: NSColor.clear
         ]
         let size = introText.size(withAttributes: attributes)
@@ -587,43 +592,67 @@ class SelectionView: NSView {
             height: size.height + 32
         )
         NSColor(
-            calibratedRed: 156 / 255,
-            green: 204 / 255,
-            blue: 0 / 255,
-            alpha: 1
+            red: 0.0,
+            green: 148 / 255,
+            blue: 1,
+            alpha: introTextAlpha
         ).setFill()
         NSBezierPath(roundedRect: textRect, xRadius: 8, yRadius: 8).fill()
         let textOrigin = NSPoint(
-                x: textRect.midX - size.width / 2,
-                y: textRect.midY - size.height / 2
-            )
-            introText.draw(at: textOrigin, withAttributes: attributes)
+            x: textRect.midX - size.width / 2,
+            y: textRect.midY - size.height / 2
+        )
+        introText.draw(at: textOrigin, withAttributes: attributes)
     }
+    
+    private func fadeInIntroText() {
+        showIntroText = true
+        introTextAlpha = 0.0
+        let duration: TimeInterval = 0.2
+        let frameDuration: TimeInterval = 1 / 60.0
+        let totalFrames = Int(duration / frameDuration)
+        var currentFrame = 0
 
-//    @objc private func saveAction() {
-//        saveScreenshot();
-////        // Hide the screenshot window so the save panel appears above it
-////        window?.orderOut(nil)
-////        let savePanel = NSSavePanel()
-////        savePanel.allowedContentTypes = [.png]
-////        savePanel.nameFieldStringValue =
-////            "Screenshot \(DateFormatter.screenshotFormatter.string(from: Date())).png"
-////
-////        savePanel.begin { response in
-////            if response == .OK, let url = savePanel.url {
-////                Task {
-////                    await self.performScreenCapture(saveToURL: url)
-////                }
-////            } else {
-////                // If cancelled, close the screenshot window
-////                self.window?.orderOut(nil)
-////                NotificationCenter.default.post(
-////                    name: NSNotification.Name("CloseScreenshotWindows"),
-////                    object: nil
-////                )
-////            }
-////        }
-//    }
+        Timer.scheduledTimer(withTimeInterval: frameDuration, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            currentFrame += 1
+            let progress = CGFloat(currentFrame) / CGFloat(totalFrames)
+            self.introTextAlpha = min(progress, 1.0)
+            self.needsDisplay = true
+            if currentFrame >= totalFrames {
+                timer.invalidate()
+                self.introTextAlpha = 1.0
+                self.needsDisplay = true
+            }
+        }
+    }
+    
+    private func fadeOutIntroText() {
+        let duration: TimeInterval = 0.2
+        let frameDuration: TimeInterval = 1 / 60.0
+        let totalFrames = Int(duration / frameDuration)
+        var currentFrame = 0
+
+        Timer.scheduledTimer(withTimeInterval: frameDuration, repeats: true) { [weak self] timer in
+            guard let self = self else {
+                timer.invalidate()
+                return
+            }
+            currentFrame += 1
+            let progress = CGFloat(currentFrame) / CGFloat(totalFrames)
+            self.introTextAlpha = 1.0 - progress
+            self.needsDisplay = true
+            if currentFrame >= totalFrames {
+                timer.invalidate()
+                self.showIntroText = false
+                self.introTextAlpha = 1.0
+                self.needsDisplay = true
+            }
+        }
+    }
 
     @objc private func cancelAction() {
         window?.orderOut(nil)
