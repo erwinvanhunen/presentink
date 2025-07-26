@@ -115,7 +115,7 @@ class SpotlightOverlayView: NSView {
 
             // Fade out the dark overlay
             self.overlayAlpha = 0.7 * (1.0 - progress)
-
+            self.currentRadius = self.flashlightRadius * (1.0 - progress)
             self.needsDisplay = true
 
             if currentFrame >= totalFrames {
