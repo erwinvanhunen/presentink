@@ -1,15 +1,14 @@
 import Cocoa
 
 class HelpWindowController: NSWindowController {
-        
+
     @objc private func buyMeACoffeeClicked() {
         if let url = URL(string: "https://buymeacoffee.com/erwinvanhunen") {
             NSWorkspace.shared.open(url)
         }
         self.window?.close()
     }
-    
-    
+
     convenience init() {
         let size = NSSize(width: 800, height: 540)
         let window = NSWindow(
@@ -34,8 +33,6 @@ class HelpWindowController: NSWindowController {
         contentStack.translatesAutoresizingMaskIntoConstraints = false
         contentStack.alignment = .left
 
-       
-        
         let title = NSTextField(labelWithString: "What is PresentInk?")
         title.font = NSFont.boldSystemFont(ofSize: 18)
         title.textColor = NSColor.labelColor
@@ -107,7 +104,7 @@ class HelpWindowController: NSWindowController {
             return hStack
         }
 
-        let shortcuts: [NSStackView] = [
+        var shortcuts: [NSStackView] = [
             shortcutRow(
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.drawHotkey
@@ -146,6 +143,26 @@ class HelpWindowController: NSWindowController {
                 desc: "Start a spotlight"
             ),
         ]
+        if Settings.shared.showExperimentalFeatures {
+            shortcuts.append(
+                shortcutRow(
+                    keys: HelpWindowController.getKeyModifiers(
+                        keyCombo: Settings.shared.textTypeHotkey
+                    ),
+                    desc: "Start the text typer (experimental feature)"
+                )
+            )
+            shortcuts.append(
+                shortcutRow(
+                    keys: HelpWindowController.getKeyModifiers(
+                        keyCombo: Settings.shared.magnifierHotkey
+                    ),
+                    desc: "Start and stop the magnifier (experimental feature)"
+                )
+            )
+
+        }
+        
         let drawShortCuts: [NSStackView] = [
             shortcutRow(
                 keys: ["Esc"],
@@ -169,7 +186,10 @@ class HelpWindowController: NSWindowController {
             ),
             shortcutRow(keys: ["T"], desc: "Add text"),
             shortcutRow(keys: ["Cmd", "Z"], desc: "Undo last drawing"),
-            shortcutRow(keys: ["Cmd", "Shift", "Z"], desc: "Redo last drawing"),
+            shortcutRow(
+                keys: ["Cmd", "Shift", "Z"],
+                desc: "Redo last drawing"
+            ),
             shortcutRow(
                 keys: ["r"],
                 desc: "Change color to red",
@@ -235,14 +255,24 @@ class HelpWindowController: NSWindowController {
         window.contentView = scrollView
 
         self.init(window: window)
-        
+
         // Add the button to the content stack
-        let buyMeACoffeeButton = ClickImageButton(image: NSImage(named: "BuyMeACoffee")!, width: 200, height: 56, action: #selector(buyMeACoffeeClicked), target: self)
+        let buyMeACoffeeButton = ClickImageButton(
+            image: NSImage(named: "BuyMeACoffee")!,
+            width: 200,
+            height: 56,
+            action: #selector(buyMeACoffeeClicked),
+            target: self
+        )
         contentStack.insertArrangedSubview(buyMeACoffeeButton, at: 2)
-        
+
         DispatchQueue.main.async {
             if let documentView = scrollView.documentView {
-                let topPoint = NSPoint(x: 0, y: documentView.bounds.height - scrollView.contentView.bounds.height)
+                let topPoint = NSPoint(
+                    x: 0,
+                    y: documentView.bounds.height
+                        - scrollView.contentView.bounds.height
+                )
                 scrollView.contentView.scroll(to: topPoint)
                 scrollView.reflectScrolledClipView(scrollView.contentView)
             }

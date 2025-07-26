@@ -42,11 +42,15 @@ class ShortcutsSettingsView: NSView {
 
     private let spotlightLabel = NSTextField(labelWithString: "Spotlight:")
 
+    private let magnifierHotKeyField = HotkeyRecorderField()
+
+    private let magnifierLabel = NSTextField(labelWithString: "Magnifier:")
+
     private var resetButtons: [HotkeyType: NSButton] = [:]
 
     private enum HotkeyType {
         case draw, screenshot, breakTimer, typeText, screenRecording,
-            screenRecordingCropped, spotlight
+            screenRecordingCropped, spotlight, magnifier
     }
 
     override init(frame frameRect: NSRect) {
@@ -90,6 +94,7 @@ class ShortcutsSettingsView: NSView {
         [
             drawLabel, screenshotLabel, breakTimerLabel, screenRecordingLabel,
             screenRecordingCroppedLabel, spotlightLabel, typeTextLabel,
+            magnifierLabel,
         ].forEach {
             label in
             label.font = NSFont.systemFont(ofSize: 13)
@@ -102,7 +107,7 @@ class ShortcutsSettingsView: NSView {
         [
             drawHotkeyField, screenshotHotkeyField, breakTimerHotkeyField,
             typeTextHotkeyField, screenRecordingHotkeyField,
-            spotlightHotKeyField,
+            spotlightHotKeyField, magnifierHotKeyField,
         ].forEach { field in
             field.heightAnchor.constraint(equalToConstant: 28).isActive = true
             field.widthAnchor.constraint(equalToConstant: 180).isActive = true
@@ -190,6 +195,20 @@ class ShortcutsSettingsView: NSView {
                 self.updateResetButtons()
             }
         }
+        
+        magnifierHotKeyField.onHotkeyChanged = { combo in
+            if self.isHotkeyConflict(
+                combo,
+                excluding: .magnifier
+            ) {
+                self.showConflictAlert()
+                self.magnifierHotKeyField.keyCombo =
+                    Settings.shared.magnifierHotkey  // Revert
+            } else {
+                Settings.shared.magnifierHotkey = combo
+                self.updateResetButtons()
+            }
+        }
 
         let drawReset = ResetButton(
             action: #selector(resetDrawHotkey),
@@ -219,6 +238,10 @@ class ShortcutsSettingsView: NSView {
             action: #selector(resetTypeTextHotkey),
             target: self
         )
+        let magnifierReset = ResetButton(
+            action: #selector(resetMagnifierHotkey),
+            target: self
+        )
 
         resetButtons = [
             .draw: drawReset,
@@ -227,10 +250,13 @@ class ShortcutsSettingsView: NSView {
             .screenRecording: screenRecordingReset,
             .screenRecordingCropped: screenRecordingRectangleReset,
             .spotlight: spotlightReset,
+            .typeText: typeTextReset,
+            .magnifier: magnifierReset,
         ]
-        if Settings.shared.showExperimentalFeatures {
-            resetButtons[.typeText] = typeTextReset
-        }
+        //        if Settings.shared.showExperimentalFeatures {
+        //            resetButtons[.typeText] = typeTextReset
+        //            resetButtons[.magnifier] = magnifierReset
+        //        }
 
         // Create stack views for each shortcut row
         let drawStack = NSStackView(views: [
@@ -289,14 +315,22 @@ class ShortcutsSettingsView: NSView {
             spotlightStack,
         ])
         let typeTextStack = NSStackView(views: [
-            typeTextLabel, typeTextHotkeyField, typeTextReset,
+            typeTextLabel, typeTextHotkeyField, typeTextReset
         ])
         typeTextStack.orientation = .horizontal
         typeTextStack.spacing = 16
         typeTextStack.alignment = .centerY
         mainStack.addArrangedSubview(typeTextStack)
-
         typeTextStack.isHidden = !Settings.shared.showExperimentalFeatures
+
+        let magnifierStack = NSStackView(views: [
+            magnifierLabel, magnifierHotKeyField, magnifierReset
+        ])
+        magnifierStack.orientation = .horizontal
+        magnifierStack.spacing = 16
+        magnifierStack.alignment = .centerY
+        mainStack.addArrangedSubview(magnifierStack)
+        magnifierStack.isHidden = !Settings.shared.showExperimentalFeatures
 
         mainStack.orientation = .vertical
         mainStack.alignment = .leading
@@ -401,6 +435,18 @@ class ShortcutsSettingsView: NSView {
         updateResetButtons()
     }
 
+    @objc private func resetMagnifierHotkey() {
+        Settings.shared.magnifierHotkey = SettingsKeyCombo(
+            key: .m,
+            modifiers: [.option, .shift]
+        )
+        magnifierHotKeyField.keyCombo = SettingsKeyCombo(
+            key: .m,
+            modifiers: [.option, .shift]
+        )
+        updateResetButtons()
+    }
+
     private func updateResetButtons() {
         resetButtons[.draw]?.isEnabled =
             Settings.shared.drawHotkey
@@ -423,6 +469,9 @@ class ShortcutsSettingsView: NSView {
         resetButtons[.spotlight]?.isEnabled =
             Settings.shared.spotlightHotkey
             != SettingsKeyCombo(key: .f, modifiers: [.option, .shift])
+        resetButtons[.magnifier]?.isEnabled =
+            Settings.shared.magnifierHotkey
+            != SettingsKeyCombo(key: .m, modifiers: [.option, .shift])
     }
 
     private func loadSettings() {
@@ -435,6 +484,7 @@ class ShortcutsSettingsView: NSView {
         screenRecordingCroppedHotkeyField.keyCombo =
             Settings.shared.screenRecordingCroppedHotkey
         spotlightHotKeyField.keyCombo = Settings.shared.spotlightHotkey
+        magnifierHotKeyField.keyCombo = Settings.shared.magnifierHotkey
         updateResetButtons()
     }
 
@@ -452,6 +502,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
+                    Settings.shared.magnifierHotkey,
                 ]
             case .screenshot:
                 return [
@@ -461,6 +512,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
+                    Settings.shared.magnifierHotkey,
                 ]
             case .breakTimer:
                 return [
@@ -470,6 +522,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
+                    Settings.shared.magnifierHotkey,
                 ]
             case .typeText:
                 return [
@@ -479,6 +532,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
+                    Settings.shared.magnifierHotkey,
                 ]
             case .screenRecording:
                 return [
@@ -488,7 +542,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
-
+                    Settings.shared.magnifierHotkey,
                 ]
             case .screenRecordingCropped:
                 return [
@@ -498,7 +552,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.spotlightHotkey,
-
+                    Settings.shared.magnifierHotkey,
                 ]
             case .spotlight:
                 return [
@@ -508,6 +562,17 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.textTypeHotkey,
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.magnifierHotkey,
+                ]
+            case .magnifier:
+                return [
+                    Settings.shared.drawHotkey,
+                    Settings.shared.screenShotHotkey,
+                    Settings.shared.breakTimerHotkey,
+                    Settings.shared.textTypeHotkey,
+                    Settings.shared.screenRecordingHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.spotlightHotkey,
                 ]
             }
         }()

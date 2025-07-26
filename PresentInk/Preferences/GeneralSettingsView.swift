@@ -40,7 +40,7 @@ class GeneralSettingsView: NSView {
           return popup
       }()
     let experimentalLabel = NSTextField(
-        labelWithString: "Experimental features"
+        labelWithString: "Experimental features (Text Typer, Magnifier)"
     )
     let experimentalSwitch = NSSwitch()
     
@@ -121,6 +121,10 @@ class GeneralSettingsView: NSView {
     @objc func experimentalSwitchToggled(_ sender: NSSwitch) {
         Settings.shared.showExperimentalFeatures = (sender.state == .on)
         NotificationCenter.default.post(name: NSNotification.Name("experimentalFeaturesToggled"), object: nil)
+        NotificationCenter.default.post(
+            name: NSNotification.Name("HotkeyRecordingStopped"),
+            object: nil
+        ) // update the hotkeys 
         typingSpeedRow?.isHidden = !Settings.shared.showExperimentalFeatures
         textTyperLabel.isHidden = !Settings.shared.showExperimentalFeatures
     }

@@ -51,7 +51,8 @@ class Settings {
     private let typeSpeedIndexKey = "typingSpeedIndex"
     private let showExperimentalFeaturesKey = "showExperimentalFeatures"
     private let spotlightHotkeyKey = "spotlightHotkey"
-    
+    private let magnifierHotkeyKey = "magnifierHotkey"
+
     private let supportedColors: [String: NSColor] = [
         "red": .red,
         "green": .green,
@@ -191,6 +192,23 @@ class Settings {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
                 UserDefaults.standard.set(encoded, forKey: spotlightHotkeyKey)
+            }
+        }
+    }
+    
+    
+    var magnifierHotkey: SettingsKeyCombo {
+        get {
+            if let data = UserDefaults.standard.data(forKey: magnifierHotkeyKey),
+               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+                return combo
+            }
+            return SettingsKeyCombo(key: Key.m, modifiers: [.option, .shift])
+        }
+        set {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(newValue) {
+                UserDefaults.standard.set(encoded, forKey: magnifierHotkeyKey)
             }
         }
     }

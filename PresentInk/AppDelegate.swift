@@ -41,6 +41,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var screenSelectionOverlayControllers:
         [ScreenSelectionOverlayWindowController] = []
     var countdownOverlayController: CountdownOverlayWindowController?
+    var hotkeyMagnifier: HotKey?
+    var magnifierOverlayWindow: MagnifierOverlayWindow?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         if !Settings.shared.launchAtLogin {
@@ -87,6 +89,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyRecording = nil
         hotkeyCroppedRecording = nil
         hotkeySpotlight = nil
+        hotkeyMagnifier = nil
 
         hotkeyDraw = HotKey(
             key: Settings.shared.drawHotkey.key ?? .d,
@@ -105,6 +108,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             key: Settings.shared.textTypeHotkey.key ?? .t,
             modifiers: Settings.shared.textTypeHotkey.modifiers
         )
+//        if(Settings.shared.showExperimentalFeatures)
+//        {
+//            hotkeyTextType?.isPaused = false
+//        } else {
+//            hotkeyTextType?.isPaused = true
+//        }
 
         hotkeyRecording = HotKey(
             key: Settings.shared.screenRecordingHotkey.key ?? .r,
@@ -120,6 +129,21 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             key: Settings.shared.spotlightHotkey.key ?? .f,
             modifiers: Settings.shared.spotlightHotkey.modifiers
         )
+        hotkeyMagnifier = HotKey(
+            key: Settings.shared.magnifierHotkey.key ?? .m,
+            modifiers: Settings.shared.magnifierHotkey.modifiers
+        )
+        
+//        if(Settings.shared.showExperimentalFeatures)
+//        {
+//            hotkeyMagnifier?.isPaused = false
+//        } else {
+//            hotkeyMagnifier?.isPaused = true
+//        }
+
+        hotkeyMagnifier?.keyDownHandler = { [weak self] in
+            self?.toggleMagnifierMode()
+        }
 
         hotkeyDraw?.keyDownHandler = { [weak self] in
             self?.toggleDrawing()
@@ -196,8 +220,15 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSNotification.Name("ClearSpotlightOverlays"),
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(clearMagnifierOverlay),
+            name: NSNotification.Name("ClearMagnifierOverlay"),
+            object: nil
+        )
     }
 
+    
     func setRecordingTrayIcon(_ recording: Bool) {
         DispatchQueue.main.async {
             if let button = self.statusItem.button {
@@ -217,6 +248,17 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
+    
+    @objc func clearMagnifierOverlay() {
+        if let existingWindow = magnifierOverlayWindow {
+            existingWindow.close()
+        }
+        magnifierOverlayWindow = nil
+        if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
+            magnifierItem.state = .off
+        }
+    }
+    
     @objc func recordScreenMenuAction() {
         Task.detached {
             await self.recordScreenAction()
@@ -418,6 +460,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         hotkeyBreak?.isPaused = true
         hotkeyTextType?.isPaused = true
         hotkeyRecording?.isPaused = true
+        hotkeyCroppedRecording?.isPaused = true
+        hotkeySpotlight?.isPaused = true
+        hotkeyMagnifier?.isPaused = true
     }
 
     @objc func hotkeyRecordingStopped() {
@@ -481,6 +526,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         spotlightItem.keyEquivalentModifierMask = spotlightHotkey.modifiers
         statusMenu.addItem(spotlightItem)
 
+        let magnifierItem = NSMenuItem(
+            title: "Magnifier",
+            action: #selector(toggleMagnifierMode),
+            keyEquivalent: "m"
+        )
+        magnifierItem.keyEquivalentModifierMask = [.option, .shift]
+        if(Settings.shared.showExperimentalFeatures) {
+            statusMenu.addItem(magnifierItem)
+        }
+        
         let recordingMenu = NSMenu(title: "Record Screen")
 
         let screenRecordingItem = NSMenuItem(
@@ -1004,5 +1059,44 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.level = .mainMenu
         window.isReleasedWhenClosed = false
         spotlightOverlayWindow = window
+    }
+    
+    @objc func toggleMagnifierMode() {
+        if !Settings.shared.showExperimentalFeatures {
+            return
+        }
+        if let existingWindow = magnifierOverlayWindow {
+            existingWindow.close()
+            magnifierOverlayWindow = nil
+            if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
+                magnifierItem.state = .off
+            }
+            return
+        }
+
+        let mouseLocation = NSEvent.mouseLocation
+        guard let currentScreen = NSScreen.screens.first(where: {
+            NSMouseInRect(mouseLocation, $0.frame, false)
+        }) else {
+            guard let screen = NSScreen.main else { return }
+            startMagnifierOnScreen(screen)
+            return
+        }
+
+        startMagnifierOnScreen(currentScreen)
+        if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
+            magnifierItem.state = .on
+        }
+    }
+
+    private func startMagnifierOnScreen(_ screen: NSScreen) {
+        let window = MagnifierOverlayWindow(screen: screen)
+        let view = MagnifierOverlayView(frame: screen.frame)
+        window.contentView = view
+        window.makeKeyAndOrderFront(nil)
+        window.orderFrontRegardless()
+        window.level = .mainMenu
+        window.isReleasedWhenClosed = false
+        magnifierOverlayWindow = window
     }
 }
