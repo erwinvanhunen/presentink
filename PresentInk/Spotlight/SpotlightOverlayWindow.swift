@@ -35,7 +35,7 @@ class SpotlightOverlayWindow: NSWindow {
 
 class SpotlightOverlayView: NSView {
     var mouseLocation: NSPoint = .zero
-    let flashlightRadius: CGFloat = 180
+    var flashlightRadius: CGFloat = 180
     var currentRadius: CGFloat = 0
     var overlayAlpha: CGFloat = 0.7
     var trackingArea: NSTrackingArea?
@@ -133,6 +133,20 @@ class SpotlightOverlayView: NSView {
             return
         }
         super.keyDown(with: event)
+    }
+    
+    override func scrollWheel(with event: NSEvent) {
+        guard !isClosing else { return }
+            let delta = event.scrollingDeltaY
+            let minRadius: CGFloat = 50
+            let maxRadius: CGFloat = 400
+
+            // Increase or decrease radius
+            flashlightRadius = max(minRadius, min(maxRadius, flashlightRadius + delta))
+            currentRadius = flashlightRadius
+            DispatchQueue.main.async {
+                self.needsDisplay = true
+            }
     }
 
     private func setupTrackingArea() {
