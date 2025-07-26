@@ -216,7 +216,7 @@ class SelectionView: NSView {
             stack.topAnchor.constraint(equalTo: bar.topAnchor),
             stack.bottomAnchor.constraint(equalTo: bar.bottomAnchor),
         ])
-        bar.isHidden = true
+       // bar.isHidden = true
         addSubview(bar)
         return bar
     }()
@@ -227,11 +227,11 @@ class SelectionView: NSView {
     }
 
     private func positionButtonBar() {
-        guard state == .selected, !selectionRect.isEmpty else {
-            buttonBar.isHidden = true
-            return
-        }
-        buttonBar.isHidden = false
+//        guard state == .selected, !selectionRect.isEmpty else {
+//            buttonBar.isHidden = true
+//            return
+//        }
+//        buttonBar.isHidden = false
 
         let barSize = buttonBar.fittingSize
         var barOrigin = NSPoint(
@@ -538,9 +538,15 @@ class SelectionView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
-
+        
         // Draw dark overlay
-        NSColor.black.withAlphaComponent(0.3).setFill()
+        if(state != .none)
+        {
+            NSColor.black.withAlphaComponent(0.8).setFill()
+        } else {
+            NSColor.black.withAlphaComponent(0.3).setFill()
+        }
+
         dirtyRect.fill()
 
         if state != .none && !selectionRect.isEmpty {
