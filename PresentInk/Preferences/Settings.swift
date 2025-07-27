@@ -306,4 +306,13 @@ class Settings {
             }
         }
     }
+    
+    var magnifierRadius: CGFloat {
+        get {
+            return UserDefaults.standard.object(forKey: "magnifierRadius") as? CGFloat ?? 80.0
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "magnifierRadius")
+        }
+    }
 }
