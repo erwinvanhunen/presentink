@@ -43,7 +43,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var countdownOverlayController: CountdownOverlayWindowController?
     var hotkeyMagnifier: HotKey?
     var magnifierOverlayWindow: MagnifierOverlayWindow?
-
+    var magnifierOn : Bool = false
+    
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         if !Settings.shared.launchAtLogin {
             splashController = SplashWindowController()
@@ -270,8 +271,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func recordScreenAction() async {
+       
         if isRecording == false {
+           
             await MainActor.run {
+                if(magnifierOn) {
+                    toggleMagnifierMode()
+                }
                 let screens = NSScreen.screens
                 ScreenSelectionDialog.present(for: screens) {
                     [weak self] selectedIndex in
@@ -355,6 +361,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func startRectRecordingFlow() {
+        if(magnifierOn) {
+            toggleMagnifierMode()
+        }
         for screen in NSScreen.screens {
             let controller = ScreenRecordCroppedController(screen: screen)
             controller.onSelection = { [weak self] screen, rect in
@@ -777,7 +786,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Close any existing break timer windows
         breakTimerControllers.forEach { $0.close() }
         breakTimerControllers.removeAll()
-
+        if(magnifierOn) {
+            toggleMagnifierMode()
+        }
         // Show break timer on all screens
         for screen in NSScreen.screens {
             let controller = BreakTimerWindowController(screen: screen)
@@ -826,6 +837,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     screenshotControllers.forEach { $0.close() }
                     screenshotControllers.removeAll()
                 } else {
+                    if(magnifierOn) {
+                        toggleMagnifierMode()
+                    }
                     // Show screenshot windows
                     for screen in NSScreen.screens {
                         let controller = ScreenShotWindowController(
@@ -848,6 +862,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 screenshotControllers.forEach { $0.close() }
                 screenshotControllers.removeAll()
             } else {
+                if(magnifierOn) {
+                    toggleMagnifierMode()
+                }
                 // Show screenshot windows
                 for screen in NSScreen.screens {
                     let controller = ScreenShotWindowController(screen: screen)
@@ -901,6 +918,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 NSCursor.arrow.set()
             }
         } else {
+            if(magnifierOn) {
+                toggleMagnifierMode()
+            }
             let color = Settings.shared.defaultColor
             let colorIconMap: [NSColor: String] = [
                 .red: "TrayIconRed",
@@ -1071,9 +1091,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
                 magnifierItem.state = .off
             }
+            magnifierOn = false
             return
         }
 
+        magnifierOn = true
         let mouseLocation = NSEvent.mouseLocation
         guard let currentScreen = NSScreen.screens.first(where: {
             NSMouseInRect(mouseLocation, $0.frame, false)
