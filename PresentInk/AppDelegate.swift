@@ -1095,6 +1095,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         magnifierOn = true
+        
         let mouseLocation = NSEvent.mouseLocation
         guard let currentScreen = NSScreen.screens.first(where: {
             NSMouseInRect(mouseLocation, $0.frame, false)
@@ -1103,7 +1104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             startMagnifierOnScreen(screen)
             return
         }
-
+        print("Starting magnifier on screen: \(currentScreen)")
         startMagnifierOnScreen(currentScreen)
         if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
             magnifierItem.state = .on
@@ -1112,12 +1113,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func startMagnifierOnScreen(_ screen: NSScreen) {
         let window = MagnifierOverlayWindow(screen: screen)
+        window.level = .screenSaver
         let view = MagnifierOverlayView(frame: screen.frame)
         window.contentView = view
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
-        window.level = .mainMenu
         window.isReleasedWhenClosed = false
+        window.ignoresMouseEvents = false
         magnifierOverlayWindow = window
     }
 }
