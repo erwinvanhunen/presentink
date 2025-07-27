@@ -101,14 +101,19 @@ class MagnifierOverlayView: NSView {
 
     private func checkForScreenChanges() {
         Task {
-            guard
-                let content =
-                    try? await SCShareableContent.excludingDesktopWindows(
-                        false,
-                        onScreenWindowsOnly: true
-                    ),
-                let display = content.displays.first
-            else { return }
+            let mouseLocation = NSEvent.mouseLocation
+                    guard let screen = NSScreen.screens.first(where: {
+                        NSMouseInRect(mouseLocation, $0.frame, false)
+                    }) else { return }
+                    guard
+                        let content = try? await SCShareableContent.excludingDesktopWindows(
+                            false,
+                            onScreenWindowsOnly: true
+                        ),
+                        let display = content.displays.first(where: {
+                            Int($0.displayID) == screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? Int
+                        })
+                    else { return }
 
             let sampleSize: CGFloat = 200
             let centerX = mouseLocation.x - screenFrame.minX
@@ -349,13 +354,20 @@ class MagnifierOverlayView: NSView {
 
     private func captureScreen() {
         Task {
+            let mouseLocation = NSEvent.mouseLocation
+            guard let screen = NSScreen.screens.first(where: {
+                NSMouseInRect(mouseLocation, $0.frame, false)
+            }) else { return }
             guard
                 let content =
                     try? await SCShareableContent.excludingDesktopWindows(
                         false,
                         onScreenWindowsOnly: true
                     ),
-                let display = content.displays.first
+                let display = content.displays.first(where: {
+                          Int($0.displayID) == screen.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? Int
+                      })
+//                let display = content.displays.first
             else { return }
 
             // Capture at higher resolution for sharper magnification
