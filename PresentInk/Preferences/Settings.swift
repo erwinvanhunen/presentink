@@ -315,4 +315,13 @@ class Settings {
             UserDefaults.standard.set(newValue, forKey: "magnifierRadius")
         }
     }
+    
+    var magnification: CGFloat {
+        get {
+            return UserDefaults.standard.object(forKey: "magnification") as? CGFloat ?? 2.0 // Default magnification
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "magnification")
+        }
+    }
 }

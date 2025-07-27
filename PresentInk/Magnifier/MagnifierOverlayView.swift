@@ -14,9 +14,9 @@ class MagnifierOverlayWindow: NSWindow {
         self.isOpaque = false
         self.backgroundColor = .clear
         self.level = .mainMenu
-        self.ignoresMouseEvents = false  // Accept mouse events
+        self.ignoresMouseEvents = false
         self.hasShadow = false
-        self.acceptsMouseMovedEvents = true  // Track mouse movement
+        self.acceptsMouseMovedEvents = true
     }
 
     required init?(coder: NSCoder) {
@@ -41,7 +41,15 @@ class MagnifierOverlayView: NSView {
             Settings.shared.magnifierRadius = newValue
         }
     }
-    private let magnification: CGFloat = 2.0
+    private var magnification: CGFloat {
+        get {
+            let stored = Settings.shared.magnification
+            return stored > 0 ? stored : 2.0  // Default to 2.0 if not set
+        }
+        set {
+            Settings.shared.magnification = newValue
+        }
+    }
     private var currentImage: NSImage?
     private var screenFrame: NSRect = .zero
     private var captureRect: CGRect = .zero
@@ -51,8 +59,8 @@ class MagnifierOverlayView: NSView {
     private var lastFullScreenshot: NSImage?
     private var lastChangeCheckTime: TimeInterval = 0
     private var lastCaptureTime: TimeInterval = 0
-    private let changeDetectionInterval: TimeInterval = 0.1  // Check for changes every 100ms
-    private let captureThrottleInterval: TimeInterval = 0.033  // 15fps fallback
+    private let changeDetectionInterval: TimeInterval = 0.1
+    private let captureThrottleInterval: TimeInterval = 0.033
     private var changeDetectionTimer: Timer?
 
     // Radius constraints
@@ -63,7 +71,7 @@ class MagnifierOverlayView: NSView {
     // Performance optimizations
     private var lastMouseLocation: NSPoint = .zero
     private let mouseMoveThreshold: CGFloat = 3.0
-    private let captureBuffer: CGFloat = 100
+    private let captureBuffer: CGFloat = 50  // Reduced buffer for sharper capture
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -102,7 +110,6 @@ class MagnifierOverlayView: NSView {
                 let display = content.displays.first
             else { return }
 
-            // Capture a small sample area around the mouse for change detection
             let sampleSize: CGFloat = 200
             let centerX = mouseLocation.x - screenFrame.minX
             let centerY = mouseLocation.y - screenFrame.minY
@@ -166,7 +173,6 @@ class MagnifierOverlayView: NSView {
                     }
                 }
             } catch {
-                // Fallback to time-based capture if change detection fails
                 DispatchQueue.main.async {
                     self.captureScreenIfNeeded()
                 }
@@ -175,13 +181,11 @@ class MagnifierOverlayView: NSView {
     }
 
     private func hasScreenChanged(newSample: NSImage) -> Bool {
-        // For the first run, always capture
         guard let lastSample = lastFullScreenshot else {
             lastFullScreenshot = newSample
             return true
         }
 
-        // Compare image data using a simple hash approach
         let newHash = imageHash(newSample)
         let oldHash = imageHash(lastSample)
 
@@ -202,19 +206,17 @@ class MagnifierOverlayView: NSView {
             )
         else { return 0 }
 
-        // Simple hash based on a few pixel samples
         let width = cgImage.width
         let height = cgImage.height
         var hash = 0
 
-        // Sample pixels at regular intervals
         let sampleStep = max(1, min(width, height) / 20)
         for y in stride(from: 0, to: height, by: sampleStep) {
             for x in stride(from: 0, to: width, by: sampleStep) {
                 if let pixelData = cgImage.dataProvider?.data,
                     let data = CFDataGetBytePtr(pixelData)
                 {
-                    let pixelIndex = (y * width + x) * 4  // 4 bytes per pixel (RGBA)
+                    let pixelIndex = (y * width + x) * 4
                     if pixelIndex < CFDataGetLength(pixelData) - 3 {
                         let r = Int(data[pixelIndex])
                         let g = Int(data[pixelIndex + 1])
@@ -266,22 +268,50 @@ class MagnifierOverlayView: NSView {
         mouseLocation = newLocation
         lastMouseLocation = newLocation
 
-        // Update the magnifier display immediately when mouse moves
         needsDisplay = true
     }
 
     override func scrollWheel(with event: NSEvent) {
         let delta = event.scrollingDeltaY
-        let oldRadius = magnifierRadius
 
-        if delta > 0 {
-            magnifierRadius = min(magnifierRadius + radiusStep, maxRadius)
-        } else if delta < 0 {
-            magnifierRadius = max(magnifierRadius - radiusStep, minRadius)
-        }
+        if event.modifierFlags.contains(.command) {
+            // Change magnification when Command key is pressed
+            let magnificationStep: CGFloat = 0.5
+            let minMagnification: CGFloat = 1.0
+            let maxMagnification: CGFloat = 5.0
 
-        if abs(magnifierRadius - oldRadius) >= radiusStep {
-            captureScreen()
+            let oldMagnification = magnification
+
+            if delta > 0 {
+                magnification = min(
+                    magnification + magnificationStep,
+                    maxMagnification
+                )
+            } else if delta < 0 {
+                magnification = max(
+                    magnification - magnificationStep,
+                    minMagnification
+                )
+            }
+
+            // Trigger new capture if magnification changed
+            if abs(magnification - oldMagnification) >= magnificationStep {
+                captureScreen()
+            }
+        } else {
+            // Change radius when no modifier key is pressed
+            let oldRadius = magnifierRadius
+
+            if delta > 0 {
+                magnifierRadius = min(magnifierRadius + radiusStep, maxRadius)
+            } else if delta < 0 {
+                magnifierRadius = max(magnifierRadius - radiusStep, minRadius)
+            }
+
+            // Trigger new capture if radius changed significantly
+            if abs(magnifierRadius - oldRadius) >= radiusStep {
+                captureScreen()
+            }
         }
 
         needsDisplay = true
@@ -328,6 +358,7 @@ class MagnifierOverlayView: NSView {
                 let display = content.displays.first
             else { return }
 
+            // Capture at higher resolution for sharper magnification
             let actualCaptureRadius =
                 (magnifierRadius / magnification) + captureBuffer
             let captureSize = actualCaptureRadius * 2
@@ -357,8 +388,9 @@ class MagnifierOverlayView: NSView {
             )
 
             let config = SCStreamConfiguration()
-            config.width = Int(captureRect.width)
-            config.height = Int(captureRect.height)
+            // Capture at 2x resolution for sharper magnification
+            config.width = Int(captureRect.width * 2)
+            config.height = Int(captureRect.height * 2)
             config.pixelFormat = kCVPixelFormatType_32BGRA
             config.sourceRect = screenCaptureRect
 
@@ -405,16 +437,19 @@ class MagnifierOverlayView: NSView {
         let viewLocation = convert(mouseLocation, from: nil)
         let captureRadius = magnifierRadius / magnification
 
+        // Fix coordinate calculation - mouse position relative to capture area
         let mouseInCaptureX =
             mouseLocation.x - screenFrame.minX - captureRect.minX
         let mouseInCaptureY =
             mouseLocation.y - screenFrame.minY - captureRect.minY
 
+        // Correct image scale calculation
         let imageScale = image.size.width / captureRect.width
 
+        // Center the source rect on the mouse position within the captured image
         let sourceRect = NSRect(
-            x: (mouseInCaptureX - captureRadius) * imageScale,
-            y: (mouseInCaptureY - captureRadius) * imageScale,
+            x: (mouseInCaptureX * imageScale) - (captureRadius * imageScale),
+            y: (mouseInCaptureY * imageScale) - (captureRadius * imageScale),
             width: captureRadius * 2 * imageScale,
             height: captureRadius * 2 * imageScale
         )
@@ -428,7 +463,11 @@ class MagnifierOverlayView: NSView {
 
         let path = NSBezierPath(ovalIn: magnifierRect)
 
+        // Enable high-quality rendering
         NSGraphicsContext.current?.saveGraphicsState()
+        NSGraphicsContext.current?.imageInterpolation = .none
+        NSGraphicsContext.current?.shouldAntialias = true
+
         path.addClip()
 
         image.draw(
@@ -440,6 +479,7 @@ class MagnifierOverlayView: NSView {
 
         NSGraphicsContext.current?.restoreGraphicsState()
 
+        // Draw crisp border
         NSColor.white.setStroke()
         path.lineWidth = 3
         path.stroke()
