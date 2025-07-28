@@ -333,4 +333,27 @@ class Settings {
             UserDefaults.standard.set(newValue, forKey: "magnification")
         }
     }
+    
+    var liveCaptionsLanguage : String {
+        get {
+            return UserDefaults.standard.string(forKey: "LiveCaptionsLanguage") ?? "en-US"
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "LiveCaptionsLanguage")
+        }
+    }
+    
+    var liveCaptionsFontSize: Double {
+        get {
+            let savedSize = UserDefaults.standard.double(forKey: "LiveCaptionsFontSize")
+            if savedSize == 0 {
+                UserDefaults.standard.set(36.0, forKey: "LiveCaptionsFontSize")
+                return 36;
+            }
+            return UserDefaults.standard.double(forKey: "LiveCaptionsFontSize")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "LiveCaptionsFontSize")
+        }
+    }
 }

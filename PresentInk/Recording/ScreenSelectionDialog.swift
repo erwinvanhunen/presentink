@@ -2,10 +2,10 @@
 import Cocoa
 
 class ScreenSelectionDialog {
-    static func present(for screens: [NSScreen], onScreenSelected: @escaping (Int?) -> Void) {
+    static func present(for screens: [NSScreen], messageText: String = "Select a screen to record", informativeText : String = "Choose which screen you want to record.",  onScreenSelected: @escaping (Int?) -> Void) {
         let alert = NSAlert()
-        alert.messageText = "Select a screen to record"
-        alert.informativeText = "Choose which screen you want to record."
+        alert.messageText = messageText
+        alert.informativeText = informativeText
         alert.alertStyle = .informational
 
         for (index, screen) in screens.enumerated() {

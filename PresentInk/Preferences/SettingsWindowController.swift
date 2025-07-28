@@ -37,6 +37,7 @@ class SettingsContentViewController: NSViewController {
         case general = "General"
         case draw = "Drawing"
         case breakTimer = "Break Timer"
+        case liveCaptions = "Live Captions"
         case shortcuts = "Shortcuts"
         case updates = "Updates"
         case about = "About"
@@ -49,6 +50,7 @@ class SettingsContentViewController: NSViewController {
             case .shortcuts: return "keyboard"
             case .updates: return "arrow.triangle.2.circlepath"
             case .about: return "info.circle"
+            case .liveCaptions: return "captions.bubble"
             }
         }
     }
@@ -61,6 +63,7 @@ class SettingsContentViewController: NSViewController {
     let breakTimerView = BreakTimerSettingsView()
     let shortcutsView = ShortcutsSettingsView()
     let updateSettingsView = UpdateSettingsView()
+    let captionsSettingsView = LiveCaptionsSettingsView()
 
     override func loadView() {
         self.view = NSView()
@@ -204,6 +207,7 @@ class SettingsContentViewController: NSViewController {
         case .draw: view = drawView
         case .about: view = aboutView
         case .breakTimer: view = breakTimerView
+        case .liveCaptions: view = captionsSettingsView
         case .shortcuts: view = shortcutsView
         case .updates:
             view = updateSettingsView

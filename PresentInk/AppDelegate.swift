@@ -43,9 +43,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var countdownOverlayController: CountdownOverlayWindowController?
     var hotkeyMagnifier: HotKey?
     var magnifierOverlayWindow: MagnifierOverlayWindow?
-    var magnifierOn : Bool = false
+    var magnifierOn: Bool = false
     var spotlightOn: Bool = false
-    
+    var hotkeyLiveCaptions: HotKey?
+    var liveCaptionsWindow: LiveCaptionsOverlayWindow?
+    var liveCaptionsManager: LiveCaptionsManager?
+
     func applicationDidFinishLaunching(_ aNotification: Notification) {
         if !Settings.shared.launchAtLogin {
             splashController = SplashWindowController()
@@ -129,8 +132,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             key: Settings.shared.magnifierHotkey.key ?? .m,
             modifiers: Settings.shared.magnifierHotkey.modifiers
         )
-        
-        
+
+        hotkeyLiveCaptions = HotKey(key: .c, modifiers: [.option, .shift])
+
         hotkeyMagnifier?.keyDownHandler = { [weak self] in
             self?.toggleMagnifierMode()
         }
@@ -157,6 +161,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
         hotkeySpotlight?.keyDownHandler = { [weak self] in
             self?.toggleSpotlightMode()
+        }
+
+        hotkeyLiveCaptions?.keyDownHandler = { [weak self] in
+            self?.toggleLiveCaptions()
         }
 
     }
@@ -218,7 +226,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
-    
     func setRecordingTrayIcon(_ recording: Bool) {
         DispatchQueue.main.async {
             if let button = self.statusItem.button {
@@ -238,7 +245,46 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    
+    @objc func toggleLiveCaptions() {
+        if let window = liveCaptionsWindow {
+            window.close()
+            liveCaptionsWindow = nil
+            liveCaptionsManager?.stopCaptions()
+            liveCaptionsManager = nil
+            return
+        }
+
+        let screens = NSScreen.screens
+        ScreenSelectionDialog.present(
+            for: screens,
+            messageText: "Select screen",
+            informativeText:
+                "Select the screen where you want to display live captions."
+        ) {
+            [weak self] selectedIndex in
+            guard let self = self, let index = selectedIndex else {
+                return
+            }
+            let screen = screens[index]
+            let window = LiveCaptionsOverlayWindow(screen: screen)
+            let view = LiveCaptionsOverlayView(frame: screen.frame)
+            window.contentView = view
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+            window.isReleasedWhenClosed = false
+            liveCaptionsWindow = window
+
+            let manager = LiveCaptionsManager()
+            manager.onTextUpdate = { [weak view] text in
+                DispatchQueue.main.async {
+                    view?.captionText = text
+                }
+            }
+            liveCaptionsManager = manager
+            try? manager.startCaptions()
+        }
+    }
+
     @objc func clearMagnifierOverlay() {
         if let existingWindow = magnifierOverlayWindow {
             existingWindow.close()
@@ -248,7 +294,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             magnifierItem.state = .off
         }
     }
-    
+
     @objc func recordScreenMenuAction() {
         Task.detached {
             await self.recordScreenAction()
@@ -260,18 +306,18 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     private func toggleModesOff() {
-        if(magnifierOn) {
+        if magnifierOn {
             toggleMagnifierMode()
         }
-        if(spotlightOn) {
+        if spotlightOn {
             toggleSpotlightMode()
         }
     }
-    
+
     @objc func recordScreenAction() async {
-       
+
         if isRecording == false {
-           
+
             await MainActor.run {
                 toggleModesOff()
                 let screens = NSScreen.screens
@@ -313,11 +359,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                     if FileManager.default.fileExists(atPath: destURL.path) {
                         try FileManager.default.removeItem(at: destURL)
                     }
-
-                    //                    screenRecorder!.convertMovToMp4(
-                    //                        inputURL: tempURL,
-                    //                        outputURL: destURL
-                    //                    )
 
                     try FileManager.default.moveItem(at: tempURL, to: destURL)
                     let content = UNMutableNotificationContent()
@@ -496,7 +537,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let screenRecordingCroppedHotkey =
             Settings.shared.screenRecordingCroppedHotkey
         let spotlightHotkey = Settings.shared.spotlightHotkey
-        
+
         let drawItem = NSMenuItem(
             title: "Draw",
             action: #selector(drawAction),
@@ -520,7 +561,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         screenshotItem.keyEquivalentModifierMask = screenshotHotkey.modifiers
         statusMenu.addItem(screenshotItem)
-        
+
         let spotlightItem = NSMenuItem(
             title: "Spotlight",
             action: #selector(toggleSpotlightMode),
@@ -536,7 +577,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         magnifierItem.keyEquivalentModifierMask = [.option, .shift]
         statusMenu.addItem(magnifierItem)
-        
+
         let recordingMenu = NSMenu(title: "Record Screen")
 
         let screenRecordingItem = NSMenuItem(
@@ -1063,7 +1104,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.isReleasedWhenClosed = false
         spotlightOverlayWindow = window
     }
-    
+
     @objc func toggleMagnifierMode() {
         if let existingWindow = magnifierOverlayWindow {
             existingWindow.close()
@@ -1071,16 +1112,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
                 magnifierItem.state = .off
             }
+            NSCursor.unhide()
             magnifierOn = false
             return
         }
 
         magnifierOn = true
-        
+
         let mouseLocation = NSEvent.mouseLocation
-        guard let currentScreen = NSScreen.screens.first(where: {
-            NSMouseInRect(mouseLocation, $0.frame, false)
-        }) else {
+        guard
+            let currentScreen = NSScreen.screens.first(where: {
+                NSMouseInRect(mouseLocation, $0.frame, false)
+            })
+        else {
             guard let screen = NSScreen.main else { return }
             startMagnifierOnScreen(screen)
             return
