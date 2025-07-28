@@ -1,12 +1,12 @@
 import Cocoa
 
 class BreakTimerSettingsView: NSView {
-    private let titleLabel = NSTextField(labelWithString: "BREAK TIMER")
+    private let titleLabel = NSTextField(labelWithString: NSLocalizedString("Break Timer", comment: "").uppercased())
 
     private let slider = NSSlider(value: 10, minValue: 1, maxValue: 60, target: nil, action: nil)
-    private let timeLabel = NSTextField(labelWithString: "Break Length: 10 min")
+    private let timeLabel = NSTextField(labelWithString: NSLocalizedString("Break Length", comment: "") + ": 10 " + NSLocalizedString("Minutes",comment:""))
     private let messageField = NSTextField(string: "It's Break Time!")
-    private let messageLabel = NSTextField(labelWithString: "Break Message:")
+    private let messageLabel = NSTextField(labelWithString: NSLocalizedString("Break Message", comment: ""))
 
     var selectedMinutes: Int {
         Int(slider.intValue)
@@ -37,7 +37,7 @@ class BreakTimerSettingsView: NSView {
         titleLabel.isSelectable = false
         
         slider.intValue = Int32(savedMinutes)
-        timeLabel.stringValue = "Break Length: \(savedMinutes) min"
+        timeLabel.stringValue = NSLocalizedString("Break Length", comment: "") + ": \(savedMinutes) " + NSLocalizedString("Minutes",comment:"")
         messageField.stringValue = savedMessage
 
         slider.target = self
@@ -80,7 +80,7 @@ class BreakTimerSettingsView: NSView {
     }
 
     @objc private func sliderChanged() {
-        timeLabel.stringValue = "Break Length: \(selectedMinutes) min"
+        timeLabel.stringValue = NSLocalizedString("Break Length", comment: "") + ": \(selectedMinutes) " + NSLocalizedString("Minutes",comment:"")
         Settings.shared.breakMinutes = selectedMinutes
     }
 

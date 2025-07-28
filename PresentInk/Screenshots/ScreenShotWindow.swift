@@ -145,7 +145,8 @@ class SelectionView: NSView {
         }
     }
 
-    private func makeIconButton(symbolName: String, action: Selector)
+    private func
+    Button(symbolName: String, action: Selector)
         -> NSButton
     {
         let button = NSButton()
@@ -185,6 +186,7 @@ class SelectionView: NSView {
         ).cgColor
         bar.layer?.cornerRadius = 18
         bar.translatesAutoresizingMaskIntoConstraints = false
+    
         let copyButton = makeIconButton(
             symbolName: "clipboard",
             action: #selector(copyAction)
@@ -582,8 +584,8 @@ class SelectionView: NSView {
     // Update drawIntroText to use alpha
     private func drawIntroText() {
         let introText = """
-            Drag to select an area. Press Esc to cancel.
-            Press Cmd+C to copy, Cmd+S to save.
+            \(NSLocalizedString("Drag to select an area. Press Esc to cancel.",comment:""))
+            \(NSLocalizedString("Press Cmd+C to copy, Cmd+S to save.",comment:""))
             """
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 18, weight: .medium),
@@ -832,9 +834,9 @@ class SelectionView: NSView {
         pasteboard.clearContents()
         pasteboard.writeObjects([image])
         let content = UNMutableNotificationContent()
-        content.title = "Screenshot copied"
+        content.title = NSLocalizedString("Screenshot copied",comment:"")
         content.body =
-            "Screenshot copied to clipboard"
+        NSLocalizedString("Screenshot copied to clipboard",comment:"")
         content.sound = .default
 
         let request = UNNotificationRequest(
@@ -862,9 +864,9 @@ class SelectionView: NSView {
         do {
             try pngData.write(to: url)
             let content = UNMutableNotificationContent()
-            content.title = "Screenshot Saved"
+            content.title = NSLocalizedString("Screenshot Saved",comment:"")
             content.body =
-                "Screenshot saved to \(url.lastPathComponent)"
+                "\(NSLocalizedString("Screenshot saved to",comment:"")) \(url.lastPathComponent)"
             content.sound = .default
 
             let request = UNNotificationRequest(
@@ -873,7 +875,6 @@ class SelectionView: NSView {
                 trigger: nil
             )
             UNUserNotificationCenter.current().add(request)
-            print("Screenshot saved to: \(url.path)")
         } catch {
             print("Failed to save screenshot: \(error)")
         }
@@ -881,6 +882,42 @@ class SelectionView: NSView {
             name: NSNotification.Name("CloseScreenshotWindows"),
             object: nil
         )
+    }
+    
+    private func makeIconButton(
+        symbolName: String,
+        action: Selector,
+        color: NSColor = NSColor.white
+    ) -> NSButton {
+        let button = NSButton()
+        button.bezelStyle = .regularSquare
+        button.isBordered = false
+        button.wantsLayer = true
+        button.layer?.backgroundColor = NSColor.clear.cgColor
+        button.layer?.cornerRadius = 6
+        button.setButtonType(.momentaryPushIn)
+        button.target = self
+        button.action = action
+        button.refusesFirstResponder = true
+
+        let config = NSImage.SymbolConfiguration(
+            pointSize: 18,
+            weight: .regular
+        )
+        button.image = NSImage(
+            systemSymbolName: symbolName,
+            accessibilityDescription: nil
+        )?.withSymbolConfiguration(config)
+        button.imagePosition = .imageOnly
+        button.contentTintColor = color
+        button.translatesAutoresizingMaskIntoConstraints = false
+
+        NSLayoutConstraint.activate([
+            button.widthAnchor.constraint(equalToConstant: 40),
+            button.heightAnchor.constraint(equalToConstant: 40),
+        ])
+
+        return button
     }
 }
 

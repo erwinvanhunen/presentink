@@ -52,7 +52,8 @@ class Settings {
     private let showExperimentalFeaturesKey = "showExperimentalFeatures"
     private let spotlightHotkeyKey = "spotlightHotkey"
     private let magnifierHotkeyKey = "magnifierHotkey"
-
+    private let liveCaptionsHotkeyKey = "liveCaptionsHotkey"
+    
     private let supportedColors: [String: NSColor] = [
         "red": .red,
         "green": .green,
@@ -209,6 +210,22 @@ class Settings {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
                 UserDefaults.standard.set(encoded, forKey: magnifierHotkeyKey)
+            }
+        }
+    }
+    
+    var liveCaptionsHotkey: SettingsKeyCombo {
+        get {
+            if let data = UserDefaults.standard.data(forKey: liveCaptionsHotkeyKey),
+               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+                return combo
+            }
+            return SettingsKeyCombo(key: Key.c, modifiers: [.option, .shift])
+        }
+        set {
+            let encoder = JSONEncoder()
+            if let encoded = try? encoder.encode(newValue) {
+                UserDefaults.standard.set(encoded, forKey: liveCaptionsHotkeyKey)
             }
         }
     }

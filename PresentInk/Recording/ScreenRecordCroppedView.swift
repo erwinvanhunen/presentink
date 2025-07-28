@@ -94,7 +94,6 @@ class ScreenRecordCroppedView: NSView {
     }
 
     override func resetCursorRects() {
-        print("Resetting cursor rects")
         addCursorRect(buttonBar.frame, cursor: .arrow)
         // Moving hand cursor inside selection rectangle
         addCursorRect(currentRect, cursor: .openHand)
@@ -255,7 +254,7 @@ class ScreenRecordCroppedView: NSView {
 
     private func drawIntroText() {
         let introText = """
-            Drag to select an area. Press Esc to cancel.
+            \(NSLocalizedString("Drag to select an area. Press Esc to cancel.",comment:""))
             """
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: 18, weight: .medium),
@@ -593,7 +592,6 @@ class ScreenRecordCroppedView: NSView {
     }
 
     @objc private func startRecording() {
-        print("Start recording with rect: \(currentRect)")
         guard !currentRect.isEmpty else { return }
         let scale = screen.backingScaleFactor
         let screenRect = NSRect(

@@ -10,47 +10,52 @@ import Cocoa
 import HotKey
 
 class ShortcutsSettingsView: NSView {
-    private let titleLabel = NSTextField(labelWithString: "SHORTCUTS")
+    private let titleLabel = NSTextField(labelWithString: NSLocalizedString("Shortcuts", comment:"").uppercased())
     private let subtitleLabel = NSTextField(
         labelWithString:
-            "Customize keyboard shortcuts for quick access. Click to change."
+            NSLocalizedString("Customize keyboard shortcuts for quick access. Click to change", comment: "")
     )
 
-    private let drawLabel = NSTextField(labelWithString: "Draw:")
+    private let drawLabel = NSTextField(labelWithString: NSLocalizedString("Draw", comment: ""))
     private let drawHotkeyField = HotkeyRecorderField()
 
-    private let screenshotLabel = NSTextField(labelWithString: "Screenshot:")
+    private let screenshotLabel = NSTextField(labelWithString: NSLocalizedString("Screenshot", comment: ""))
     private let screenshotHotkeyField = HotkeyRecorderField()
 
-    private let breakTimerLabel = NSTextField(labelWithString: "Break Timer:")
+    private let breakTimerLabel = NSTextField(labelWithString: NSLocalizedString("Break Timer", comment: ""))
     private let breakTimerHotkeyField = HotkeyRecorderField()
 
-    private let typeTextLabel = NSTextField(labelWithString: "Type text:")
+    private let typeTextLabel = NSTextField(labelWithString: NSLocalizedString("Text Typer", comment: ""))
     private let typeTextHotkeyField = HotkeyRecorderField()
 
     private let screenRecordingLabel = NSTextField(
-        labelWithString: "Record Screen:"
+        labelWithString: NSLocalizedString("Record Screen", comment: "")
     )
     private let screenRecordingHotkeyField = HotkeyRecorderField()
 
     private let screenRecordingCroppedLabel = NSTextField(
-        labelWithString: "Record Cropped:"
+        labelWithString: NSLocalizedString(
+            "Record cropped", comment:"")
     )
     private let screenRecordingCroppedHotkeyField = HotkeyRecorderField()
 
     private let spotlightHotKeyField = HotkeyRecorderField()
 
-    private let spotlightLabel = NSTextField(labelWithString: "Spotlight:")
+    private let spotlightLabel = NSTextField(labelWithString: NSLocalizedString("Spotlight", comment: ""))
 
     private let magnifierHotKeyField = HotkeyRecorderField()
 
-    private let magnifierLabel = NSTextField(labelWithString: "Magnifier:")
+    private let magnifierLabel = NSTextField(labelWithString: NSLocalizedString("Magnifier", comment: ""))
+    
+    private let liveCaptionsHotkeyField = HotkeyRecorderField()
+
+    private let liveCaptionsLabel = NSTextField(labelWithString: NSLocalizedString("Live captions", comment: ""))
 
     private var resetButtons: [HotkeyType: NSButton] = [:]
 
     private enum HotkeyType {
         case draw, screenshot, breakTimer, typeText, screenRecording,
-            screenRecordingCropped, spotlight, magnifier
+            screenRecordingCropped, spotlight, magnifier, liveCaptions
     }
 
     override init(frame frameRect: NSRect) {
@@ -94,7 +99,7 @@ class ShortcutsSettingsView: NSView {
         [
             drawLabel, screenshotLabel, breakTimerLabel, screenRecordingLabel,
             screenRecordingCroppedLabel, spotlightLabel, typeTextLabel,
-            magnifierLabel,
+            magnifierLabel, liveCaptionsLabel
         ].forEach {
             label in
             label.font = NSFont.systemFont(ofSize: 13)
@@ -107,7 +112,7 @@ class ShortcutsSettingsView: NSView {
         [
             drawHotkeyField, screenshotHotkeyField, breakTimerHotkeyField,
             typeTextHotkeyField, screenRecordingHotkeyField,
-            spotlightHotKeyField, magnifierHotKeyField,
+            spotlightHotKeyField, magnifierHotKeyField, liveCaptionsHotkeyField
         ].forEach { field in
             field.heightAnchor.constraint(equalToConstant: 28).isActive = true
             field.widthAnchor.constraint(equalToConstant: 180).isActive = true
@@ -209,6 +214,20 @@ class ShortcutsSettingsView: NSView {
                 self.updateResetButtons()
             }
         }
+        
+        liveCaptionsHotkeyField.onHotkeyChanged = { combo in
+            if self.isHotkeyConflict(
+                combo,
+                excluding: .liveCaptions
+            ) {
+                self.showConflictAlert()
+                self.liveCaptionsHotkeyField.keyCombo =
+                    Settings.shared.liveCaptionsHotkey  // Revert
+            } else {
+                Settings.shared.liveCaptionsHotkey = combo
+                self.updateResetButtons()
+            }
+        }
 
         let drawReset = ResetButton(
             action: #selector(resetDrawHotkey),
@@ -242,6 +261,10 @@ class ShortcutsSettingsView: NSView {
             action: #selector(resetMagnifierHotkey),
             target: self
         )
+        let liveCaptionsReset = ResetButton(
+            action: #selector(resetLiveCaptionsHotkey),
+            target: self
+        )
 
         resetButtons = [
             .draw: drawReset,
@@ -252,12 +275,9 @@ class ShortcutsSettingsView: NSView {
             .spotlight: spotlightReset,
             .typeText: typeTextReset,
             .magnifier: magnifierReset,
+            .liveCaptions: liveCaptionsReset
         ]
-        //        if Settings.shared.showExperimentalFeatures {
-        //            resetButtons[.typeText] = typeTextReset
-        //            resetButtons[.magnifier] = magnifierReset
-        //        }
-
+      
         // Create stack views for each shortcut row
         let drawStack = NSStackView(views: [
             drawLabel, drawHotkeyField, drawReset,
@@ -314,6 +334,24 @@ class ShortcutsSettingsView: NSView {
             screenRecordingRectangleStack,
             spotlightStack,
         ])
+        
+        let magnifierStack = NSStackView(views: [
+            magnifierLabel, magnifierHotKeyField, magnifierReset
+        ])
+        magnifierStack.orientation = .horizontal
+        magnifierStack.spacing = 16
+        magnifierStack.alignment = .centerY
+        mainStack.addArrangedSubview(magnifierStack)
+        
+        let liveCaptionsStack = NSStackView(views: [
+            liveCaptionsLabel, liveCaptionsHotkeyField, liveCaptionsReset
+        ])
+        
+        liveCaptionsStack.orientation = .horizontal
+        liveCaptionsStack.spacing = 16
+        liveCaptionsStack.alignment = .centerY
+        mainStack.addArrangedSubview(liveCaptionsStack)
+        
         let typeTextStack = NSStackView(views: [
             typeTextLabel, typeTextHotkeyField, typeTextReset
         ])
@@ -323,14 +361,7 @@ class ShortcutsSettingsView: NSView {
         mainStack.addArrangedSubview(typeTextStack)
         typeTextStack.isHidden = !Settings.shared.showExperimentalFeatures
 
-        let magnifierStack = NSStackView(views: [
-            magnifierLabel, magnifierHotKeyField, magnifierReset
-        ])
-        magnifierStack.orientation = .horizontal
-        magnifierStack.spacing = 16
-        magnifierStack.alignment = .centerY
-        mainStack.addArrangedSubview(magnifierStack)
-        magnifierStack.isHidden = !Settings.shared.showExperimentalFeatures
+       
 
         mainStack.orientation = .vertical
         mainStack.alignment = .leading
@@ -446,6 +477,18 @@ class ShortcutsSettingsView: NSView {
         )
         updateResetButtons()
     }
+    
+    @objc private func resetLiveCaptionsHotkey() {
+        Settings.shared.liveCaptionsHotkey = SettingsKeyCombo(
+            key: .c,
+            modifiers: [.option, .shift]
+        )
+        liveCaptionsHotkeyField.keyCombo = SettingsKeyCombo(
+            key: .c,
+            modifiers: [.option, .shift]
+        )
+        updateResetButtons()
+    }
 
     private func updateResetButtons() {
         resetButtons[.draw]?.isEnabled =
@@ -472,6 +515,9 @@ class ShortcutsSettingsView: NSView {
         resetButtons[.magnifier]?.isEnabled =
             Settings.shared.magnifierHotkey
             != SettingsKeyCombo(key: .m, modifiers: [.option, .shift])
+        resetButtons[.liveCaptions]?.isEnabled =
+            Settings.shared.liveCaptionsHotkey
+            != SettingsKeyCombo(key: .c, modifiers: [.option, .shift])
     }
 
     private func loadSettings() {
@@ -485,6 +531,7 @@ class ShortcutsSettingsView: NSView {
             Settings.shared.screenRecordingCroppedHotkey
         spotlightHotKeyField.keyCombo = Settings.shared.spotlightHotkey
         magnifierHotKeyField.keyCombo = Settings.shared.magnifierHotkey
+        liveCaptionsHotkeyField.keyCombo = Settings.shared.liveCaptionsHotkey
         updateResetButtons()
     }
 
@@ -503,6 +550,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
                     Settings.shared.magnifierHotkey,
+                    Settings.shared.liveCaptionsHotkey,
                 ]
             case .screenshot:
                 return [
@@ -513,6 +561,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
                     Settings.shared.magnifierHotkey,
+                    Settings.shared.liveCaptionsHotkey,
                 ]
             case .breakTimer:
                 return [
@@ -523,6 +572,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
                     Settings.shared.magnifierHotkey,
+                    Settings.shared.liveCaptionsHotkey,
                 ]
             case .typeText:
                 return [
@@ -533,6 +583,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
                     Settings.shared.magnifierHotkey,
+                    Settings.shared.liveCaptionsHotkey,
                 ]
             case .screenRecording:
                 return [
@@ -543,6 +594,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
                     Settings.shared.magnifierHotkey,
+                    Settings.shared.liveCaptionsHotkey,
                 ]
             case .screenRecordingCropped:
                 return [
@@ -553,6 +605,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.spotlightHotkey,
                     Settings.shared.magnifierHotkey,
+                    Settings.shared.liveCaptionsHotkey,
                 ]
             case .spotlight:
                 return [
@@ -563,6 +616,7 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.magnifierHotkey,
+                    Settings.shared.liveCaptionsHotkey,
                 ]
             case .magnifier:
                 return [
@@ -573,6 +627,18 @@ class ShortcutsSettingsView: NSView {
                     Settings.shared.screenRecordingHotkey,
                     Settings.shared.screenRecordingCroppedHotkey,
                     Settings.shared.spotlightHotkey,
+                    Settings.shared.liveCaptionsHotkey,
+                ]
+            case .liveCaptions:
+                return [
+                    Settings.shared.drawHotkey,
+                    Settings.shared.screenShotHotkey,
+                    Settings.shared.breakTimerHotkey,
+                    Settings.shared.textTypeHotkey,
+                    Settings.shared.screenRecordingHotkey,
+                    Settings.shared.screenRecordingCroppedHotkey,
+                    Settings.shared.spotlightHotkey,
+                    Settings.shared.magnifierHotkey,
                 ]
             }
         }()
@@ -585,9 +651,12 @@ class ShortcutsSettingsView: NSView {
 
     private func showConflictAlert() {
         let alert = NSAlert()
-        alert.messageText = "Shortcut Conflict"
+        alert.messageText = NSLocalizedString(
+            "Shortcut Conflict",
+            comment: "Alert title when a shortcut conflict occurs"
+        )
         alert.informativeText =
-            "This keyboard shortcut is already assigned to another action. Please choose a different combination."
+        NSLocalizedString("This keyboard shortcut is already assigned to another action. Please choose a different combination", comment:"")
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
         alert.runModal()
@@ -628,7 +697,7 @@ class HotkeyRecorderField: NSView {
         textField.backgroundColor = .clear
         textField.font = NSFont.systemFont(ofSize: 13)
         textField.alignment = .center
-        textField.stringValue = "Click to record"
+        textField.stringValue = NSLocalizedString("Click to record", comment: "")
         textField.translatesAutoresizingMaskIntoConstraints = false
 
         addSubview(textField)
@@ -661,7 +730,7 @@ class HotkeyRecorderField: NSView {
             object: nil
         )
         isRecording = true
-        textField.stringValue = "Press keys..."
+        textField.stringValue = NSLocalizedString("Press keys", comment:"")
         layer?.borderColor = NSColor.controlAccentColor.cgColor
 
         eventMonitor = NSEvent.addLocalMonitorForEvents(matching: [
@@ -707,7 +776,7 @@ class HotkeyRecorderField: NSView {
 
     private func updateDisplay() {
         guard let combo = keyCombo else {
-            textField.stringValue = "Click to record"
+            textField.stringValue = NSLocalizedString("Click to record", comment: "")
             return
         }
 

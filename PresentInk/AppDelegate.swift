@@ -81,7 +81,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
         setupHotkeys()
 
-        setupStatusMenu()
+        setupMenu()
 
         setupObservers()
     }
@@ -251,15 +251,24 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             liveCaptionsWindow = nil
             liveCaptionsManager?.stopCaptions()
             liveCaptionsManager = nil
+            if let liveCaptionsItem = statusMenu.item(withTitle: NSLocalizedString("Live Captions", comment: "Live captions menu item")) {
+                liveCaptionsItem.state = .off
+            }
             return
         }
 
         let screens = NSScreen.screens
         ScreenSelectionDialog.present(
             for: screens,
-            messageText: "Select screen",
+            messageText: NSLocalizedString(
+                "Select screen",
+                comment: "Select screen for live captions"
+                ),
             informativeText:
-                "Select the screen where you want to display live captions."
+                NSLocalizedString(
+                "Select the screen where you want to display live captions",
+                comment: "Informative text for live captions screen selection"
+                )
         ) {
             [weak self] selectedIndex in
             guard let self = self, let index = selectedIndex else {
@@ -282,6 +291,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
             liveCaptionsManager = manager
             try? manager.startCaptions()
+            if let liveCaptionsItem = statusMenu.item(withTitle: NSLocalizedString("Live Captions", comment: "Live captions menu item")) {
+                liveCaptionsItem.state = .on
+            }
         }
     }
 
@@ -290,7 +302,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             existingWindow.close()
         }
         magnifierOverlayWindow = nil
-        if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
+        if let magnifierItem = statusMenu.item(withTitle: NSLocalizedString("Magnifier", comment: "")) {
             magnifierItem.state = .off
         }
     }
@@ -511,11 +523,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func hotkeyRecordingStopped() {
         setupHotkeys()
-        setupStatusMenu()
+        setupMenu()
     }
 
     @objc func experimentalFeaturesToggled() {
-        setupStatusMenu()
+        setupMenu()
     }
 
     @objc func clearSpotlightOverlays() {
@@ -525,7 +537,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         spotlightOverlayWindow = nil
     }
 
-    fileprivate func setupStatusMenu() {
+    fileprivate func setupMenu() {
         statusMenu = NSMenu()
 
         // Get hotkey settings
@@ -539,7 +551,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let spotlightHotkey = Settings.shared.spotlightHotkey
 
         let drawItem = NSMenuItem(
-            title: "Draw",
+            title: NSLocalizedString("Draw", comment: "Draw menu item"),
             action: #selector(drawAction),
             keyEquivalent: drawHotkey.key?.description.lowercased() ?? "d"
         )
@@ -547,7 +559,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.addItem(drawItem)
 
         let breakItem = NSMenuItem(
-            title: "Break Time",
+            title: NSLocalizedString("Break Time", comment: "Break Time menu item"),
             action: #selector(breakTimeAction),
             keyEquivalent: breakTimerHotkey.key?.description.lowercased() ?? "b"
         )
@@ -555,7 +567,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.addItem(breakItem)
 
         let screenshotItem = NSMenuItem(
-            title: "Screenshot",
+            title: NSLocalizedString("Screenshot", comment: "Screenshot menu item"),
             action: #selector(screenshotAction),
             keyEquivalent: screenshotHotkey.key?.description.lowercased() ?? "s"
         )
@@ -563,7 +575,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.addItem(screenshotItem)
 
         let spotlightItem = NSMenuItem(
-            title: "Spotlight",
+            title: NSLocalizedString(
+                "Spotlight",
+                comment: "Spotlight menu item"),
             action: #selector(toggleSpotlightMode),
             keyEquivalent: spotlightHotkey.key?.description.lowercased() ?? "f"
         )
@@ -571,17 +585,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.addItem(spotlightItem)
 
         let magnifierItem = NSMenuItem(
-            title: "Magnifier",
+            title: NSLocalizedString(
+                "Magnifier",
+                comment: "Magnifier menu item"),
             action: #selector(toggleMagnifierMode),
-            keyEquivalent: "m"
+            keyEquivalent: Settings.shared.magnifierHotkey.key?.description.lowercased() ?? "m"
+                
         )
-        magnifierItem.keyEquivalentModifierMask = [.option, .shift]
+        magnifierItem.keyEquivalentModifierMask = Settings.shared.magnifierHotkey.modifiers
         statusMenu.addItem(magnifierItem)
+        
+        let liveCaptionsItem = NSMenuItem(
+            title: NSLocalizedString(
+                "Live Captions",
+                comment: "Live Captions menu item"),
+            action: #selector(toggleLiveCaptions),
+            keyEquivalent: Settings.shared.liveCaptionsHotkey.key?.description.lowercased() ?? "c"
+        )
+        liveCaptionsItem.keyEquivalentModifierMask = Settings.shared.liveCaptionsHotkey.modifiers
+        statusMenu.addItem(liveCaptionsItem)
 
         let recordingMenu = NSMenu(title: "Record Screen")
 
         let screenRecordingItem = NSMenuItem(
-            title: "Record screen",
+            title: NSLocalizedString(
+                "Record Full Screen",
+                comment: "Screen Recording menu item"
+            ),
             action: #selector(recordScreenMenuAction),
             keyEquivalent: screenRecordingHotkey.key?.description.lowercased()
                 ?? "r"
@@ -592,7 +622,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         recordingMenu.addItem(screenRecordingItem)
 
         let screenRecordingCroppedMenuItem = NSMenuItem(
-            title: "Record cropped",
+            title: NSLocalizedString(
+                "Record cropped",
+                comment: "Record cropped screen menu item"
+                ),
             action: #selector(recordScreenCroppedMenuAction),
             keyEquivalent: screenRecordingCroppedHotkey.key?.description
                 .lowercased()
@@ -604,7 +637,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         recordingMenu.addItem(screenRecordingCroppedMenuItem)
 
         let recordingMenuItem = NSMenuItem(
-            title: "Screen Recording",
+            title: NSLocalizedString(
+                "Record Screen",
+                comment: "Record Full Screen menu item"
+                ),
             action: nil,
             keyEquivalent: ""
         )
@@ -614,14 +650,20 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let typeTextMenu = NSMenu(title: "Type Text")
         typeTextMenu.addItem(
             NSMenuItem(
-                title: "Select Text File...",
+                title: NSLocalizedString(
+                    "Select Text File",
+                    comment: "Select Text File menu item"
+                    ),
                 action: #selector(selectTextAction),
                 keyEquivalent: ""
             )
         )
         let noFileItem = NSMenuItem(
             title: selectedTextfile != nil
-                ? "File selected: " + selectedTextfile! : "No file selected",
+            ? NSLocalizedString("File selected", comment: "File selected menu item") + selectedTextfile! : NSLocalizedString(
+                "No file selected",
+                comment: "No file selected menu item"
+                ),
             action: nil,
             keyEquivalent: ""
         )
@@ -639,7 +681,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         typeTextMenu.addItem(typeTextMenuItem)
 
         let typeTextItem = NSMenuItem(
-            title: "Text Typer",
+            title: NSLocalizedString(
+                "Text Typer",
+                comment: "Text Typer menu item"),
             action: nil,
             keyEquivalent: ""
         )
@@ -651,7 +695,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.addItem(NSMenuItem.separator())
         statusMenu.addItem(
             NSMenuItem(
-                title: "Settings...",
+                title: NSLocalizedString(
+                    "Settings",
+                    comment: "Settings menu item"
+                    ),
                 action: #selector(settingsAction),
                 keyEquivalent: ""
             )
@@ -667,7 +714,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         statusMenu.addItem(NSMenuItem.separator())
         statusMenu.addItem(
             NSMenuItem(
-                title: "Quit",
+                title: NSLocalizedString(
+                    "Quit",
+                    comment: "Quit menu item"
+                    ),
                 action: #selector(NSApplication.terminate(_:)),
                 keyEquivalent: "q"
             )
@@ -733,7 +783,10 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         panel.allowedContentTypes = [.plainText]
         panel.allowsMultipleSelection = false
         panel.canChooseDirectories = false
-        panel.title = "Select a text file"
+        panel.title = NSLocalizedString(
+            "Select a text file",
+            comment: "Title for selecting text file"
+        )
 
         if panel.runModal() == .OK, let url = panel.url {
             selectedTextfile = url.lastPathComponent
@@ -750,7 +803,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             } catch {
                 print("Failed to read file: \(error)")
             }
-            setupStatusMenu()
+            setupMenu()
         }
 
     }
@@ -1001,7 +1054,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 }
             }
         }
-        if let drawItem = statusMenu.item(withTitle: "Draw") {
+        if let drawItem = statusMenu.item(withTitle: NSLocalizedString("Draw", comment: "Draw menu item")) {
             drawItem.state = overlayIsActive ? .on : .off
         }
     }
@@ -1069,7 +1122,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let existingWindow = spotlightOverlayWindow {
             (existingWindow.contentView as? SpotlightOverlayView)?
                 .closeWithAnimation()
-            if let spotlightItem = statusMenu.item(withTitle: "Spotlight") {
+            if let spotlightItem = statusMenu.item(withTitle: NSLocalizedString("Spotlight", comment: "")) {
                 spotlightItem.state = .off
             }
             spotlightOn = false
@@ -1089,7 +1142,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         startSpotlightOnScreen(currentScreen)
-        if let spotlightItem = statusMenu.item(withTitle: "Spotlight") {
+        if let spotlightItem = statusMenu.item(withTitle: NSLocalizedString("Spotlight", comment: "")) {
             spotlightItem.state = .on
         }
     }
@@ -1109,7 +1162,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let existingWindow = magnifierOverlayWindow {
             existingWindow.close()
             magnifierOverlayWindow = nil
-            if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
+            if let magnifierItem = statusMenu.item(withTitle: NSLocalizedString("Magnifier", comment: "")) {
                 magnifierItem.state = .off
             }
             NSCursor.unhide()
@@ -1129,9 +1182,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             startMagnifierOnScreen(screen)
             return
         }
-        print("Starting magnifier on screen: \(currentScreen)")
         startMagnifierOnScreen(currentScreen)
-        if let magnifierItem = statusMenu.item(withTitle: "Magnifier") {
+        if let magnifierItem = statusMenu.item(withTitle: NSLocalizedString("Magnifier", comment: "")) {
             magnifierItem.state = .on
         }
     }

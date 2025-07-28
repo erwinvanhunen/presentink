@@ -53,7 +53,16 @@ class SettingsContentViewController: NSViewController {
             case .liveCaptions: return "captions.bubble"
             }
         }
+        
+        func localizedString() -> String {
+                return NSLocalizedString(self.rawValue, comment: "")
+            }
+            
+            static func getTitleFor(title: Category) -> String {
+                return title.localizedString()
+            }
     }
+    
     let categories: [Category] = Category.allCases
     var sidebarButtons: [NSButton] = []
     let contentContainer = NSView()
@@ -108,7 +117,7 @@ class SettingsContentViewController: NSViewController {
                     systemSymbolName: category.iconName,
                     accessibilityDescription: nil
                 ),
-                title: category.rawValue
+                title: category.localizedString()
             )
             customView.translatesAutoresizingMaskIntoConstraints = false
             button.addSubview(customView)

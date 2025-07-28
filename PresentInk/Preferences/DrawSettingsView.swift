@@ -9,7 +9,7 @@ import Cocoa
 class DrawSettingsView: NSView {
     // Section label
     let sectionLabel: NSTextField = {
-        let label = NSTextField(labelWithString: "DRAWING")
+        let label = NSTextField(labelWithString: NSLocalizedString("Drawing", comment: "").uppercased())
         label.font = NSFont.boldSystemFont(ofSize: 12)
         label.textColor = NSColor.secondaryLabelColor
         label.isBezeled = false
@@ -31,7 +31,7 @@ class DrawSettingsView: NSView {
     var colorButtons: [NSButton] = []
 
     // Pen width
-    let penWidthLabel = NSTextField(labelWithString: "Pen width")
+    let penWidthLabel = NSTextField(labelWithString: NSLocalizedString("Pen width", comment: ""))
     let penWidthSlider = NSSlider(
         value: 7,
         minValue: 1,
@@ -62,7 +62,7 @@ class DrawSettingsView: NSView {
             penPreview.penColor = colors[selectedColorIndex]
         }
         // Color row
-        let colorLabel = NSTextField(labelWithString: "Default color")
+        let colorLabel = NSTextField(labelWithString: NSLocalizedString("Default color", comment: ""))
         colorLabel.font = NSFont.systemFont(ofSize: 12)
         colorLabel.textColor = .labelColor
 

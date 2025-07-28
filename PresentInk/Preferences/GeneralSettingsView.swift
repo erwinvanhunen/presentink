@@ -11,7 +11,7 @@ class GeneralSettingsView: NSView {
     var typingSpeedRow: NSStackView?
     
     let sectionLabel: NSTextField = {
-        let label = NSTextField(labelWithString: "GENERAL")
+        let label = NSTextField(labelWithString: NSLocalizedString("General", comment: "").uppercased())
         label.font = NSFont.boldSystemFont(ofSize: 12)
         label.textColor = NSColor.secondaryLabelColor
         label.isBezeled = false
@@ -22,7 +22,7 @@ class GeneralSettingsView: NSView {
     }()
     
     let textTyperLabel: NSTextField = {
-        let label = NSTextField(labelWithString: "TEXT TYPER")
+        let label = NSTextField(labelWithString: NSLocalizedString("Text Typer", comment: "").uppercased())
         label.font = NSFont.boldSystemFont(ofSize: 12)
         label.textColor = NSColor.secondaryLabelColor
         label.isBezeled = false
@@ -32,15 +32,16 @@ class GeneralSettingsView: NSView {
         return label
     }()
     let launchSwitch = NSSwitch()
-    let launchLabel = NSTextField(labelWithString: "Launch at login")
-    let typingSpeedLabel = NSTextField(labelWithString: "Typing speed")
+    let launchLabel = NSTextField(labelWithString: NSLocalizedString("Launch at login", comment: ""))
+    let typingSpeedLabel = NSTextField(labelWithString: NSLocalizedString("Typing speed", comment: ""))
       let typingSpeedSelector: NSPopUpButton = {
           let popup = NSPopUpButton()
-          popup.addItems(withTitles: ["Slow", "Normal", "Fast"])
+          popup.addItems(withTitles: [NSLocalizedString("Slow", comment:""), NSLocalizedString("Normal", comment:""), NSLocalizedString("Fast", comment:"")])
           return popup
       }()
     let experimentalLabel = NSTextField(
-        labelWithString: "Experimental features (Text Typer)"
+        labelWithString: NSLocalizedString(
+            "Experimental features (Text Typer)", comment: "")
     )
     let experimentalSwitch = NSSwitch()
     
