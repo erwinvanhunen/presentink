@@ -1,10 +1,3 @@
-//
-//  FlashlightOverlayWindow.swift
-//  PresentInk
-//
-//  Created by Erwin van Hunen on 2025-07-25.
-//
-
 import Cocoa
 
 class SpotlightOverlayWindow: NSWindow {
@@ -35,9 +28,13 @@ class SpotlightOverlayWindow: NSWindow {
 
 class SpotlightOverlayView: NSView {
     var mouseLocation: NSPoint = .zero
-    var flashlightRadius: CGFloat = 180
+    var spotlightRadius: CGFloat
+    {
+        get { Settings.shared.spotlightRadius }
+        set { Settings.shared.spotlightRadius = newValue}
+    }
     var currentRadius: CGFloat = 0
-    var overlayAlpha: CGFloat = 0.7
+    var overlayAlpha: CGFloat = 0.7 
     var trackingArea: NSTrackingArea?
     var animationTimer: Timer?
     var isClosing: Bool = false
@@ -98,14 +95,14 @@ class SpotlightOverlayView: NSView {
             let progress = CGFloat(currentFrame) / CGFloat(totalFrames)
 
             let easedProgress = 1.0 - pow(1.0 - progress, 3.0)
-            self.currentRadius = 5 + (self.flashlightRadius - 5) * easedProgress
+            self.currentRadius = 5 + (self.spotlightRadius - 5) * easedProgress
 
             DispatchQueue.main.async {
                 self.needsDisplay = true
             }
 
             if currentFrame >= totalFrames {
-                self.currentRadius = self.flashlightRadius
+                self.currentRadius = self.spotlightRadius
                 timer.invalidate()
                 self.animationTimer = nil
             }
@@ -133,7 +130,7 @@ class SpotlightOverlayView: NSView {
 
             // Fade out the dark overlay
             self.overlayAlpha = 0.7 * (1.0 - progress)
-            self.currentRadius = self.flashlightRadius * (1.0 - progress)
+            self.currentRadius = self.spotlightRadius * (1.0 - progress)
             self.needsDisplay = true
 
             if currentFrame >= totalFrames {
@@ -169,11 +166,11 @@ class SpotlightOverlayView: NSView {
         let maxRadius: CGFloat = 400
 
         // Increase or decrease radius
-        flashlightRadius = max(
+        spotlightRadius = max(
             minRadius,
-            min(maxRadius, flashlightRadius + delta)
+            min(maxRadius, spotlightRadius + delta)
         )
-        currentRadius = flashlightRadius
+        currentRadius = spotlightRadius
         DispatchQueue.main.async {
             self.needsDisplay = true
         }

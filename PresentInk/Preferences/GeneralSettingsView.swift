@@ -40,7 +40,7 @@ class GeneralSettingsView: NSView {
           return popup
       }()
     let experimentalLabel = NSTextField(
-        labelWithString: "Experimental features (Text Typer, Magnifier)"
+        labelWithString: "Experimental features (Text Typer)"
     )
     let experimentalSwitch = NSSwitch()
     
@@ -120,7 +120,7 @@ class GeneralSettingsView: NSView {
     
     @objc func experimentalSwitchToggled(_ sender: NSSwitch) {
         Settings.shared.showExperimentalFeatures = (sender.state == .on)
-        NotificationCenter.default.post(name: NSNotification.Name("experimentalFeaturesToggled"), object: nil)
+        NotificationCenter.default.post(name: NSNotification.Name("ExperimentalFeaturesToggled"), object: nil)
         NotificationCenter.default.post(
             name: NSNotification.Name("HotkeyRecordingStopped"),
             object: nil

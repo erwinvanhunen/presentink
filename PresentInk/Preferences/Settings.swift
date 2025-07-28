@@ -316,6 +316,15 @@ class Settings {
         }
     }
     
+    var spotlightRadius: CGFloat {
+        get {
+            return UserDefaults.standard.object(forKey: "spotlightRadius") as? CGFloat ?? 80.0
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "spotlightRadius")
+        }
+    }
+    
     var magnification: CGFloat {
         get {
             return UserDefaults.standard.object(forKey: "magnification") as? CGFloat ?? 2.0 // Default magnification

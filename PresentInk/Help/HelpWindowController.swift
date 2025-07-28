@@ -142,6 +142,12 @@ class HelpWindowController: NSWindowController {
                 ),
                 desc: "Start a spotlight"
             ),
+            shortcutRow(
+                keys: HelpWindowController.getKeyModifiers(
+                    keyCombo: Settings.shared.magnifierHotkey
+                ),
+                desc: "Start and stop the magnifier"
+            )
         ]
         if Settings.shared.showExperimentalFeatures {
             shortcuts.append(
@@ -152,15 +158,6 @@ class HelpWindowController: NSWindowController {
                     desc: "Start the text typer (experimental feature)"
                 )
             )
-            shortcuts.append(
-                shortcutRow(
-                    keys: HelpWindowController.getKeyModifiers(
-                        keyCombo: Settings.shared.magnifierHotkey
-                    ),
-                    desc: "Start and stop the magnifier (experimental feature)"
-                )
-            )
-
         }
         
         let drawShortCuts: [NSStackView] = [

@@ -59,7 +59,7 @@ class ShortcutsSettingsView: NSView {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(experimentalFeaturesToggled),
-            name: NSNotification.Name("experimentalFeaturesToggled"),
+            name: NSNotification.Name("ExperimentalFeaturesToggled"),
             object: nil
         )
         setupUI()

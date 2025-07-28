@@ -110,12 +110,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             key: Settings.shared.textTypeHotkey.key ?? .t,
             modifiers: Settings.shared.textTypeHotkey.modifiers
         )
-//        if(Settings.shared.showExperimentalFeatures)
-//        {
-//            hotkeyTextType?.isPaused = false
-//        } else {
-//            hotkeyTextType?.isPaused = true
-//        }
 
         hotkeyRecording = HotKey(
             key: Settings.shared.screenRecordingHotkey.key ?? .r,
@@ -136,13 +130,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             modifiers: Settings.shared.magnifierHotkey.modifiers
         )
         
-//        if(Settings.shared.showExperimentalFeatures)
-//        {
-//            hotkeyMagnifier?.isPaused = false
-//        } else {
-//            hotkeyMagnifier?.isPaused = true
-//        }
-
+        
         hotkeyMagnifier?.keyDownHandler = { [weak self] in
             self?.toggleMagnifierMode()
         }
@@ -213,7 +201,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(experimentalFeaturesToggled),
-            name: NSNotification.Name("experimentalFeaturesToggled"),
+            name: NSNotification.Name("ExperimentalFeaturesToggled"),
             object: nil
         )
         NotificationCenter.default.addObserver(
@@ -547,9 +535,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             keyEquivalent: "m"
         )
         magnifierItem.keyEquivalentModifierMask = [.option, .shift]
-        if(Settings.shared.showExperimentalFeatures) {
-            statusMenu.addItem(magnifierItem)
-        }
+        statusMenu.addItem(magnifierItem)
         
         let recordingMenu = NSMenu(title: "Record Screen")
 
@@ -1039,7 +1025,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func toggleSpotlightMode() {
-        // Toggle: if flashlight is active, close it
         if let existingWindow = spotlightOverlayWindow {
             (existingWindow.contentView as? SpotlightOverlayView)?
                 .closeWithAnimation()
@@ -1050,7 +1035,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
         spotlightOn = true
-        // Start flashlight mode
         let mouseLocation = NSEvent.mouseLocation
         guard
             let currentScreen = NSScreen.screens.first(where: {
@@ -1081,9 +1065,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
     
     @objc func toggleMagnifierMode() {
-        if !Settings.shared.showExperimentalFeatures {
-            return
-        }
         if let existingWindow = magnifierOverlayWindow {
             existingWindow.close()
             magnifierOverlayWindow = nil
