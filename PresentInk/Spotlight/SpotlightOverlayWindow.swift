@@ -41,6 +41,7 @@ class SpotlightOverlayView: NSView {
     var trackingArea: NSTrackingArea?
     var animationTimer: Timer?
     var isClosing: Bool = false
+    private var lastScreen: NSScreen?
 
     override var acceptsFirstResponder: Bool {
         return true
@@ -50,14 +51,31 @@ class SpotlightOverlayView: NSView {
         super.viewDidMoveToWindow()
         setupTrackingArea()
         updateMouseLocation()
-
+        lastScreen = window?.screen
+        
         DispatchQueue.main.async { [weak self] in
             self?.window?.makeKeyAndOrderFront(nil)
             self?.window?.makeFirstResponder(self)
         }
+        NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+                   self?.handleMouseMoved()
+                   return event
+               }
+
 
         startGrowAnimation()
     }
+    
+    private func handleMouseMoved() {
+            let mouseLocation = NSEvent.mouseLocation
+            if let newScreen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }) {
+                if newScreen != lastScreen {
+                    lastScreen = newScreen
+                    window?.setFrame(newScreen.frame, display: true)
+                    updateMouseLocation()
+                }
+            }
+        }
 
     private func startGrowAnimation() {
         currentRadius = 5

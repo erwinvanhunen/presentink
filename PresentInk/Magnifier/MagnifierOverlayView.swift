@@ -34,6 +34,7 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
     private var stream: SCStream?
     private var display: SCDisplay?
     private var filter: SCContentFilter?
+    private var lastScreen: NSScreen?
     private var zoomFactor: CGFloat {
         get { Settings.shared.magnification }
         set { Settings.shared.magnification = newValue }
@@ -46,6 +47,7 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
            setupScreenCapture()
            startScreenshotTimer()
            NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) { [weak self] event in
+               self?.handleMouseMoved()
                self?.needsDisplay = true
                return event
            }
@@ -69,6 +71,21 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
                return event
            }
        }
+    
+    private func handleMouseMoved() {
+           let mouseLocation = NSEvent.mouseLocation
+           if let newScreen = NSScreen.screens.first(where: { NSMouseInRect(mouseLocation, $0.frame, false) }) {
+               if newScreen != lastScreen {
+                   lastScreen = newScreen
+                   updateOverlayWindowFrame(for: newScreen)
+                   setupScreenCapture()
+               }
+           }
+       }
+    
+    private func updateOverlayWindowFrame(for screen: NSScreen) {
+            window?.setFrame(screen.frame, display: true)
+        }
     
     override func resetCursorRects() {
         super.resetCursorRects()
@@ -97,6 +114,8 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
         }
     }
     private func setupScreenCapture() {
+        guard let screen = lastScreen ?? window?.screen else { return }
+              lastScreen = screen
         Task {
             let content = try? await SCShareableContent.excludingDesktopWindows(false, onScreenWindowsOnly: true)
             // Find PresentInk windows to exclude
