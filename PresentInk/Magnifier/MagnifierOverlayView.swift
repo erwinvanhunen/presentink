@@ -44,6 +44,7 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
 
+//        NSCursor.hide()
         setupScreenCapture()
         startScreenshotTimer()
         NSEvent.addLocalMonitorForEvents(matching: .mouseMoved) {
@@ -142,6 +143,9 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
             self.needsDisplay = true
 
             if currentFrame >= totalFrames {
+//                window?.ignoresMouseEvents = false
+                NSCursor.unhide()
+                
                 timer.invalidate()
                 NotificationCenter.default.post(
                     name: NSNotification.Name("ClearMagnifierOverlays"),
@@ -209,6 +213,7 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
             stream = nil
         }
     }
+    
     private func setupScreenCapture() {
         if isClosing { return }
         guard let screen = lastScreen ?? window?.screen else { return }

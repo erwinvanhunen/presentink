@@ -1,725 +1,731 @@
 {
-  "sourceLanguage": "en",
-  "strings": {
-    "Activate blackboard mode (draw on a black background)": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tafelmodus aktivieren (auf schwarzem Hintergrund zeichnen)"
+  "sourceLanguage" : "en",
+  "strings" : {
+    "Activate blackboard mode (draw on a black background)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tafelmodus aktivieren (auf schwarzem Hintergrund zeichnen)"
           }
         },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activeer krijtbordmodus (tekenen op een zwarte achtergrond)"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer krijtbordmodus (tekenen op een zwarte achtergrond)"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aktivera svarta tavlan-läge (rita på svart bakgrund)"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivera svarta tavlan-läge (rita på svart bakgrund)"
           }
         }
       }
     },
-    "Activate whiteboard mode (draw on a white background)": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Whiteboard-Modus aktivieren (auf weißem Hintergrund zeichnen)"
+    "Activate whiteboard mode (draw on a white background)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Whiteboard-Modus aktivieren (auf weißem Hintergrund zeichnen)"
           }
         },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Activeer whiteboardmodus (tekenen op een witte achtergrond)"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Activeer whiteboardmodus (tekenen op een witte achtergrond)"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Aktivera whiteboard-läge (rita på vit bakgrund)"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Aktivera whiteboard-läge (rita på vit bakgrund)"
           }
         }
       }
     },
-    "Add text": {
-      "extractionState": "manual",
-      "localizations": {
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Text hinzufügen"
+    "Add text" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Text hinzufügen"
           }
         },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tekst toevoegen"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekst toevoegen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lägg till text"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lägg till text"
           }
         }
       }
     },
-    "Center the cursor on the current screen": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Centreer de cursor op het huidige scherm"
+    "Center the cursor on the current screen" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Den Cursor auf dem aktuellen Bildschirm zentrieren"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Centrera markören på den aktuella skärmen"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centreer de cursor op het huidige scherm"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Den Cursor auf dem aktuellen Bildschirm zentrieren"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Centrera markören på den aktuella skärmen"
           }
         }
       }
     },
-    "Change color to blue": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verander kleur naar blauw"
+    "Change color to blue" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe zu Blau ändern"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byt färg till blå"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander kleur naar blauw"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Farbe zu Blau ändern"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt färg till blå"
           }
         }
       }
     },
-    "Change color to green": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verander kleur naar groen"
+    "Change color to green" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe zu Grün ändern"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byt färg till grön"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander kleur naar groen"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Farbe zu Grün ändern"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt färg till grön"
           }
         }
       }
     },
-    "Change color to orange": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verander kleur naar oranje"
+    "Change color to orange" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe zu Orange ändern"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byt färg till orange"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander kleur naar oranje"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Farbe zu Orange ändern"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt färg till orange"
           }
         }
       }
     },
-    "Change color to pink": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verander kleur naar roze"
+    "Change color to pink" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe zu Pink ändern"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byt färg till rosa"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander kleur naar roze"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Farbe zu Pink ändern"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt färg till rosa"
           }
         }
       }
     },
-    "Change color to red": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verander kleur naar rood"
+    "Change color to red" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe zu Rot ändern"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byt färg till röd"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander kleur naar rood"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Farbe zu Rot ändern"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt färg till röd"
           }
         }
       }
     },
-    "Change color to yellow": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verander kleur naar geel"
+    "Change color to yellow" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Farbe zu Gelb ändern"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Byt färg till gul"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verander kleur naar geel"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Farbe zu Gelb ändern"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Byt färg till gul"
           }
         }
       }
     },
-    "Clear all drawings but stay in draw mode": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wis alle tekeningen maar blijf in tekenmodus"
+    "Clear all drawings but stay in draw mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Alle Zeichnungen löschen, aber im Zeichenmodus bleiben"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rensa alla ritningar men stanna i ritläge"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wis alle tekeningen maar blijf in tekenmodus"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alle Zeichnungen löschen, aber im Zeichenmodus bleiben"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rensa alla ritningar men stanna i ritläge"
           }
         }
       }
     },
-    "Draw a centered ellipse": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teken een gecentreerde ellips"
+    "Draw a centered ellipse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine zentrierte Ellipse zeichnen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rita en centrerad ellips"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teken een gecentreerde ellips"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine zentrierte Ellipse zeichnen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rita en centrerad ellips"
           }
         }
       }
     },
-    "Draw an ellipse": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teken een ellips"
+    "Draw an ellipse" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Eine Ellipse zeichnen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rita en ellips"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teken een ellips"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Eine Ellipse zeichnen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rita en ellips"
           }
         }
       }
     },
-    "Draw arrows": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teken pijlen"
+    "Draw arrows" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pfeile zeichnen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rita pilar"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teken pijlen"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pfeile zeichnen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rita pilar"
           }
         }
       }
     },
-    "Draw boxes (rectangles)": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teken rechthoeken"
+    "Draw boxes (rectangles)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechtecke zeichnen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rita rutor (rektanglar)"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teken rechthoeken"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechtecke zeichnen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rita rutor (rektanglar)"
           }
         }
       }
     },
-    "Draw mode keys": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tekenmodus toetsen"
+    "Draw mode keys" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichenmodus-Tasten"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ritlägesknappar"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekenmodus toetsen"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zeichenmodus-Tasten"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ritlägesknappar"
           }
         }
       }
     },
-    "Draw perfectly straight lines": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teken perfect rechte lijnen"
+    "Draw perfectly straight lines" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Perfekt gerade Linien zeichnen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rita helt raka linjer"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teken perfect rechte lijnen"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Perfekt gerade Linien zeichnen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rita helt raka linjer"
           }
         }
       }
     },
-    "Draw with a marker/highlighter": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Teken met een markeerstift/highlighter"
+    "Draw with a marker/highlighter" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mit einem Marker/Highlighter zeichnen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rita med en överstrykningspenna"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Teken met een markeerstift/highlighter"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Mit einem Marker/Highlighter zeichnen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rita med en överstrykningspenna"
           }
         }
       }
     },
-    "Exit draw, screenshot or break timer mode": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Verlaat teken-, screenshot- of pauzemodus"
+    "Exit draw, screenshot or break timer mode" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichen-, Screenshot- oder Pausenmodus beenden"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avsluta rit-, skärmdump- eller pausläget"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Verlaat teken-, screenshot- of pauzemodus"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zeichen-, Screenshot- oder Pausenmodus beenden"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avsluta rit-, skärmdump- eller pausläget"
           }
         }
       }
     },
-    "PresentInk is a macOS menu bar tool for drawing over your screen during presentations or screen sharing": {
-      "extractionState": "manual",
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": " PresentInk is a macOS menu bar tool for drawing over your screen during presentations or screen sharing."
+    "PresentInk is a macOS menu bar tool for drawing over your screen during presentations or screen sharing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PresentInk ist ein macOS-Menüleistentool zum Zeichnen auf Ihrem Bildschirm während Präsentationen oder Bildschirmfreigabe."
           }
         },
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PresentInk is een macOS menubalktool om over je scherm te tekenen tijdens presentaties of het delen van je scherm."
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : " PresentInk is a macOS menu bar tool for drawing over your screen during presentations or screen sharing."
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PresentInk är ett macOS-menyradsverktyg för att rita över din skärm under presentationer eller skärmdelning."
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PresentInk is een macOS menubalktool om over je scherm te tekenen tijdens presentaties of het delen van je scherm."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "PresentInk ist ein macOS-Menüleistentool zum Zeichnen auf Ihrem Bildschirm während Präsentationen oder Bildschirmfreigabe."
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "PresentInk är ett macOS-menyradsverktyg för att rita över din skärm under presentationer eller skärmdelning."
           }
         }
       }
     },
-    "Redo last drawing": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Opnieuw uitvoeren van laatste tekening"
+    "Redo last drawing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Zeichnung wiederholen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Gör om senaste ritningen"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Opnieuw uitvoeren van laatste tekening"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Letzte Zeichnung wiederholen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gör om senaste ritningen"
           }
         }
       }
     },
-    "Start a break timer": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start een pauzetimer"
+    "Start a break timer" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Pausentimer starten"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starta en paus-timer"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start een pauzetimer"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Pausentimer starten"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta en paus-timer"
           }
         }
       }
     },
-    "Start a screen recording": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start een schermopname"
+    "Start a screen recording" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmaufnahme starten"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starta en skärminspelning"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start een schermopname"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bildschirmaufnahme starten"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta en skärminspelning"
           }
         }
       }
     },
-    "Start a screen recording of a selected area": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start een schermopname van een geselecteerd gebied"
+    "Start a screen recording of a selected area" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bildschirmaufnahme eines ausgewählten Bereichs starten"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starta en skärminspelning av ett valt område"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start een schermopname van een geselecteerd gebied"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Bildschirmaufnahme eines ausgewählten Bereichs starten"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta en skärminspelning av ett valt område"
           }
         }
       }
     },
-    "Start a spotlight": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start een spotlight"
+    "Start a spotlight" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spotlight starten"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starta en spotlight"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start een spotlight"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Spotlight starten"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta en spotlight"
           }
         }
       }
     },
-    "Start and stop the magnifier": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start en stop de vergrootglasfunctie"
+    "Start and stop the magnifier" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Lupe starten und stoppen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starta och stoppa förstoringsglaset"
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start and stop the magnifier. Use the scrollwheel to change the area to zoom and use Cmd+scrollwheel to change the zoom factor"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Lupe starten und stoppen"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Start en stop de vergrootglasfunctie"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "Starta och stoppa förstoringsglaset"
           }
         }
       }
     },
-    "Start the text typer (experimental feature)": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Start de teksttyper (experimentele functie)"
+    "Start the text typer (experimental feature)" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Textschreiber starten (experimentelle Funktion)"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Starta textskrivaren (experimentell funktion)"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start de teksttyper (experimentele functie)"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Textschreiber starten (experimentelle Funktion)"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starta textskrivaren (experimentell funktion)"
           }
         }
       }
     },
-    "Take a rectangular screenshot and copy it to the clipboard.": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Maak een rechthoekige screenshot en kopieer deze naar het klembord."
+    "Take a rectangular screenshot and copy it to the clipboard." : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rechteckigen Screenshot machen und in die Zwischenablage kopieren."
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ta en rektangulär skärmdump och kopiera den till urklippet."
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Maak een rechthoekige screenshot en kopieer deze naar het klembord."
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Rechteckigen Screenshot machen und in die Zwischenablage kopieren."
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ta en rektangulär skärmdump och kopiera den till urklippet."
           }
         }
       }
     },
-    "Toggle draw mode on or off": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tekenmodus aan of uit zetten"
+    "Toggle draw mode on or off" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Zeichenmodus ein- oder ausschalten"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Slå på eller av ritläget"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tekenmodus aan of uit zetten"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Zeichenmodus ein- oder ausschalten"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Slå på eller av ritläget"
           }
         }
       }
     },
-    "Undo last drawing": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ongedaan maken van laatste tekening"
+    "Undo last drawing" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Letzte Zeichnung rückgängig machen"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Ångra senaste ritningen"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ongedaan maken van laatste tekening"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Letzte Zeichnung rückgängig machen"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ångra senaste ritningen"
           }
         }
       }
     },
-    "What is PresentInk?": {
-      "extractionState": "manual",
-      "localizations": {
-        "nl": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Wat is PresentInk?"
+    "What is PresentInk?" : {
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Was ist PresentInk?"
           }
         },
-        "sv": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Vad är PresentInk?"
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wat is PresentInk?"
           }
         },
-        "de": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Was ist PresentInk?"
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vad är PresentInk?"
           }
         }
       }
     }
   },
-  "version": "1.0"
+  "version" : "1.0"
 }
