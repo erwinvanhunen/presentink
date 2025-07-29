@@ -33,13 +33,13 @@ class HelpWindowController: NSWindowController {
         contentStack.translatesAutoresizingMaskIntoConstraints = false
         contentStack.alignment = .left
 
-        let title = NSTextField(labelWithString: "What is PresentInk?")
+        let title = NSTextField(labelWithString: NSLocalizedString("What is PresentInk?", tableName: "Help", comment:""))
         title.font = NSFont.boldSystemFont(ofSize: 18)
         title.textColor = NSColor.labelColor
 
         let desc = NSTextField(
             labelWithString:
-                "PresentInk is a macOS menu bar tool for drawing over your screen during presentations or screen sharing.\nUse it to highlight, annotate, and focus attention live."
+                NSLocalizedString("PresentInk is a macOS menu bar tool for drawing over your screen during presentations or screen sharing", tableName: "Help", comment:"")
         )
         desc.font = NSFont.systemFont(ofSize: 14)
         desc.textColor = NSColor.secondaryLabelColor
@@ -109,44 +109,44 @@ class HelpWindowController: NSWindowController {
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.drawHotkey
                 ),
-                desc: "Toggle draw mode on or off"
+                desc: NSLocalizedString("Toggle draw mode on or off", tableName: "Help",comment:"")
             ),
             shortcutRow(
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.screenShotHotkey
                 ),
                 desc:
-                    "Take a rectangular screenshot and copy it to the clipboard."
+                    NSLocalizedString("Take a rectangular screenshot and copy it to the clipboard.", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.breakTimerHotkey
                 ),
-                desc: "Start a break timer"
+                desc: NSLocalizedString("Start a break timer", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.screenRecordingHotkey
                 ),
-                desc: "Start a screen recording"
+                desc: NSLocalizedString("Start a screen recording", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.screenRecordingCroppedHotkey
                 ),
-                desc: "Start a screen recording of a selected area"
+                desc: NSLocalizedString("Start a screen recording of a selected area", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.spotlightHotkey
                 ),
-                desc: "Start a spotlight"
+                desc: NSLocalizedString("Start a spotlight", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: HelpWindowController.getKeyModifiers(
                     keyCombo: Settings.shared.magnifierHotkey
                 ),
-                desc: "Start and stop the magnifier"
+                desc: NSLocalizedString("Start and stop the magnifier", tableName: "Help", comment:"")
             )
         ]
         if Settings.shared.showExperimentalFeatures {
@@ -155,7 +155,7 @@ class HelpWindowController: NSWindowController {
                     keys: HelpWindowController.getKeyModifiers(
                         keyCombo: Settings.shared.textTypeHotkey
                     ),
-                    desc: "Start the text typer (experimental feature)"
+                    desc: NSLocalizedString("Start the text typer (experimental feature)", tableName: "Help", comment:"")
                 )
             )
         }
@@ -163,71 +163,71 @@ class HelpWindowController: NSWindowController {
         let drawShortCuts: [NSStackView] = [
             shortcutRow(
                 keys: ["Esc"],
-                desc: "Exit draw, screenshot or break timer mode"
+                desc: NSLocalizedString("Exit draw, screenshot or break timer mode", tableName: "Help", comment:"")
             ),
-            shortcutRow(keys: ["Shift"], desc: "Draw perfectly straight lines"),
-            shortcutRow(keys: ["Cmd", "Shift"], desc: "Draw arrows"),
-            shortcutRow(keys: ["Cmd"], desc: "Draw boxes (rectangles)"),
-            shortcutRow(keys: ["Option"], desc: "Draw an ellipse"),
+            shortcutRow(keys: ["Shift"], desc: NSLocalizedString("Draw perfectly straight lines", tableName: "Help", comment:"")),
+            shortcutRow(keys: ["Cmd", "Shift"], desc: NSLocalizedString("Draw arrows", tableName: "Help", comment:"")),
+            shortcutRow(keys: ["Cmd"], desc: NSLocalizedString("Draw boxes (rectangles)", tableName: "Help", comment:"")),
+            shortcutRow(keys: ["Option"], desc: NSLocalizedString("Draw an ellipse", tableName: "Help", comment:"")),
             shortcutRow(
                 keys: ["Option", "Shift"],
-                desc: "Draw a centered ellipse"
+                desc: NSLocalizedString("Draw a centered ellipse", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: ["Control"],
-                desc: "Draw with a marker/highlighter"
+                desc: NSLocalizedString("Draw with a marker/highlighter", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: ["E"],
-                desc: "Clear all drawings but stay in draw mode"
+                desc: NSLocalizedString("Clear all drawings but stay in draw mode", tableName: "Help", comment:"")
             ),
-            shortcutRow(keys: ["T"], desc: "Add text"),
-            shortcutRow(keys: ["Cmd", "Z"], desc: "Undo last drawing"),
+            shortcutRow(keys: ["T"], desc: NSLocalizedString("Add text", tableName: "Help", comment:"")),
+            shortcutRow(keys: ["Cmd", "Z"], desc: NSLocalizedString("Undo last drawing", tableName: "Help", comment:"")),
             shortcutRow(
                 keys: ["Cmd", "Shift", "Z"],
-                desc: "Redo last drawing"
+                desc: NSLocalizedString("Redo last drawing", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: ["r"],
-                desc: "Change color to red",
+                desc: NSLocalizedString("Change color to red", tableName: "Help", comment:""),
                 color: .red
             ),
             shortcutRow(
                 keys: ["g"],
-                desc: "Change color to green",
+                desc: NSLocalizedString("Change color to green", tableName: "Help", comment:""),
                 color: .green
             ),
             shortcutRow(
                 keys: ["b"],
-                desc: "Change color to blue",
+                desc: NSLocalizedString("Change color to blue", tableName: "Help", comment:""),
                 color: .blue
             ),
             shortcutRow(
                 keys: ["y"],
-                desc: "Change color to yellow",
+                desc: NSLocalizedString("Change color to yellow", tableName: "Help", comment:""),
                 color: .yellow
             ),
             shortcutRow(
                 keys: ["o"],
-                desc: "Change color to orange",
+                desc: NSLocalizedString("Change color to orange", tableName: "Help", comment:""),
                 color: .orange
             ),
             shortcutRow(
                 keys: ["p"],
-                desc: "Change color to pink",
+                desc: NSLocalizedString("Change color to pink", tableName: "Help", comment:""),
                 color: .magenta
             ),
             shortcutRow(
                 keys: ["w"],
-                desc: "Activate whiteboard mode (draw on a white background)"
+                desc: NSLocalizedString("Activate whiteboard mode (draw on a white background)", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: ["k"],
-                desc: "Activate blackboard mode (draw on a black background)"
+                desc: NSLocalizedString("Activate blackboard mode (draw on a black background)", tableName: "Help", comment:"")
             ),
             shortcutRow(
                 keys: ["Space"],
-                desc: "Center the cursor on the current screen"
+                desc: NSLocalizedString("Center the cursor on the current screen", tableName: "Help", comment:"")
             ),
         ]
         contentStack.addArrangedSubview(title)
@@ -236,7 +236,7 @@ class HelpWindowController: NSWindowController {
         for s in shortcuts { contentStack.addArrangedSubview(s) }
         //        contentStack.addArrangedSubview(textDesc)
 
-        let drawTitle = NSTextField(labelWithString: "Draw mode keys")
+        let drawTitle = NSTextField(labelWithString: NSLocalizedString("Draw mode keys", tableName: "Help", comment:""))
         drawTitle.font = NSFont.boldSystemFont(ofSize: 16)
         drawTitle.textColor = NSColor.labelColor
 

@@ -120,6 +120,7 @@
 				Base,
 				nl,
 				sv,
+				de,
 			);
 			mainGroup = 8B58624C2E1EFDC1009FCB9E;
 			minimizedProjectReferenceProxies = 1;

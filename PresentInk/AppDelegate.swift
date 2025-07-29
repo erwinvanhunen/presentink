@@ -221,7 +221,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(clearMagnifierOverlay),
-            name: NSNotification.Name("ClearMagnifierOverlay"),
+            name: NSNotification.Name("ClearMagnifierOverlays"),
             object: nil
         )
     }
@@ -1128,6 +1128,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             spotlightOn = false
             return
         }
+        toggleModesOff()
         spotlightOn = true
         let mouseLocation = NSEvent.mouseLocation
         guard
@@ -1160,8 +1161,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc func toggleMagnifierMode() {
         if let existingWindow = magnifierOverlayWindow {
-            existingWindow.close()
-            magnifierOverlayWindow = nil
+            (existingWindow.contentView as? MagnifierOverlayView)?
+                .closeWithAnimation()
             if let magnifierItem = statusMenu.item(withTitle: NSLocalizedString("Magnifier", comment: "")) {
                 magnifierItem.state = .off
             }
@@ -1170,6 +1171,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             return
         }
 
+        toggleModesOff()
         magnifierOn = true
 
         let mouseLocation = NSEvent.mouseLocation

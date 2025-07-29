@@ -60,39 +60,64 @@ class LiveCaptionsOverlayView: NSView {
 
     override func draw(_ dirtyRect: NSRect) {
         super.draw(dirtyRect)
+        
+        guard !_captionText.isEmpty else { return }
+        
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.lineBreakMode = .byWordWrapping
         paragraphStyle.alignment = .center
+        paragraphStyle.lineSpacing = 4
 
         let attributes: [NSAttributedString.Key: Any] = [
             .font: NSFont.systemFont(ofSize: Settings.shared.liveCaptionsFontSize, weight: .bold),
             .foregroundColor: NSColor.white,
-            .backgroundColor: NSColor.black.withAlphaComponent(0.7),
             .paragraphStyle: paragraphStyle,
         ]
 
-        let lineHeight: CGFloat = 44
-        let maxTextHeight: CGFloat = lineHeight * 2
-        let maxTextWidth: CGFloat = bounds.width - 40
-
-        let attributedString = NSAttributedString(
-            string: _captionText,
-            attributes: attributes
-        )
-        let textRectSize = attributedString.boundingRect(
-            with: NSSize(width: maxTextWidth, height: maxTextHeight),
+        let horizontalMargin: CGFloat = 20
+        let verticalMargin: CGFloat = 16
+        let bottomMargin: CGFloat = 40
+        
+        // Maximum width is 70% of screen width
+        let maxTextWidth = (bounds.width * 0.7) - (horizontalMargin * 2)
+        
+        let attributedString = NSAttributedString(string: _captionText, attributes: attributes)
+        
+        // Calculate the actual text size with word wrapping and unlimited height
+        let textRect = attributedString.boundingRect(
+            with: NSSize(width: maxTextWidth, height: CGFloat.greatestFiniteMagnitude),
             options: [.usesLineFragmentOrigin, .usesFontLeading]
-        ).size
-
-        let x = (bounds.width - textRectSize.width) / 2
-        let y = 40  // 40pt margin from the bottom
-
-        let textRect = NSRect(
-            x: x,
-            y: CGFloat(y),
-            width: textRectSize.width,
-            height: textRectSize.height
         )
-        attributedString.draw(in: textRect)
+        
+        // Calculate background rectangle dimensions
+        let backgroundWidth = min(textRect.width + (horizontalMargin * 2), bounds.width * 0.7)
+        let backgroundHeight = textRect.height + (verticalMargin * 2)
+        
+        // Center the background rectangle horizontally
+        let backgroundX = (bounds.width - backgroundWidth) / 2
+        let backgroundY = bottomMargin
+        
+        let backgroundRect = NSRect(
+            x: backgroundX,
+            y: backgroundY,
+            width: backgroundWidth,
+            height: backgroundHeight
+        )
+        
+        // Draw background with rounded corners
+        let backgroundPath = NSBezierPath(roundedRect: backgroundRect, xRadius: 12, yRadius: 12)
+        NSColor.black.withAlphaComponent(0.8).setFill()
+        backgroundPath.fill()
+        
+        // Calculate text drawing area within the background
+        let textDrawRect = NSRect(
+            x: backgroundRect.minX + horizontalMargin,
+            y: backgroundRect.minY + verticalMargin,
+            width: backgroundRect.width - (horizontalMargin * 2),
+            height: backgroundRect.height - (verticalMargin * 2)
+        )
+        
+        // Draw the text
+        attributedString.draw(in: textDrawRect)
     }
 }

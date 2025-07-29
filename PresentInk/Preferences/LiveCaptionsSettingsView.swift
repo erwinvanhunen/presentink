@@ -101,7 +101,13 @@ class LiveCaptionsSettingsView: NSView {
         fontSizeStack.spacing = 12
         fontSizeStack.alignment = .centerY
         
-        let mainStack = NSStackView(views: [sectionLabel, languageStack, fontSizeStack, exampleCaptionLabel])
+        let fieldStack = NSStackView(views: [languageStack, fontSizeStack])
+        fieldStack.orientation = .vertical
+        fieldStack.spacing = 16
+        fieldStack.alignment = .leading
+        fieldStack.translatesAutoresizingMaskIntoConstraints = false
+        
+        let mainStack = NSStackView(views: [sectionLabel, fieldStack, exampleCaptionLabel])
                 mainStack.orientation = .vertical
                 mainStack.spacing = 16
                 mainStack.alignment = .leading
@@ -109,17 +115,28 @@ class LiveCaptionsSettingsView: NSView {
 
                 addSubview(mainStack)
         
+      
+        
         NSLayoutConstraint.activate([
-            mainStack.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 32),
-            mainStack.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -32),
             mainStack.topAnchor.constraint(equalTo: topAnchor, constant: 32),
-            mainStack.bottomAnchor.constraint(lessThanOrEqualTo: bottomAnchor, constant: -32),
+            mainStack.leadingAnchor.constraint(
+                equalTo: leadingAnchor,
+                constant: 32
+            ),
+            mainStack.trailingAnchor.constraint(
+                lessThanOrEqualTo: trailingAnchor,
+                constant: -32
+            ),
+            mainStack.bottomAnchor.constraint(
+                lessThanOrEqualTo: bottomAnchor,
+                constant: -32
+            ),
             
-            languageLabel.widthAnchor.constraint(equalToConstant: 80),
-            fontSizeLabel.widthAnchor.constraint(equalToConstant: 80),
-            fontSizeSlider.widthAnchor.constraint(equalToConstant: 200),
-            fontSizeValueLabel.widthAnchor.constraint(equalToConstant: 40),
-            exampleCaptionLabel.widthAnchor.constraint(equalToConstant: 320)
+//            languageLabel.widthAnchor.constraint(equalToConstant: 80),
+//            fontSizeLabel.widthAnchor.constraint(equalToConstant: 80),
+//            fontSizeSlider.widthAnchor.constraint(equalToConstant: 200),
+//            fontSizeValueLabel.widthAnchor.constraint(equalToConstant: 40),
+//            exampleCaptionLabel.widthAnchor.constraint(equalToConstant: 320)
         ])
     }
     

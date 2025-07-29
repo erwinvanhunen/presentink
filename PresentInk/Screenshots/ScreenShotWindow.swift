@@ -864,7 +864,7 @@ class SelectionView: NSView {
         do {
             try pngData.write(to: url)
             let content = UNMutableNotificationContent()
-            content.title = NSLocalizedString("Screenshot Saved",comment:"")
+            content.title = NSLocalizedString("Screenshot saved",comment:"")
             content.body =
                 "\(NSLocalizedString("Screenshot saved to",comment:"")) \(url.lastPathComponent)"
             content.sound = .default
