@@ -133,7 +133,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             modifiers: Settings.shared.magnifierHotkey.modifiers
         )
 
-        hotkeyLiveCaptions = HotKey(key: .c, modifiers: [.option, .shift])
+        hotkeyLiveCaptions = HotKey(key: Settings.shared.liveCaptionsHotkey.key ?? .c, modifiers: Settings.shared.liveCaptionsHotkey.modifiers)
 
         hotkeyMagnifier?.keyDownHandler = { [weak self] in
             self?.toggleMagnifierMode()
@@ -246,6 +246,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func toggleLiveCaptions() {
+        
+        func showLiveCaptions(on screen: NSScreen)
+        {
+            let window = LiveCaptionsOverlayWindow(screen: screen)
+            let view = LiveCaptionsOverlayView(frame: screen.frame)
+            window.contentView = view
+            window.makeKeyAndOrderFront(nil)
+            window.orderFrontRegardless()
+            window.isReleasedWhenClosed = false
+            liveCaptionsWindow = window
+            
+            let manager = LiveCaptionsManager()
+            manager.onTextUpdate = { [weak view] text in
+                DispatchQueue.main.async {
+                    view?.captionText = text
+                }
+            }
+            liveCaptionsManager = manager
+            try? manager.startCaptions()
+            if let liveCaptionsItem = statusMenu.item(withTitle: NSLocalizedString("Live Captions", comment: "Live captions menu item")) {
+                liveCaptionsItem.state = .on
+            }
+        }
+        
         if let window = liveCaptionsWindow {
             window.close()
             liveCaptionsWindow = nil
@@ -258,42 +282,26 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let screens = NSScreen.screens
-        ScreenSelectionDialog.present(
-            for: screens,
-            messageText: NSLocalizedString(
-                "Select screen",
-                comment: "Select screen for live captions"
+        if screens.count > 1 {
+            ScreenSelectionDialog.present(
+                for: screens,
+                messageText: NSLocalizedString(
+                    "Select screen",
+                    comment: "Select screen for live captions"
                 ),
-            informativeText:
-                NSLocalizedString(
-                "Select the screen where you want to display live captions",
-                comment: "Informative text for live captions screen selection"
-                )
-        ) {
-            [weak self] selectedIndex in
-            guard let self = self, let index = selectedIndex else {
-                return
+                informativeText:
+                    NSLocalizedString(
+                        "Select the screen where you want to display live captions",
+                        comment: "Informative text for live captions screen selection"
+                    )
+            ) {
+                selectedIndex in
+                guard let index = selectedIndex else { return }
+                let screen = screens[index]
+                showLiveCaptions(on: screen)
             }
-            let screen = screens[index]
-            let window = LiveCaptionsOverlayWindow(screen: screen)
-            let view = LiveCaptionsOverlayView(frame: screen.frame)
-            window.contentView = view
-            window.makeKeyAndOrderFront(nil)
-            window.orderFrontRegardless()
-            window.isReleasedWhenClosed = false
-            liveCaptionsWindow = window
-
-            let manager = LiveCaptionsManager()
-            manager.onTextUpdate = { [weak view] text in
-                DispatchQueue.main.async {
-                    view?.captionText = text
-                }
-            }
-            liveCaptionsManager = manager
-            try? manager.startCaptions()
-            if let liveCaptionsItem = statusMenu.item(withTitle: NSLocalizedString("Live Captions", comment: "Live captions menu item")) {
-                liveCaptionsItem.state = .on
-            }
+        } else if let screen = screens.first {
+            showLiveCaptions(on: screen)
         }
     }
 
@@ -329,16 +337,23 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     @objc func recordScreenAction() async {
 
         if isRecording == false {
-
+            
             await MainActor.run {
                 toggleModesOff()
                 let screens = NSScreen.screens
-                ScreenSelectionDialog.present(for: screens) {
-                    [weak self] selectedIndex in
-                    guard let self = self, let index = selectedIndex else {
-                        return
+                if screens.count > 1
+                {
+                    ScreenSelectionDialog.present(for: screens) {
+                        [weak self] selectedIndex in
+                        guard let self = self, let index = selectedIndex else {
+                            return
+                        }
+                        self.startCountdownAndRecord(screenIndex: index)
                     }
-                    self.startCountdownAndRecord(screenIndex: index)
+                } else {
+                    self.startCountdownAndRecord(
+                        screenIndex: 0
+                    )
                 }
             }
         } else {

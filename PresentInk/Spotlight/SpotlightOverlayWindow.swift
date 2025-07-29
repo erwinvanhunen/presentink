@@ -11,7 +11,7 @@ class SpotlightOverlayWindow: NSWindow {
         self.isOpaque = false
         self.backgroundColor = .clear
         self.level = .floating
-        self.ignoresMouseEvents = true
+        self.ignoresMouseEvents = false
         self.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         self.hasShadow = false
         self.acceptsMouseMovedEvents = true

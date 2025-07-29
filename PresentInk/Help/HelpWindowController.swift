@@ -396,8 +396,7 @@ class HelpWindowController: NSWindowController {
         contentStack.addArrangedSubview(title)
         contentStack.addArrangedSubview(desc)
         contentStack.addArrangedSubview(keyboardTitle)
-        //        for s in shortcuts { contentStack.addArrangedSubview(s) }
-        //        contentStack.addArrangedSubview(textDesc)
+      
         contentStack.addArrangedSubview(shortcutGrid)
         let drawTitle = NSTextField(
             labelWithString: NSLocalizedString(
