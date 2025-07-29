@@ -290,6 +290,15 @@ class Settings {
         }
     }
     
+    var textTyperFile: Data? {
+        get {
+            return UserDefaults.standard.data(forKey: "textTyperFile")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "textTyperFile")
+        }
+    }
+    
     var showExperimentalFeatures: Bool {
         get {
             UserDefaults.standard.bool(forKey: showExperimentalFeaturesKey)

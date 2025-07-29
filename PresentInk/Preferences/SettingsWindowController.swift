@@ -17,13 +17,13 @@ class SettingsWindowController: NSWindowController {
         )
         window.title = "PresentInk"
         window.appearance = NSAppearance(named: .darkAqua)
-        
+
         window.makeKey()
         window.center()
         super.init(window: window)
         self.contentViewController = SettingsContentViewController()
     }
-    
+
     override func windowDidLoad() {
         super.windowDidLoad()
         window?.minSize = NSSize(width: 720, height: 480)
@@ -38,6 +38,7 @@ class SettingsContentViewController: NSViewController {
         case draw = "Drawing"
         case breakTimer = "Break Timer"
         case liveCaptions = "Live Captions"
+        case textTyper = "Text Typer"
         case shortcuts = "Shortcuts"
         case updates = "Updates"
         case about = "About"
@@ -51,18 +52,19 @@ class SettingsContentViewController: NSViewController {
             case .updates: return "arrow.triangle.2.circlepath"
             case .about: return "info.circle"
             case .liveCaptions: return "captions.bubble"
+            case .textTyper: return "keyboard.onehanded.right"
             }
         }
-        
+
         func localizedString() -> String {
-                return NSLocalizedString(self.rawValue, comment: "")
-            }
-            
-            static func getTitleFor(title: Category) -> String {
-                return title.localizedString()
-            }
+            return NSLocalizedString(self.rawValue, comment: "")
+        }
+
+        static func getTitleFor(title: Category) -> String {
+            return title.localizedString()
+        }
     }
-    
+
     let categories: [Category] = Category.allCases
     var sidebarButtons: [NSButton] = []
     let contentContainer = NSView()
@@ -73,6 +75,7 @@ class SettingsContentViewController: NSViewController {
     let shortcutsView = ShortcutsSettingsView()
     let updateSettingsView = UpdateSettingsView()
     let captionsSettingsView = LiveCaptionsSettingsView()
+    let textTyperView = TextTyperSettingsView()
 
     override func loadView() {
         self.view = NSView()
@@ -220,6 +223,7 @@ class SettingsContentViewController: NSViewController {
         case .shortcuts: view = shortcutsView
         case .updates:
             view = updateSettingsView
+        case .textTyper: view = textTyperView
         }
         view.translatesAutoresizingMaskIntoConstraints = false
         contentContainer.addSubview(view)

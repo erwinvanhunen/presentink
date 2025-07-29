@@ -7,9 +7,7 @@
 import Cocoa
 
 class GeneralSettingsView: NSView {
-    
-    var typingSpeedRow: NSStackView?
-    
+        
     let sectionLabel: NSTextField = {
         let label = NSTextField(labelWithString: NSLocalizedString("General", comment: "").uppercased())
         label.font = NSFont.boldSystemFont(ofSize: 12)
@@ -33,12 +31,7 @@ class GeneralSettingsView: NSView {
     }()
     let launchSwitch = NSSwitch()
     let launchLabel = NSTextField(labelWithString: NSLocalizedString("Launch at login", comment: ""))
-    let typingSpeedLabel = NSTextField(labelWithString: NSLocalizedString("Typing speed", comment: ""))
-      let typingSpeedSelector: NSPopUpButton = {
-          let popup = NSPopUpButton()
-          popup.addItems(withTitles: [NSLocalizedString("Slow", comment:""), NSLocalizedString("Normal", comment:""), NSLocalizedString("Fast", comment:"")])
-          return popup
-      }()
+    
     let experimentalLabel = NSTextField(
         labelWithString: NSLocalizedString(
             "Experimental features (Text Typer)", comment: "")
@@ -53,7 +46,6 @@ class GeneralSettingsView: NSView {
 
         launchLabel.font = NSFont.systemFont(ofSize: 12)
         experimentalLabel.font = NSFont.systemFont(ofSize: 12)
-        typingSpeedLabel.font = NSFont.systemFont(ofSize: 12)
 
         // Set initial state from settings
         launchSwitch.state = Settings.shared.launchAtLogin ? .on : .off
@@ -61,9 +53,6 @@ class GeneralSettingsView: NSView {
         launchSwitch.action = #selector(launchSwitchToggled(_:))
 
         
-        typingSpeedSelector.selectItem(at: Settings.shared.typingSpeedIndex)
-                typingSpeedSelector.target = self
-                typingSpeedSelector.action = #selector(typingSpeedChanged(_:))
         
         let launchRow = NSStackView(views: [launchLabel, launchSwitch])
         launchRow.orientation = .horizontal
@@ -82,16 +71,10 @@ class GeneralSettingsView: NSView {
         experimentalRow.alignment = .centerY
         experimentalRow.spacing = 16
 
-        typingSpeedRow = NSStackView(views: [typingSpeedLabel, typingSpeedSelector])
-               typingSpeedRow?.orientation = .horizontal
-               typingSpeedRow?.alignment = .centerY
-               typingSpeedRow?.spacing = 16
         
-        textTyperLabel.isHidden = Settings.shared.showExperimentalFeatures == false
-        typingSpeedRow?.isHidden = Settings.shared.showExperimentalFeatures == false
         
         let stack = NSStackView(views: [
-            sectionLabel, launchRow, experimentalRow, textTyperLabel, typingSpeedRow!
+            sectionLabel, launchRow, experimentalRow
         ])
         stack.orientation = .vertical
         stack.alignment = .leading
@@ -126,8 +109,6 @@ class GeneralSettingsView: NSView {
             name: NSNotification.Name("HotkeyRecordingStopped"),
             object: nil
         ) // update the hotkeys 
-        typingSpeedRow?.isHidden = !Settings.shared.showExperimentalFeatures
-        textTyperLabel.isHidden = !Settings.shared.showExperimentalFeatures
     }
 
     @objc func typingSpeedChanged(_ sender: NSPopUpButton) {

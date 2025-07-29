@@ -14,5 +14,7 @@
 	<true/>
 	<key>com.apple.security.network.client</key>
 	<true/>
+	<key>com.apple.security.files.documents.read-write</key>
+	<true/>
 </dict>
 </plist>
