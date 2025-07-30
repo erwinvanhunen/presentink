@@ -369,6 +369,15 @@ class Settings {
         }
     }
     
+    var languageCode : String {
+        get {
+            return UserDefaults.standard.string(forKey: "LanguageCode") ?? "en"
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "LanguageCode")
+        }
+    }
+    
     var liveCaptionsFontSize: Double {
         get {
             let savedSize = UserDefaults.standard.double(forKey: "LiveCaptionsFontSize")

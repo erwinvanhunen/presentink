@@ -50,7 +50,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var liveCaptionsManager: LiveCaptionsManager?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
-        if !Settings.shared.launchAtLogin {
+       
+       if !Settings.shared.launchAtLogin {
             splashController = SplashWindowController()
             splashController?.showWindow(nil)
             splashController?.fadeIn(duration: 0.5)

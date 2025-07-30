@@ -7,9 +7,11 @@
 
 import AppKit
 
+let defaults = UserDefaults.standard
+defaults.set([UserDefaults.standard.string(forKey: "LanguageCode") ?? "en"], forKey: "AppleLanguages")
+
 let app = NSApplication.shared
 let delegate = AppDelegate()
 app.delegate = delegate
 
-// 2
 _ = NSApplicationMain(CommandLine.argc, CommandLine.unsafeArgv)

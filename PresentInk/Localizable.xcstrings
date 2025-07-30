@@ -436,6 +436,9 @@
         }
       }
     },
+    "Language Changed" : {
+
+    },
     "Last checked" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -685,6 +688,9 @@
           }
         }
       }
+    },
+    "PresentInk needs to be restarted for the language change to take effect." : {
+
     },
     "Press Cmd+C to copy, Cmd+S to save." : {
       "extractionState" : "manual",
