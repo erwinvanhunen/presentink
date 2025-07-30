@@ -45,6 +45,37 @@ class TextTyperSettingsView: NSView {
         label.textColor = NSColor.secondaryLabelColor
         return label
     }()
+    
+    let clearFileButton: NSButton = {
+        let button = NSButton(
+            title: "Clear",
+            target: nil,
+            action: nil
+        )
+        button.bezelStyle = .rounded
+        return button
+    }()
+
+    let previewTextView: NSTextView = {
+        let textView = NSTextView()
+        textView.isEditable = false
+        textView.isSelectable = false
+        textView.font = NSFont.systemFont(ofSize: 12)
+        textView.textColor = NSColor.lightGray
+        textView.backgroundColor = NSColor.darkGray
+        textView.autoresizingMask = [.width]
+        textView.layer?.borderColor = NSColor.gray.cgColor
+        return textView
+    }()
+    let previewScrollView: NSScrollView = {
+        let scrollView = NSScrollView()
+        scrollView.hasVerticalScroller = true
+        scrollView.hasHorizontalScroller = false
+        scrollView.borderType = .bezelBorder
+        scrollView.translatesAutoresizingMaskIntoConstraints = false
+
+        return scrollView
+    }()
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
@@ -65,7 +96,7 @@ class TextTyperSettingsView: NSView {
         typingSpeedRow?.spacing = 16
 
         // File selection row
-        let fileRow = NSStackView(views: [selectFileButton, selectedFileLabel])
+        let fileRow = NSStackView(views: [selectFileButton, clearFileButton, selectedFileLabel ])
         fileRow.orientation = .horizontal
         fileRow.alignment = .centerY
         fileRow.spacing = 16
@@ -73,8 +104,15 @@ class TextTyperSettingsView: NSView {
         selectFileButton.target = self
         selectFileButton.action = #selector(selectFileButtonClicked)
 
+        clearFileButton.target = self
+        clearFileButton.action = #selector(clearFileButtonClicked)
+        
+        previewScrollView.documentView = previewTextView
+        previewScrollView.heightAnchor.constraint(equalToConstant: 240)
+            .isActive = true
+
         let stack = NSStackView(views: [
-            sectionLabel, typingSpeedRow!, fileRow,
+            sectionLabel, typingSpeedRow!, fileRow, previewScrollView,
         ])
         stack.orientation = .vertical
         stack.alignment = .leading
@@ -88,7 +126,7 @@ class TextTyperSettingsView: NSView {
                 constant: 32
             ),
             stack.trailingAnchor.constraint(
-                lessThanOrEqualTo: trailingAnchor,
+                equalTo: trailingAnchor,
                 constant: -32
             ),
             stack.bottomAnchor.constraint(
@@ -96,11 +134,18 @@ class TextTyperSettingsView: NSView {
                 constant: -32
             ),
         ])
+
         var isStale = false
-        if let url = try? URL(resolvingBookmarkData: Settings.shared.textTyperFile ?? Data(), options: .withSecurityScope, bookmarkDataIsStale: &isStale) {
+        if let url = try? URL(
+            resolvingBookmarkData: Settings.shared.textTyperFile ?? Data(),
+            options: .withSecurityScope,
+            bookmarkDataIsStale: &isStale
+        ) {
             guard url.startAccessingSecurityScopedResource() else { return }
             selectedFileLabel.stringValue =
-            url.lastPathComponent
+                url.lastPathComponent
+            previewTextView.string =
+                (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         }
     }
 
@@ -125,7 +170,15 @@ class TextTyperSettingsView: NSView {
                 relativeTo: nil
             )
             Settings.shared.textTyperFile = bookmarkData
+            previewTextView.string =
+                (try? String(contentsOf: url, encoding: .utf8)) ?? ""
         }
+    }
+    
+    @objc func clearFileButtonClicked() {
+        Settings.shared.textTyperFile = nil
+        selectedFileLabel.stringValue = "No file selected"
+        previewTextView.string = ""
     }
 
     required init?(coder: NSCoder) { fatalError() }
