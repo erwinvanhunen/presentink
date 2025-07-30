@@ -746,15 +746,21 @@
     "Record cropped" : {
       "extractionState" : "manual",
       "localizations" : {
-        "nl" : {
+        "en" : {
           "stringUnit" : {
             "state" : "translated",
+            "value" : "Record Cropped"
+          }
+        },
+        "nl" : {
+          "stringUnit" : {
+            "state" : "needs_review",
             "value" : "Deel van scherm"
           }
         },
         "sv" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "Spela in beskuren"
           }
         }
