@@ -43,6 +43,12 @@ if ($version) {
             Remove-Item $zipFile -Force
         }
         Write-Host "Creating ZIP file: $zipFile" -ForegroundColor Cyan
-        zip -r $zipFile $AppName license.rtf -x "*.DS_Store" -x "__MACOSX/*"
+        Write-Host "Creating folder structure for ZIP file" -ForegroundColor Cyan
+        New-Item -ItemType Directory -Path "PresentInk" -Force | Out-Null
+        Copy-Item -Path $AppName -Destination "PresentInk" -Recurse
+        Copy-Item -Path "license.rtf" -Destination "PresentInk" -Force
+       #zip -r $zipFile $AppName license.rtf -x "*.DS_Store" -x "__MACOSX/*"
+        ditto -c -k -X --rsrc PresentInk $zipFile
+        Remove-Item -Path "PresentInk" -Recurse -Force
     }
 }
