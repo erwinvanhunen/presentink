@@ -124,6 +124,14 @@ class SelectionView: NSView {
             addCursorRect(selectionRect, cursor: .arrow)
         }
     }
+    
+    private func getResizeHandleAtPoint(_ point: NSPoint) -> ResizeCorner? {
+        let handles = getResizeHandles()
+        for (handle, rect) in handles {
+            if rect.contains(point) { return handle }
+        }
+        return nil
+    }
 
     private func cursorForResizeCorner(_ corner: ResizeCorner) -> NSCursor {
         switch corner {
@@ -142,6 +150,20 @@ class SelectionView: NSView {
             return NSCursor.resizeUpDown
         case .left, .right:
             return NSCursor.resizeLeftRight
+        }
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+        let point = convert(event.locationInWindow, from: nil)
+        
+        if let handle = getResizeHandleAtPoint(point) {
+            cursorForResizeCorner(handle).set()
+        } else if selectionRect.contains(point) {
+            NSCursor.openHand.set()
+        } else if buttonBar.frame.contains(point) {
+            NSCursor.arrow.set()
+        } else {
+            NSCursor.crosshair.set()
         }
     }
 
