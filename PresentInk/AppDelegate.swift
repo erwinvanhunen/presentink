@@ -286,6 +286,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         NotificationCenter.default.addObserver(
             self,
+            selector: #selector(toggleMagnifierMode),
+            name: NSNotification.Name("ToggleMagnifierOverlays"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
             selector: #selector(clearMagnifierOverlay),
             name: NSNotification.Name("ClearMagnifierOverlays"),
             object: nil

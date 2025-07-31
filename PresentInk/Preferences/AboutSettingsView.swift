@@ -6,7 +6,8 @@ class AboutSettingsView: NSView {
     let appName = NSTextField(labelWithString: "PresentInk")
     let versionLabel: NSTextField = {
         let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "1.0"
-        return NSTextField(labelWithString: "Version \(version)")
+        let build = Bundle.main.object(forInfoDictionaryKey: "CFBundleVersion") as? String ?? "1"
+        return NSTextField(labelWithString: "Version \(version) (\(build))")
     }()
     let copyrightLabel = NSTextField(labelWithString: "Copyright © 2025 Erwin van Hunen")
   

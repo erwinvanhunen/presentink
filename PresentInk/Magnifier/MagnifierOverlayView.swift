@@ -17,6 +17,14 @@ class MagnifierOverlayWindow: NSWindow {
         self.ignoresMouseEvents = true
         self.hasShadow = false
     }
+    
+    override var canBecomeKey: Bool {
+        return true
+    }
+
+    override var canBecomeMain: Bool {
+        return true
+    }
 }
 
 class MagnifierOverlayView: NSView, SCStreamOutput {
@@ -40,6 +48,12 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
     }
 
     var animationTimer: Timer?
+    
+    
+    override var acceptsFirstResponder: Bool {
+        return true
+    }
+
 
     override func viewDidMoveToWindow() {
         super.viewDidMoveToWindow()
@@ -162,7 +176,10 @@ class MagnifierOverlayView: NSView, SCStreamOutput {
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 {  // Escape key
-            closeWithAnimation()
+            NotificationCenter.default.post(
+                name: NSNotification.Name("ToggleMagnifierOverlays"),
+                object: nil
+            )
             return
         }
         super.keyDown(with: event)
