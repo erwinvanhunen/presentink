@@ -50,6 +50,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var liveCaptionsManager: LiveCaptionsManager?
 
     func applicationDidFinishLaunching(_ aNotification: Notification) {
+        if isAnotherInstanceRunning() {
+                showSingleInstanceAlert()
+                NSApplication.shared.terminate(nil)
+                return
+            }
         if !Settings.shared.launchAtLogin {
             splashController = SplashWindowController()
             splashController?.showWindow(nil)
@@ -84,6 +89,58 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupMenu()
 
         setupObservers()
+        
+        checkPermissions()
+    }
+    
+    
+    private func isAnotherInstanceRunning() -> Bool {
+        let runningApps = NSWorkspace.shared.runningApplications
+        let currentApp = NSRunningApplication.current
+        
+        // Count instances of our app (excluding the current one)
+        let appInstances = runningApps.filter { app in
+            guard let bundleId = app.bundleIdentifier,
+                  bundleId == currentApp.bundleIdentifier else {
+                return false
+            }
+            return app.processIdentifier != currentApp.processIdentifier
+        }
+        
+        return appInstances.count > 0
+    }
+
+    private func showSingleInstanceAlert() {
+        let alert = NSAlert()
+        alert.messageText = "PresentInk is Already Running"
+        alert.informativeText = "Another instance of PresentInk is already active. Only one instance can run at a time."
+        alert.addButton(withTitle: "OK")
+        alert.runModal()
+    }
+    
+    fileprivate func checkPermissions()
+    {
+        if !CGPreflightScreenCaptureAccess() {
+            CGRequestScreenCaptureAccess()
+        }
+        guard hasAccessibilityRights() else {
+            let alert = NSAlert()
+            alert.messageText = "Accessibility Permission Required"
+            alert.informativeText =
+            "PresentInk needs Accessibility permissions to type text. Please enable it in System Settings > Privacy & Security > Accessibility."
+            alert.addButton(withTitle: "Open Preferences")
+            alert.addButton(withTitle: "Cancel")
+            let response = alert.runModal()
+            if response == .alertFirstButtonReturn {
+                if let url = URL(
+                    string:
+                        "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                ) {
+                    NSWorkspace.shared.open(url)
+                }
+            }
+            return
+        }
     }
 
     fileprivate func setupHotkeys() {
@@ -213,6 +270,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             self,
             selector: #selector(experimentalFeaturesToggled),
             name: NSNotification.Name("ExperimentalFeaturesToggled"),
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(toggleSpotlightMode),
+            name: NSNotification.Name("ToggleSpotlightOverlays"),
             object: nil
         )
         NotificationCenter.default.addObserver(
