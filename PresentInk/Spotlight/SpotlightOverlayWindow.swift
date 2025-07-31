@@ -155,7 +155,10 @@ class SpotlightOverlayView: NSView {
 
     override func keyDown(with event: NSEvent) {
         if event.keyCode == 53 {  // Escape key
-            closeWithAnimation()
+            NotificationCenter.default.post(
+                name: NSNotification.Name("ToggleSpotlightOverlays"),
+                object: nil
+            )
             return
         }
         super.keyDown(with: event)
