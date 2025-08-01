@@ -165,7 +165,11 @@ class GeneralSettingsView: NSView {
         NotificationCenter.default.post(
             name: NSNotification.Name("HotkeyRecordingStopped"),
             object: nil
-        )  // update the hotkeys
+        )
+        NotificationCenter.default.post(
+            name: NSNotification.Name("SetupPreferencesUI"),
+            object: nil
+        )  //
     }
 
     @objc func typingSpeedChanged(_ sender: NSPopUpButton) {

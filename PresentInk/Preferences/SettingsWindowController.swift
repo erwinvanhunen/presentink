@@ -85,10 +85,17 @@ class SettingsContentViewController: NSViewController {
         self.view.layer?.backgroundColor =
             NSColor(named: "windowBackgroundColor")?.cgColor
             ?? NSColor.windowBackgroundColor.cgColor
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(setupUI),
+            name: NSNotification.Name("SetupPreferencesUI"),
+            object: nil
+        )
+        
         setupUI()
     }
 
-    func setupUI() {
+    @objc func setupUI() {
         let contentView = self.view
 
         // Sidebar
@@ -105,6 +112,12 @@ class SettingsContentViewController: NSViewController {
         sidebarStack.translatesAutoresizingMaskIntoConstraints = false
 
         for (index, category) in categories.enumerated() {
+            var show = true
+            if(category == .textTyper && !Settings.shared.showExperimentalFeatures == true)
+            {
+                show = false
+            }
+            if !show { continue }
             let button = SidebarHoverButton()
             button.title = ""
             button.setButtonType(.toggle)

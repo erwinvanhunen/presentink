@@ -35,8 +35,21 @@
         }
       }
     },
-    "Background Color" : {
-
+    "Background" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Achtergrond"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bakgrund"
+          }
+        }
+      }
     },
     "Break Length" : {
       "extractionState" : "manual",
@@ -205,6 +218,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Klicka för att spela in"
+          }
+        }
+      }
+    },
+    "Colors" : {
+      "localizations" : {
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Färger"
           }
         }
       }
@@ -440,7 +463,20 @@
       }
     },
     "Language Changed" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Taal veranderd"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Språk ändrat"
+          }
+        }
+      }
     },
     "Last checked" : {
       "extractionState" : "manual",
@@ -583,8 +619,21 @@
         }
       }
     },
-    "Message Color" : {
-
+    "Message" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bericht"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Medelande"
+          }
+        }
+      }
     },
     "Minutes" : {
       "extractionState" : "manual",
@@ -813,7 +862,14 @@
       }
     },
     "Reset" : {
-
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Herstellen"
+          }
+        }
+      }
     },
     "Screen recorder" : {
       "extractionState" : "manual",
@@ -1140,8 +1196,21 @@
         }
       }
     },
-    "Timer Color" : {
-
+    "Timer" : {
+      "localizations" : {
+        "nl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timer"
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Timer"
+          }
+        }
+      }
     },
     "Typing speed" : {
       "extractionState" : "manual",

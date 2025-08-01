@@ -21,25 +21,44 @@ class BreakTimerSettingsView: NSView {
     private let messageLabel = NSTextField(
         labelWithString: NSLocalizedString("Break Message", comment: "")
     )
-    private let backgroundColorWell = NSColorWell()
-    private let backgroundColorLabel = NSTextField(
-        labelWithString: NSLocalizedString("Background Color", comment: "")
-    )
-    
-    private let timerColorWell = NSColorWell()
-    private let timerColorLabel = NSTextField(
-        labelWithString: NSLocalizedString("Timer Color", comment: "")
-    )
-    
-    private let messageColorWell = NSColorWell()
-    private let messageColorLabel = NSTextField(
-        labelWithString: NSLocalizedString("Message Color", comment: "")
+
+    private let colorLabel = NSTextField(
+        labelWithString: NSLocalizedString("Colors", comment: "")
     )
 
-    private let backgroundColorReset = NSButton(title: NSLocalizedString("Reset", comment: ""), target: nil, action: nil)
-    private let messageColorReset = NSButton(title: NSLocalizedString("Reset", comment: ""), target: nil, action: nil)
-    private let timerColorReset = NSButton(title: NSLocalizedString("Reset", comment: ""), target: nil, action: nil)
-    
+    private let backgroundColorWell = NSColorWell()
+    private let backgroundColorLabel = NSTextField(
+        labelWithString: NSLocalizedString("Background", comment: "")
+    )
+
+    private let timerColorWell = NSColorWell()
+    private let timerColorLabel = NSTextField(
+        labelWithString: NSLocalizedString("Timer", comment: "")
+    )
+
+    private let messageColorWell = NSColorWell()
+    private let messageColorLabel = NSTextField(
+        labelWithString: NSLocalizedString("Message", comment: "")
+    )
+
+    private let backgroundColorReset = NSButton(
+        title: NSLocalizedString("Reset", comment: ""),
+        target: nil,
+        action: nil
+    )
+    private let messageColorReset = NSButton(
+        title: NSLocalizedString("Reset", comment: ""),
+        target: nil,
+        action: nil
+    )
+    private let timerColorReset = NSButton(
+        title: NSLocalizedString("Reset", comment: ""),
+        target: nil,
+        action: nil
+    )
+
+    private let colorGrid = NSGridView()
+
     var selectedMinutes: Int {
         Int(slider.intValue)
     }
@@ -50,11 +69,11 @@ class BreakTimerSettingsView: NSView {
     var backgroundColor: NSColor {
         backgroundColorWell.color
     }
-    
+
     var timerColor: NSColor {
         timerColorWell.color
     }
-    
+
     var messageColor: NSColor {
         messageColorWell.color
     }
@@ -99,8 +118,8 @@ class BreakTimerSettingsView: NSView {
         messageField.maximumNumberOfLines = 1
 
         messageField.translatesAutoresizingMaskIntoConstraints = false
-//        messageField.heightAnchor.constraint(equalToConstant: 80).isActive =
-//            true
+        //        messageField.heightAnchor.constraint(equalToConstant: 80).isActive =
+        //            true
         // messageField.backgroundColor = NSColor(calibratedWhite: 0.97, alpha: 1.0)
 
         messageField.target = self
@@ -110,18 +129,18 @@ class BreakTimerSettingsView: NSView {
         backgroundColorWell.color = Settings.shared.breakBackgroundColor
         backgroundColorWell.target = self
         backgroundColorWell.action = #selector(backgroundColorChanged)
-   
+
         backgroundColorReset.target = self
         backgroundColorReset.action = #selector(resetBackgroundColor)
-        
+
         timerColorLabel.font = NSFont.systemFont(ofSize: 12)
         timerColorWell.color = Settings.shared.breakTimerColor
         timerColorWell.target = self
         timerColorWell.action = #selector(timerColorChanged)
-        
+
         timerColorReset.target = self
         timerColorReset.action = #selector(resetTimerColor)
-        
+
         messageColorLabel.font = NSFont.systemFont(ofSize: 12)
         messageColorWell.color = Settings.shared.breakMessageColor
         messageColorWell.target = self
@@ -129,22 +148,28 @@ class BreakTimerSettingsView: NSView {
 
         messageColorReset.target = self
         messageColorReset.action = #selector(resetMessageColor)
-        
-        let colorGrid = NSGridView()
-        colorGrid.addRow(with: [backgroundColorLabel, timerColorLabel, messageColorLabel])
-        colorGrid.addRow(with: [backgroundColorWell, timerColorWell, messageColorWell])
-        colorGrid.addRow(with: [backgroundColorReset, timerColorReset, messageColorReset])
-           
+
+        colorGrid.addRow(with: [
+            backgroundColorLabel, backgroundColorWell, backgroundColorReset,
+        ])
+        colorGrid.addRow(with: [
+            timerColorLabel, timerColorWell, timerColorReset,
+        ])
+        colorGrid.addRow(with: [
+            messageColorLabel, messageColorWell, messageColorReset,
+        ])
+
         colorGrid.translatesAutoresizingMaskIntoConstraints = false
-           colorGrid.columnSpacing = 16
-           colorGrid.rowSpacing = 8
+        colorGrid.columnSpacing = 16
+        colorGrid.rowSpacing = 8
         let stack = NSStackView(views: [
             titleLabel,
             timeLabel,
             slider,
             messageLabel,
             messageField,
-           colorGrid
+            colorLabel,
+            colorGrid,
         ])
         stack.orientation = .vertical
         stack.spacing = 16
@@ -163,7 +188,7 @@ class BreakTimerSettingsView: NSView {
                 constant: -32
             ),
             messageField.widthAnchor.constraint(equalTo: stack.widthAnchor),
-            colorGrid.widthAnchor.constraint(equalToConstant: 300) // Add this line
+            colorGrid.widthAnchor.constraint(equalToConstant: 220),  // Add this line
         ])
     }
 
@@ -182,25 +207,25 @@ class BreakTimerSettingsView: NSView {
     @objc private func backgroundColorChanged() {
         Settings.shared.breakBackgroundColor = backgroundColor
     }
-    
+
     @objc private func timerColorChanged() {
         Settings.shared.breakTimerColor = timerColor
     }
-    
+
     @objc private func messageColorChanged() {
         Settings.shared.breakMessageColor = messageColor
     }
-    
+
     @objc private func resetBackgroundColor() {
         backgroundColorWell.color = .white
         Settings.shared.breakBackgroundColor = .white
     }
-    
+
     @objc private func resetTimerColor() {
         timerColorWell.color = .red
         Settings.shared.breakTimerColor = .red
     }
-    
+
     @objc private func resetMessageColor() {
         messageColorWell.color = .black
         Settings.shared.breakMessageColor = .black
