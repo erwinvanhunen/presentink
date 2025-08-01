@@ -17,7 +17,7 @@ class BreakTimerWindowController: NSWindowController {
             screen: screen
         )
         window.level = .mainMenu + 1
-        window.backgroundColor = .white
+        window.backgroundColor = Settings.shared.breakBackgroundColor
         window.isOpaque = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
         window.ignoresMouseEvents = false
@@ -36,7 +36,7 @@ class BreakTimerWindowController: NSWindowController {
 
         timerLabel = NSTextField(labelWithString: formatTime(countdown))
         timerLabel.font = .systemFont(ofSize: 120, weight: .bold)
-        timerLabel.textColor = .red
+        timerLabel.textColor = Settings.shared.breakTimerColor
         timerLabel.alignment = .center
         timerLabel.backgroundColor = .clear
         timerLabel.isBordered = false
@@ -46,7 +46,7 @@ class BreakTimerWindowController: NSWindowController {
 
         breakLabel = NSTextField(labelWithString: Settings.shared.breakMessage)
         breakLabel.font = .systemFont(ofSize: 48, weight: .medium)
-        breakLabel.textColor = .black
+        breakLabel.textColor = Settings.shared.breakMessageColor
         breakLabel.alignment = .center
         breakLabel.backgroundColor = .clear
         breakLabel.isBordered = false

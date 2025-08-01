@@ -35,6 +35,9 @@
         }
       }
     },
+    "Background Color" : {
+
+    },
     "Break Length" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -580,6 +583,9 @@
         }
       }
     },
+    "Message Color" : {
+
+    },
     "Minutes" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -805,6 +811,9 @@
           }
         }
       }
+    },
+    "Reset" : {
+
     },
     "Screen recorder" : {
       "extractionState" : "manual",
@@ -1130,6 +1139,9 @@
           }
         }
       }
+    },
+    "Timer Color" : {
+
     },
     "Typing speed" : {
       "extractionState" : "manual",

@@ -7,32 +7,35 @@
 
 import Cocoa
 import Foundation
-import ServiceManagement
 import HotKey
+import ServiceManagement
 
 struct SettingsKeyCombo: Codable, Equatable {
     let keyRawValue: UInt32
     let modifiersRawValue: UInt
 
     var key: Key? { Key(carbonKeyCode: keyRawValue) }
-    var modifiers: NSEvent.ModifierFlags { NSEvent.ModifierFlags(rawValue: modifiersRawValue) }
+    var modifiers: NSEvent.ModifierFlags {
+        NSEvent.ModifierFlags(rawValue: modifiersRawValue)
+    }
 
     init(key: Key?, modifiers: NSEvent.ModifierFlags) {
         self.keyRawValue = key?.carbonKeyCode ?? 0
         self.modifiersRawValue = modifiers.rawValue
     }
-    
-    public static func == (lhs: SettingsKeyCombo, rhs: SettingsKeyCombo) -> Bool {
-            return lhs.keyRawValue == rhs.keyRawValue &&
-                   lhs.modifiersRawValue == rhs.modifiersRawValue
-        }
-    
+
+    public static func == (lhs: SettingsKeyCombo, rhs: SettingsKeyCombo) -> Bool
+    {
+        return lhs.keyRawValue == rhs.keyRawValue
+            && lhs.modifiersRawValue == rhs.modifiersRawValue
+    }
+
 }
 
 enum TypingSpeed: Int {
-    case slow = 0, normal, fast
+    case slow = 0
+    case normal, fast
 }
-
 
 class Settings {
     static let shared = Settings()
@@ -53,14 +56,16 @@ class Settings {
     private let spotlightHotkeyKey = "spotlightHotkey"
     private let magnifierHotkeyKey = "magnifierHotkey"
     private let liveCaptionsHotkeyKey = "liveCaptionsHotkey"
-    
+    private let breakBackgroundColorKey = "breakBackgroundColor"
+    private let breakTimerColorKey = "breakTimerColor"
+    private let breakMessageColorKey = "breakMessageColor"
     private let supportedColors: [String: NSColor] = [
         "red": .red,
         "green": .green,
         "blue": .blue,
         "yellow": .yellow,
         "pink": .magenta,
-        "orange": .orange
+        "orange": .orange,
     ]
 
     var penWidth: Int {
@@ -75,20 +80,26 @@ class Settings {
 
     var defaultColor: NSColor {
         get {
-            let value = UserDefaults.standard.string(forKey: defaultColorKey) ?? "red"
+            let value =
+                UserDefaults.standard.string(forKey: defaultColorKey) ?? "red"
             return supportedColors[value] ?? .red
         }
         set {
-            if let name = supportedColors.first(where: { $0.value == newValue })?.key {
+            if let name = supportedColors.first(where: { $0.value == newValue }
+            )?.key {
                 UserDefaults.standard.set(name, forKey: defaultColorKey)
             }
         }
     }
-    
+
     var drawHotkey: SettingsKeyCombo {
         get {
             if let data = UserDefaults.standard.data(forKey: drawHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.d, modifiers: [.option, .shift])
@@ -100,11 +111,17 @@ class Settings {
             }
         }
     }
-    
+
     var screenShotHotkey: SettingsKeyCombo {
         get {
-            if let data = UserDefaults.standard.data(forKey: screenShotHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: screenShotHotkeyKey
+            ),
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.s, modifiers: [.option, .shift])
@@ -116,11 +133,17 @@ class Settings {
             }
         }
     }
-    
+
     var screenRecordingHotkey: SettingsKeyCombo {
         get {
-            if let data = UserDefaults.standard.data(forKey: screenRecordingHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: screenRecordingHotkeyKey
+            ),
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.r, modifiers: [.option, .shift])
@@ -128,15 +151,24 @@ class Settings {
         set {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
-                UserDefaults.standard.set(encoded, forKey: screenRecordingHotkeyKey)
+                UserDefaults.standard.set(
+                    encoded,
+                    forKey: screenRecordingHotkeyKey
+                )
             }
         }
     }
-    
+
     var screenRecordingCroppedHotkey: SettingsKeyCombo {
         get {
-            if let data = UserDefaults.standard.data(forKey: screenRecordingCroppedHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: screenRecordingCroppedHotkeyKey
+            ),
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.r, modifiers: [.control, .shift])
@@ -144,15 +176,24 @@ class Settings {
         set {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
-                UserDefaults.standard.set(encoded, forKey: screenRecordingCroppedHotkeyKey)
+                UserDefaults.standard.set(
+                    encoded,
+                    forKey: screenRecordingCroppedHotkeyKey
+                )
             }
         }
     }
-    
+
     var breakTimerHotkey: SettingsKeyCombo {
         get {
-            if let data = UserDefaults.standard.data(forKey: breakTimerHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: breakTimerHotkeyKey
+            ),
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.b, modifiers: [.option, .shift])
@@ -164,11 +205,15 @@ class Settings {
             }
         }
     }
-    
+
     var textTypeHotkey: SettingsKeyCombo {
         get {
             if let data = UserDefaults.standard.data(forKey: textTypeHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.t, modifiers: [.option, .shift])
@@ -180,11 +225,17 @@ class Settings {
             }
         }
     }
-    
+
     var spotlightHotkey: SettingsKeyCombo {
         get {
-            if let data = UserDefaults.standard.data(forKey: spotlightHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: spotlightHotkeyKey
+            ),
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.f, modifiers: [.option, .shift])
@@ -196,12 +247,17 @@ class Settings {
             }
         }
     }
-    
-    
+
     var magnifierHotkey: SettingsKeyCombo {
         get {
-            if let data = UserDefaults.standard.data(forKey: magnifierHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: magnifierHotkeyKey
+            ),
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.m, modifiers: [.option, .shift])
@@ -213,11 +269,17 @@ class Settings {
             }
         }
     }
-    
+
     var liveCaptionsHotkey: SettingsKeyCombo {
         get {
-            if let data = UserDefaults.standard.data(forKey: liveCaptionsHotkeyKey),
-               let combo = try? JSONDecoder().decode(SettingsKeyCombo.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: liveCaptionsHotkeyKey
+            ),
+                let combo = try? JSONDecoder().decode(
+                    SettingsKeyCombo.self,
+                    from: data
+                )
+            {
                 return combo
             }
             return SettingsKeyCombo(key: Key.c, modifiers: [.option, .shift])
@@ -225,11 +287,14 @@ class Settings {
         set {
             let encoder = JSONEncoder()
             if let encoded = try? encoder.encode(newValue) {
-                UserDefaults.standard.set(encoded, forKey: liveCaptionsHotkeyKey)
+                UserDefaults.standard.set(
+                    encoded,
+                    forKey: liveCaptionsHotkeyKey
+                )
             }
         }
     }
-    
+
     var breakMinutes: Int {
         get {
             let value = UserDefaults.standard.integer(forKey: breakMinutesKey)
@@ -239,16 +304,17 @@ class Settings {
             UserDefaults.standard.set(newValue, forKey: breakMinutesKey)
         }
     }
-    
+
     var breakMessage: String {
         get {
-            UserDefaults.standard.string(forKey: breakMessageKey) ?? "It's Break Time!"
+            UserDefaults.standard.string(forKey: breakMessageKey)
+                ?? "It's Break Time!"
         }
         set {
             UserDefaults.standard.set(newValue, forKey: breakMessageKey)
         }
     }
-    
+
     var launchAtLogin: Bool {
         get {
             if #available(macOS 13.0, *) {
@@ -271,25 +337,32 @@ class Settings {
             }
         }
     }
-    
+
     var typingSpeed: TypingSpeed {
         get {
-            return TypingSpeed(rawValue: UserDefaults.standard.integer(forKey: typeSpeedIndexKey)) ?? .normal
+            return TypingSpeed(
+                rawValue: UserDefaults.standard.integer(
+                    forKey: typeSpeedIndexKey
+                )
+            ) ?? .normal
         }
         set {
-            UserDefaults.standard.set(newValue.rawValue, forKey: typeSpeedIndexKey)
+            UserDefaults.standard.set(
+                newValue.rawValue,
+                forKey: typeSpeedIndexKey
+            )
         }
     }
-    
+
     var typingSpeedIndex: Int {
         get {
-            return typingSpeed.rawValue;
+            return typingSpeed.rawValue
         }
         set {
             UserDefaults.standard.set(newValue, forKey: typeSpeedIndexKey)
         }
     }
-    
+
     var textTyperFile: Data? {
         get {
             return UserDefaults.standard.data(forKey: "textTyperFile")
@@ -298,29 +371,38 @@ class Settings {
             UserDefaults.standard.set(newValue, forKey: "textTyperFile")
         }
     }
-    
+
     var showExperimentalFeatures: Bool {
         get {
             UserDefaults.standard.bool(forKey: showExperimentalFeaturesKey)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: showExperimentalFeaturesKey)
+            UserDefaults.standard.set(
+                newValue,
+                forKey: showExperimentalFeaturesKey
+            )
         }
     }
-    
+
     var checkForUpdatesOnStartup: Bool {
         get {
             UserDefaults.standard.bool(forKey: checkForUpdatesOnStartupKey)
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: checkForUpdatesOnStartupKey)
+            UserDefaults.standard.set(
+                newValue,
+                forKey: checkForUpdatesOnStartupKey
+            )
         }
     }
-    
+
     var lastUpdateCheck: Date? {
         get {
-            if let data = UserDefaults.standard.data(forKey: lastUpdateCheckKey),
-               let date = try? JSONDecoder().decode(Date.self, from: data) {
+            if let data = UserDefaults.standard.data(
+                forKey: lastUpdateCheckKey
+            ),
+                let date = try? JSONDecoder().decode(Date.self, from: data)
+            {
                 return date
             }
             return Date.distantPast
@@ -332,44 +414,48 @@ class Settings {
             }
         }
     }
-    
+
     var magnifierRadius: CGFloat {
         get {
-            return UserDefaults.standard.object(forKey: "magnifierRadius") as? CGFloat ?? 80.0
+            return UserDefaults.standard.object(forKey: "magnifierRadius")
+                as? CGFloat ?? 80.0
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "magnifierRadius")
         }
     }
-    
+
     var spotlightRadius: CGFloat {
         get {
-            return UserDefaults.standard.object(forKey: "spotlightRadius") as? CGFloat ?? 80.0
+            return UserDefaults.standard.object(forKey: "spotlightRadius")
+                as? CGFloat ?? 80.0
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "spotlightRadius")
         }
     }
-    
+
     var magnification: CGFloat {
         get {
-            return UserDefaults.standard.object(forKey: "magnification") as? CGFloat ?? 2.0 // Default magnification
+            return UserDefaults.standard.object(forKey: "magnification")
+                as? CGFloat ?? 2.0  // Default magnification
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "magnification")
         }
     }
-    
-    var liveCaptionsLanguage : String {
+
+    var liveCaptionsLanguage: String {
         get {
-            return UserDefaults.standard.string(forKey: "LiveCaptionsLanguage") ?? "en-US"
+            return UserDefaults.standard.string(forKey: "LiveCaptionsLanguage")
+                ?? "en-US"
         }
         set {
             UserDefaults.standard.set(newValue, forKey: "LiveCaptionsLanguage")
         }
     }
-    
-    var languageCode : String {
+
+    var languageCode: String {
         get {
             return UserDefaults.standard.string(forKey: "LanguageCode") ?? "en"
         }
@@ -377,13 +463,15 @@ class Settings {
             UserDefaults.standard.set(newValue, forKey: "LanguageCode")
         }
     }
-    
+
     var liveCaptionsFontSize: Double {
         get {
-            let savedSize = UserDefaults.standard.double(forKey: "LiveCaptionsFontSize")
+            let savedSize = UserDefaults.standard.double(
+                forKey: "LiveCaptionsFontSize"
+            )
             if savedSize == 0 {
                 UserDefaults.standard.set(36.0, forKey: "LiveCaptionsFontSize")
-                return 36;
+                return 36
             }
             return UserDefaults.standard.double(forKey: "LiveCaptionsFontSize")
         }
@@ -391,4 +479,77 @@ class Settings {
             UserDefaults.standard.set(newValue, forKey: "LiveCaptionsFontSize")
         }
     }
+
+    var breakBackgroundColor: NSColor {
+        get {
+            if let data = UserDefaults.standard.data(
+                forKey: breakBackgroundColorKey
+            ),
+                let color = try? NSKeyedUnarchiver.unarchivedObject(
+                    ofClass: NSColor.self,
+                    from: data
+                )
+            {
+                return color
+            }
+            return .white  // Default background color
+        }
+        set {
+            if let data = try? NSKeyedArchiver.archivedData(
+                withRootObject: newValue,
+                requiringSecureCoding: false
+            ) {
+                UserDefaults.standard.set(data, forKey: breakBackgroundColorKey)
+            }
+        }
+    }
+    
+    var breakTimerColor: NSColor {
+        get {
+            if let data = UserDefaults.standard.data(
+                forKey: breakTimerColorKey
+            ),
+                let color = try? NSKeyedUnarchiver.unarchivedObject(
+                    ofClass: NSColor.self,
+                    from: data
+                )
+            {
+                return color
+            }
+            return .red  // Default background color
+        }
+        set {
+            if let data = try? NSKeyedArchiver.archivedData(
+                withRootObject: newValue,
+                requiringSecureCoding: false
+            ) {
+                UserDefaults.standard.set(data, forKey: breakTimerColorKey)
+            }
+        }
+    }
+    var breakMessageColor: NSColor {
+        get {
+            if let data = UserDefaults.standard.data(
+                forKey: breakMessageColorKey
+            ),
+                let color = try? NSKeyedUnarchiver.unarchivedObject(
+                    ofClass: NSColor.self,
+                    from: data
+                )
+            {
+                return color
+            }
+            return .black  // Default background color
+        }
+        set {
+            if let data = try? NSKeyedArchiver.archivedData(
+                withRootObject: newValue,
+                requiringSecureCoding: false
+            ) {
+                UserDefaults.standard.set(data, forKey: breakMessageColorKey)
+            }
+        }
+    }
+
+
 }
