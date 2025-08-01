@@ -7,7 +7,6 @@ class BreakTimerWindowController: NSWindowController {
     private var timer: Timer?
 
     init(screen: NSScreen) {
-        // Get breakMinutes from settings and convert to seconds
         let minutes = Settings.shared.breakMinutes
         self.countdown = minutes * 60
         let window = BreakTimerWindow(
@@ -21,19 +20,13 @@ class BreakTimerWindowController: NSWindowController {
         window.backgroundColor = .white
         window.isOpaque = true
         window.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        window.makeKeyAndOrderFront(nil)
         window.ignoresMouseEvents = false
-        window.makeKeyAndOrderFront(nil)
-        window.makeFirstResponder(window)
 
         super.init(window: window)
         setupLabels(frame: window.contentView!.bounds)
         startCountdown()
     }
 
-    override var acceptsFirstResponder: Bool { return true }
-    
-    
     required init?(coder: NSCoder) {
         fatalError("init(coder:) has not been implemented")
     }
@@ -42,60 +35,37 @@ class BreakTimerWindowController: NSWindowController {
         guard let contentView = window?.contentView else { return }
 
         timerLabel = NSTextField(labelWithString: formatTime(countdown))
-        timerLabel.font = NSFont.systemFont(ofSize: 120, weight: .bold)
+        timerLabel.font = .systemFont(ofSize: 120, weight: .bold)
         timerLabel.textColor = .red
         timerLabel.alignment = .center
         timerLabel.backgroundColor = .clear
         timerLabel.isBordered = false
         timerLabel.isEditable = false
         timerLabel.translatesAutoresizingMaskIntoConstraints = false
-
         contentView.addSubview(timerLabel)
 
-        let breakMessage = Settings.shared.breakMessage
-        breakLabel = NSTextField(labelWithString: breakMessage)
-        breakLabel.font = NSFont.systemFont(ofSize: 48, weight: .medium)
+        breakLabel = NSTextField(labelWithString: Settings.shared.breakMessage)
+        breakLabel.font = .systemFont(ofSize: 48, weight: .medium)
         breakLabel.textColor = .black
         breakLabel.alignment = .center
         breakLabel.backgroundColor = .clear
         breakLabel.isBordered = false
         breakLabel.isEditable = false
         breakLabel.translatesAutoresizingMaskIntoConstraints = false
-
         contentView.addSubview(breakLabel)
 
         NSLayoutConstraint.activate([
-            // Center timerLabel horizontally and vertically (with offset)
-            timerLabel.centerXAnchor.constraint(
-                equalTo: contentView.centerXAnchor
-            ),
-            timerLabel.centerYAnchor.constraint(
-                equalTo: contentView.centerYAnchor,
-                constant: -60
-            ),
-            timerLabel.widthAnchor.constraint(
-                lessThanOrEqualTo: contentView.widthAnchor,
-                multiplier: 0.9
-            ),
-
-            // Center breakLabel horizontally, place below timerLabel
-            breakLabel.centerXAnchor.constraint(
-                equalTo: contentView.centerXAnchor
-            ),
-            breakLabel.topAnchor.constraint(
-                equalTo: timerLabel.bottomAnchor,
-                constant: 40
-            ),
-            breakLabel.widthAnchor.constraint(
-                lessThanOrEqualTo: contentView.widthAnchor,
-                multiplier: 0.9
-            ),
+            timerLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            timerLabel.centerYAnchor.constraint(equalTo: contentView.centerYAnchor, constant: -60),
+            timerLabel.widthAnchor.constraint(lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.9),
+            breakLabel.centerXAnchor.constraint(equalTo: contentView.centerXAnchor),
+            breakLabel.topAnchor.constraint(equalTo: timerLabel.bottomAnchor, constant: 40),
+            breakLabel.widthAnchor.constraint(lessThanOrEqualTo: contentView.widthAnchor, multiplier: 0.9),
         ])
     }
 
     private func startCountdown() {
-        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) {
-            [weak self] _ in
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             guard let self = self else { return }
             self.countdown -= 1
             self.timerLabel.stringValue = self.formatTime(self.countdown)
@@ -110,5 +80,10 @@ class BreakTimerWindowController: NSWindowController {
         let min = seconds / 60
         let sec = seconds % 60
         return String(format: "%02d:%02d", min, sec)
+    }
+
+    override func close() {
+        timer?.invalidate()
+        super.close()
     }
 }

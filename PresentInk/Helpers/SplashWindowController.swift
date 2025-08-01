@@ -33,13 +33,7 @@ class SplashWindowController: NSWindowController {
         blurView.material = .hudWindow
         blurView.state = .active
         blurView.wantsLayer = true
-//        blurView.layer?.backgroundColor =
-//            NSColor(
-//                red: 74 / 255,
-//                green: 113 / 255,
-//                blue: 139 / 255,
-//                alpha: 0
-//            ).cgColor
+
         let colorOverlay = NSView(frame: blurView.bounds)
         colorOverlay.wantsLayer = true
         colorOverlay.layer?.backgroundColor = NSColor(calibratedRed: 74/255, green: 113/255, blue: 139/255, alpha: 0.3).cgColor

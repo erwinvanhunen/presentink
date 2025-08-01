@@ -1240,6 +1240,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             }
         }
         UpdateChecker.checkForUpdates { result in
+            
             DispatchQueue.main.async {
 
                 switch result {
