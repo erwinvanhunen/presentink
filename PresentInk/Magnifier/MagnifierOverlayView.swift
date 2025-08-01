@@ -14,7 +14,7 @@ class MagnifierOverlayWindow: NSWindow {
         self.isOpaque = false
         self.backgroundColor = .clear
         self.level = .screenSaver
-        self.ignoresMouseEvents = true
+//        self.ignoresMouseEvents = true
         self.hasShadow = false
     }
     

@@ -1349,6 +1349,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         window.contentView = view
         window.makeKeyAndOrderFront(nil)
         window.orderFrontRegardless()
+        window.level = .mainMenu
         window.isReleasedWhenClosed = false
         window.ignoresMouseEvents = false
         magnifierOverlayWindow = window
