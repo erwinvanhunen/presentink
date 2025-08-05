@@ -159,6 +159,10 @@ class BreakTimerSettingsView: NSView {
             messageColorLabel, messageColorWell, messageColorReset,
         ])
 
+        for row in 0..<colorGrid.numberOfRows {
+            colorGrid.row(at: row).yPlacement = .center
+        }
+
         colorGrid.translatesAutoresizingMaskIntoConstraints = false
         colorGrid.columnSpacing = 16
         colorGrid.rowSpacing = 8
