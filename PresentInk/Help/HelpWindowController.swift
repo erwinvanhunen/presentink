@@ -10,11 +10,8 @@ class HelpWindowController: NSWindowController {
     }
 
     convenience init() {
-
-        func shortcutRow(keys: [String], desc: String, color: NSColor? = nil)
-            -> [NSView]
-        {
-
+        func shortcutRow(keys: [String], desc: String, color: NSColor? = nil) -> [NSView] {
+            // ... existing shortcutRow implementation remains the same
             let keyStack = NSStackView()
             keyStack.orientation = .horizontal
             keyStack.spacing = 6
@@ -29,27 +26,20 @@ class HelpWindowController: NSWindowController {
             }
             keyStack.translatesAutoresizingMaskIntoConstraints = false
             keyStack.setContentHuggingPriority(.required, for: .horizontal)
-            keyStack.setContentCompressionResistancePriority(
-                .required,
-                for: .horizontal
-            )
+            keyStack.setContentCompressionResistancePriority(.required, for: .horizontal)
 
             let labelStack = NSStackView()
             labelStack.orientation = .horizontal
             labelStack.spacing = 8
 
             if let color = color {
-                let colorBox = NSView(
-                    frame: NSRect(x: 0, y: 0, width: 18, height: 18)
-                )
+                let colorBox = NSView(frame: NSRect(x: 0, y: 0, width: 18, height: 18))
                 colorBox.wantsLayer = true
                 colorBox.layer?.backgroundColor = color.cgColor
                 colorBox.layer?.cornerRadius = 4
                 colorBox.translatesAutoresizingMaskIntoConstraints = false
-                colorBox.widthAnchor.constraint(equalToConstant: 18).isActive =
-                    true
-                colorBox.heightAnchor.constraint(equalToConstant: 18).isActive =
-                    true
+                colorBox.widthAnchor.constraint(equalToConstant: 18).isActive = true
+                colorBox.heightAnchor.constraint(equalToConstant: 18).isActive = true
                 labelStack.addArrangedSubview(colorBox)
             }
 
@@ -57,10 +47,7 @@ class HelpWindowController: NSWindowController {
             label.font = NSFont.systemFont(ofSize: 12)
             label.textColor = NSColor.labelColor
             label.setContentHuggingPriority(.defaultLow, for: .horizontal)
-            label.setContentCompressionResistancePriority(
-                .defaultLow,
-                for: .horizontal
-            )
+            label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
             label.lineBreakMode = .byWordWrapping
             label.maximumNumberOfLines = 0
             label.preferredMaxLayoutWidth = 0
@@ -78,6 +65,38 @@ class HelpWindowController: NSWindowController {
         window.title = "Help"
         window.center()
         window.isReleasedWhenClosed = false
+
+        // Initialize self first
+        self.init(window: window)
+
+        // Now you can use self to set up the UI
+        setupUI()
+    }
+
+    private func setupUI() {
+        guard let window = self.window else { return }
+        
+        // Create the fixed top bar
+        let topBar = NSView()
+        topBar.wantsLayer = true
+        topBar.layer?.backgroundColor = NSColor.controlBackgroundColor.cgColor
+        topBar.translatesAutoresizingMaskIntoConstraints = false
+
+        let buyMeACoffeeButton = ClickImageButton(
+            image: NSImage(named: "BuyMeACoffee")!,
+            width: 200,
+            height: 56,
+            action: #selector(buyMeACoffeeClicked),
+            target: self  // Now self is available
+        )
+
+        topBar.addSubview(buyMeACoffeeButton)
+
+        NSLayoutConstraint.activate([
+            topBar.heightAnchor.constraint(equalToConstant: 80),
+            buyMeACoffeeButton.centerXAnchor.constraint(equalTo: topBar.centerXAnchor),
+            buyMeACoffeeButton.centerYAnchor.constraint(equalTo: topBar.centerYAnchor)
+        ])
 
         let contentStack = NSStackView()
         contentStack.orientation = .vertical
@@ -428,19 +447,33 @@ class HelpWindowController: NSWindowController {
             ),
         ])
         scrollView.documentView = contentStack
-        window.contentView = scrollView
+        
+        let containerView = NSView()
+           containerView.addSubview(topBar)
+           containerView.addSubview(scrollView)
+        
+        NSLayoutConstraint.activate([
+               topBar.topAnchor.constraint(equalTo: containerView.topAnchor),
+               topBar.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+               topBar.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+               
+               scrollView.topAnchor.constraint(equalTo: topBar.bottomAnchor),
+               scrollView.leadingAnchor.constraint(equalTo: containerView.leadingAnchor),
+               scrollView.trailingAnchor.constraint(equalTo: containerView.trailingAnchor),
+               scrollView.bottomAnchor.constraint(equalTo: containerView.bottomAnchor)
+           ])
 
-        self.init(window: window)
+           window.contentView = containerView
 
         // Add the button to the content stack
-        let buyMeACoffeeButton = ClickImageButton(
-            image: NSImage(named: "BuyMeACoffee")!,
-            width: 200,
-            height: 56,
-            action: #selector(buyMeACoffeeClicked),
-            target: self
-        )
-        contentStack.insertArrangedSubview(buyMeACoffeeButton, at: 2)
+//        let buyMeACoffeeButton = ClickImageButton(
+//            image: NSImage(named: "BuyMeACoffee")!,
+//            width: 200,
+//            height: 56,
+//            action: #selector(buyMeACoffeeClicked),
+//            target: self
+//        )
+//        contentStack.insertArrangedSubview(buyMeACoffeeButton, at: 2)
 
     }
 
