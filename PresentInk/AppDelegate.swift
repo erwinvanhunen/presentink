@@ -24,6 +24,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var settingsWindowController: SettingsWindowController?
     var helpWindowController: HelpWindowController?
     var spotlightOverlayWindow: SpotlightOverlayWindow?
+    var welcomeController: WelcomeWindowController?
     var hotkeyDraw: HotKey?
     var hotkeyScreenshot: HotKey?
     var hotkeyBreak: HotKey?
@@ -75,6 +76,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 self.checkForUpdatesOnStartup()
             }
         }
+        
         statusItem = NSStatusBar.system.statusItem(
             withLength: NSStatusItem.squareLength
         )
@@ -91,8 +93,19 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupObservers()
         
         checkPermissions()
+        
+        if !Settings.shared.launchAtLogin {
+            if !Settings.shared.hasShownWelcome {
+                showWelcomeWindow()
+            }
+        }
     }
     
+    private func showWelcomeWindow() {
+        welcomeController = WelcomeWindowController()
+           welcomeController?.showWindow(nil)
+        welcomeController?.window?.makeKeyAndOrderFront(nil)
+    }
     
     private func isAnotherInstanceRunning() -> Bool {
         let runningApps = NSWorkspace.shared.runningApplications

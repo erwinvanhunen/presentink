@@ -550,6 +550,14 @@ class Settings {
             }
         }
     }
-
+    
+    var hasShownWelcome: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "hasShownWelcome")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "hasShownWelcome")
+        }
+    }
 
 }

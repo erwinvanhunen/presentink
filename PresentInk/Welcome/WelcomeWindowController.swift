@@ -1,3 +1,11 @@
+//
+//  WelcomeWindowController.swift
+//  PresentInk
+//
+//  Created by Erwin van Hunen on 2025-08-07.
+//
+
+
 import Cocoa
 
 class WelcomeWindowController: NSWindowController {
@@ -8,9 +16,9 @@ class WelcomeWindowController: NSWindowController {
     private let descriptionLabel = NSTextField(labelWithString: "")
     private let imageView = NSImageView()
     private let stepIndicator = NSTextField(labelWithString: "")
-    private let backButton = NSButton(title: "Back", target: nil, action: nil)
-    private let nextButton = NSButton(title: "Next", target: nil, action: nil)
-    private let skipButton = NSButton(title: "Skip", target: nil, action: nil)
+    private var backButton = NSButton(title: "Back", target: nil, action: nil)
+    private var nextButton = NSButton(title: "Next", target: nil, action: nil)
+    private var skipButton = NSButton(title: "Skip", target: nil, action: nil)
     
     convenience init() {
         let size = NSSize(width: 600, height: 400)
@@ -60,20 +68,18 @@ class WelcomeWindowController: NSWindowController {
         stepIndicator.isBezeled = false
         stepIndicator.drawsBackground = false
         
-        backButton.target = self
-        backButton.action = #selector(backClicked)
+        // Create new button instances with proper target/action setup
+         backButton = NSButton(title: "Back", target: self, action: #selector(backClicked))
+         nextButton = NSButton(title: "Next", target: self, action: #selector(nextClicked))
+        skipButton = NSButton(title: "Skip", target: self, action: #selector(skipClicked))
+        
         backButton.isEnabled = false
-        
-        nextButton.target = self
-        nextButton.action = #selector(nextClicked)
         nextButton.keyEquivalent = "\r"
-        
-        skipButton.target = self
-        skipButton.action = #selector(skipClicked)
         
         let buttonStack = NSStackView(views: [backButton, NSView(), skipButton, nextButton])
         buttonStack.orientation = .horizontal
         buttonStack.spacing = 12
+     
         
         let mainStack = NSStackView(views: [
             titleLabel,
@@ -111,19 +117,19 @@ class WelcomeWindowController: NSWindowController {
             
         case 1:
             titleLabel.stringValue = "Drawing Tools"
-            descriptionLabel.stringValue = "Use the toolbar to access different drawing tools like pen, highlighter, shapes, and text. You can customize colors and sizes for each tool."
-            imageView.image = NSImage(named: "DrawingTools") // Add your screenshot
+            descriptionLabel.stringValue = "Use drawing tools like pen, highlighter, shapes, and text. Turn on drawing mode by either selecting 'Draw' from the system tray menu, or by pressing the shortcut (the default is Option+Shift+D). You can change colors by simply pressing a key (R,G,B,Y,P,O). See the help for all key combinations."
+            imageView.image = NSImage(named: "FirstRunDrawing") // Add your screenshot
             backButton.isEnabled = true
             
         case 2:
             titleLabel.stringValue = "Break Timer"
-            descriptionLabel.stringValue = "Set up break reminders to help maintain healthy screen time habits. Customize the duration, message, and colors to your preference."
-            imageView.image = NSImage(named: "BreakTimer") // Add your screenshot
+            descriptionLabel.stringValue = "Set up break reminders to easily show the audience when you return to your presentation. Customize the duration, message, and colors to your preference in the settings."
+            imageView.image = NSImage(named: "FirstRunBreaktime") // Add your screenshot
             
         case 3:
             titleLabel.stringValue = "Ready to Start!"
-            descriptionLabel.stringValue = "You're all set! Access PresentInk from the menu bar and start enhancing your presentations. Check the Help menu for keyboard shortcuts."
-            imageView.image = NSImage(named: "MenuBar") // Add your screenshot
+            descriptionLabel.stringValue = "You're all set! Access PresentInk from the menu bar and start enhancing your presentations. Check the Help menu for keyboard shortcuts and make sure to check out the settings as you can customize quite some things."
+            imageView.image = NSImage(named: "AppIcon") // Add your screenshot
             nextButton.title = "Get Started"
             
         default:

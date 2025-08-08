@@ -11,6 +11,9 @@ import UserNotifications
 
 class ScreenShotWindow: NSWindow {
     var selectionView: SelectionView!
+
+    
+    
     private let screenRef: NSScreen
     override var canBecomeKey: Bool { true }
     override var canBecomeMain: Bool { true }
@@ -79,6 +82,7 @@ class ScreenShotWindow: NSWindow {
 class SelectionView: NSView {
 
     private var showIntroText: Bool = true
+    private var lastSelectionRect: NSRect?
 
     override func acceptsFirstMouse(for event: NSEvent?) -> Bool { true }
     override var acceptsFirstResponder: Bool { return true }
@@ -704,7 +708,8 @@ class SelectionView: NSView {
     }
 
     @objc private func saveScreenshot() {
-        // Hide the screenshot window so the save panel appears above it
+        // Store the current selectionRect before hiding the window
+        lastSelectionRect = selectionRect
         window?.orderOut(nil)
         Task {
             try? await Task.sleep(nanoseconds: 1_000_000)  // 1 second pause
@@ -714,13 +719,12 @@ class SelectionView: NSView {
                 savePanel.nameFieldStringValue =
                     "Screenshot \(DateFormatter.screenshotFormatter.string(from: Date())).png"
 
-                // Present from main window, not screenshot window
                 let parentWindow = NSApp.mainWindow ?? NSApp.keyWindow
-                savePanel.beginSheetModal(for: parentWindow ?? savePanel) {
-                    response in
+                savePanel.beginSheetModal(for: parentWindow ?? savePanel) { response in
                     if response == .OK, let url = savePanel.url {
                         Task {
-                            await self.performScreenCapture(saveToURL: url)
+                            // Use the stored selectionRect
+                            await self.performScreenCapture(saveToURL: url, selectionRect: self.lastSelectionRect ?? self.selectionRect)
                         }
                     } else {
                         NotificationCenter.default.post(
@@ -731,14 +735,16 @@ class SelectionView: NSView {
                 }
             }
         }
-
     }
+
 
     @MainActor
     private func performScreenCapture(
         copyToClipboard: Bool = false,
-        saveToURL: URL? = nil
+        saveToURL: URL? = nil,
+        selectionRect: NSRect? = nil
     ) async {
+        let rectToUse = selectionRect ?? self.selectionRect
         do {
             window?.orderOut(nil)
             try await Task.sleep(nanoseconds: 100_000_000)
@@ -777,9 +783,10 @@ class SelectionView: NSView {
                 contentFilter: filter,
                 configuration: config
             )
-
             // Crop the selection area
-            let screenRect = convertToScreenCoordinates(selectionRect)
+            let screenRect = convertToScreenCoordinates(rectToUse)
+            
+            print("Screen Rect: \(screenRect)")
             let cropRect = CGRect(
                 x: screenRect.minX * scale,
                 y: screenRect.minY * scale,
@@ -787,6 +794,7 @@ class SelectionView: NSView {
                 height: screenRect.height * scale
             )
 
+          
             guard let croppedCGImage = fullImage.cropping(to: cropRect) else {
                 print("Failed to crop image")
                 return
@@ -827,10 +835,7 @@ class SelectionView: NSView {
                 copyImageToClipboard(finalImage)
             } else if let url = saveToURL {
                 saveImageToDisk(finalImage, url: url)
-            } else {
-                copyImageToClipboard(finalImage)
             }
-
             window?.orderOut(nil)
         } catch {
             print("Screenshot capture failed: \(error)")
@@ -852,6 +857,7 @@ class SelectionView: NSView {
     }
 
     private func copyImageToClipboard(_ image: NSImage) {
+        print("Image size: \(image.size)")
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.writeObjects([image])
@@ -882,7 +888,7 @@ class SelectionView: NSView {
             print("Failed to convert image to PNG")
             return
         }
-
+        print(" image.size: \(image.size), url: \(url)")
         do {
             try pngData.write(to: url)
             let content = UNMutableNotificationContent()
