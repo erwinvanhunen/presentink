@@ -710,6 +710,7 @@ class SelectionView: NSView {
     @objc private func saveScreenshot() {
         // Store the current selectionRect before hiding the window
         lastSelectionRect = selectionRect
+        buttonBar.isHidden = true
         window?.orderOut(nil)
         Task {
             try? await Task.sleep(nanoseconds: 1_000_000)  // 1 second pause
@@ -786,7 +787,6 @@ class SelectionView: NSView {
             // Crop the selection area
             let screenRect = convertToScreenCoordinates(rectToUse)
             
-            print("Screen Rect: \(screenRect)")
             let cropRect = CGRect(
                 x: screenRect.minX * scale,
                 y: screenRect.minY * scale,
@@ -857,7 +857,6 @@ class SelectionView: NSView {
     }
 
     private func copyImageToClipboard(_ image: NSImage) {
-        print("Image size: \(image.size)")
         let pasteboard = NSPasteboard.general
         pasteboard.clearContents()
         pasteboard.writeObjects([image])
@@ -888,7 +887,6 @@ class SelectionView: NSView {
             print("Failed to convert image to PNG")
             return
         }
-        print(" image.size: \(image.size), url: \(url)")
         do {
             try pngData.write(to: url)
             let content = UNMutableNotificationContent()
