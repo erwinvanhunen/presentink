@@ -43,6 +43,12 @@ class AboutSettingsView: NSView {
         thanksLabel.textColor = NSColor(white: 1, alpha: 0.7)
 
         let buyMeACoffeeButton = ClickImageButton(image: NSImage(named: "BuyMeACoffee")!, width: 200, height: 56, action: #selector(buyMeACoffeeClicked), target: self)
+        
+        let githubButton = NSButton(title: "View on GitHub", target: self, action: #selector(githubClicked))
+              githubButton.bezelStyle = .rounded
+              githubButton.font = NSFont.systemFont(ofSize: 14)
+              githubButton.contentTintColor = .white
+        
         // Main vertical stack
         let stack = NSStackView(views: [
             appIcon,
@@ -51,6 +57,7 @@ class AboutSettingsView: NSView {
             versionLabel,
             copyrightLabel,
             buyMeACoffeeButton,
+            githubButton,
             thanksLabel
         ])
         stack.orientation = .vertical
@@ -76,6 +83,14 @@ class AboutSettingsView: NSView {
         }
         self.window?.close()
     }
+    
+    @objc private func githubClicked() {
+           if let url = URL(string: "https://github.com/erwinvanhunen/presentink") {
+               NSWorkspace.shared.open(url)
+           }
+           self.window?.close()
+       }
+
 
     required init?(coder: NSCoder) { fatalError() }
 }
