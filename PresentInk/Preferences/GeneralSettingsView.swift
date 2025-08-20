@@ -11,6 +11,17 @@ class GeneralSettingsView: NSView {
     let languageCodes = ["en", "nl", "sv"]
     let languageNames = ["English", "Nederlands", "Svenska"]
 
+    private let backgroundView: NSVisualEffectView = {
+           let v = NSVisualEffectView()
+           v.material = .sidebar
+           v.blendingMode = .withinWindow
+           v.state = .active
+           v.appearance = NSAppearance(named: .vibrantDark)
+           v.translatesAutoresizingMaskIntoConstraints = false
+           return v
+       }()
+
+    
     let sectionLabel: NSTextField = {
         let label = NSTextField(
             labelWithString: NSLocalizedString("General", comment: "")
@@ -59,7 +70,20 @@ class GeneralSettingsView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
+        
+         wantsLayer = true
+         appearance = NSAppearance(named: .darkAqua)
+
+         // Background
+         addSubview(backgroundView)
+         NSLayoutConstraint.activate([
+             backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+             backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+             backgroundView.topAnchor.constraint(equalTo: topAnchor),
+             backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+         ])
+        
+//        layer?.backgroundColor = NSColor.clear.cgColor
 
         languageLabel.font = NSFont.systemFont(ofSize: 12)
         languagePopUp.addItems(withTitles: languageNames)

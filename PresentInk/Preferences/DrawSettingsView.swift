@@ -7,7 +7,17 @@
 import Cocoa
 
 class DrawSettingsView: NSView {
-    // Section label
+    
+    private let backgroundView: NSVisualEffectView = {
+           let v = NSVisualEffectView()
+           v.material = .sidebar
+           v.blendingMode = .withinWindow
+           v.state = .active
+           v.appearance = NSAppearance(named: .vibrantDark)
+           v.translatesAutoresizingMaskIntoConstraints = false
+           return v
+       }()
+    
     let sectionLabel: NSTextField = {
         let label = NSTextField(labelWithString: NSLocalizedString("Drawing", comment: "").uppercased())
         label.font = NSFont.boldSystemFont(ofSize: 12)
@@ -45,7 +55,18 @@ class DrawSettingsView: NSView {
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
         wantsLayer = true
-        layer?.backgroundColor = NSColor.clear.cgColor
+        wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
+
+        // Background
+        addSubview(backgroundView)
+        NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+
 
         let configuredPenWidth = Settings.shared.penWidth
         penWidthSlider.integerValue = configuredPenWidth

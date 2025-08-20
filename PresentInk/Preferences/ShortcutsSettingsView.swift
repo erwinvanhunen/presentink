@@ -4,16 +4,29 @@
 //
 //  Created by Erwin van Hunen on 2025-07-12.
 //
-
 import Carbon
 import Cocoa
 import HotKey
 
 class ShortcutsSettingsView: NSView {
+
+    // Persistent dark background
+    private let backgroundView: NSVisualEffectView = {
+        let v = NSVisualEffectView()
+        v.material = .sidebar
+        v.blendingMode = .withinWindow
+        v.state = .active
+        v.appearance = NSAppearance(named: .vibrantDark)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+
+    // Keep a handle to the content so we can rebuild it without removing the background
+    private var mainStack: NSStackView?
+
     private let titleLabel = NSTextField(labelWithString: NSLocalizedString("Shortcuts", comment:"").uppercased())
     private let subtitleLabel = NSTextField(
-        labelWithString:
-            NSLocalizedString("Customize keyboard shortcuts for quick access. Click to change", comment: "")
+        labelWithString: NSLocalizedString("Customize keyboard shortcuts for quick access. Click to change", comment: "")
     )
 
     private let drawLabel = NSTextField(labelWithString: NSLocalizedString("Draw", comment: ""))
@@ -28,38 +41,41 @@ class ShortcutsSettingsView: NSView {
     private let typeTextLabel = NSTextField(labelWithString: NSLocalizedString("Text Typer", comment: ""))
     private let typeTextHotkeyField = HotkeyRecorderField()
 
-    private let screenRecordingLabel = NSTextField(
-        labelWithString: NSLocalizedString("Record Screen", comment: "")
-    )
+    private let screenRecordingLabel = NSTextField(labelWithString: NSLocalizedString("Record Screen", comment: ""))
     private let screenRecordingHotkeyField = HotkeyRecorderField()
 
-    private let screenRecordingCroppedLabel = NSTextField(
-        labelWithString: NSLocalizedString(
-            "Record cropped", comment:"")
-    )
+    private let screenRecordingCroppedLabel = NSTextField(labelWithString: NSLocalizedString("Record cropped", comment:""))
     private let screenRecordingCroppedHotkeyField = HotkeyRecorderField()
 
     private let spotlightHotKeyField = HotkeyRecorderField()
-
     private let spotlightLabel = NSTextField(labelWithString: NSLocalizedString("Spotlight", comment: ""))
 
     private let magnifierHotKeyField = HotkeyRecorderField()
-
     private let magnifierLabel = NSTextField(labelWithString: NSLocalizedString("Magnifier", comment: ""))
-    
-    private let liveCaptionsHotkeyField = HotkeyRecorderField()
 
+    private let liveCaptionsHotkeyField = HotkeyRecorderField()
     private let liveCaptionsLabel = NSTextField(labelWithString: NSLocalizedString("Live captions", comment: ""))
 
     private var resetButtons: [HotkeyType: NSButton] = [:]
 
     private enum HotkeyType {
-        case draw, screenshot, breakTimer, typeText, screenRecording,
-            screenRecordingCropped, spotlight, magnifier, liveCaptions
+        case draw, screenshot, breakTimer, typeText, screenRecording, screenRecordingCropped, spotlight, magnifier, liveCaptions
     }
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+
+        wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
+
+        // Background (added once, stays in the view)
+        addSubview(backgroundView)
+        NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
 
         NotificationCenter.default.addObserver(
             self,
@@ -67,11 +83,7 @@ class ShortcutsSettingsView: NSView {
             name: NSNotification.Name("ExperimentalFeaturesToggled"),
             object: nil
         )
-        setupUI()
-        loadSettings()
-    }
 
-    @objc private func experimentalFeaturesToggled() {
         setupUI()
         loadSettings()
     }
@@ -80,191 +92,143 @@ class ShortcutsSettingsView: NSView {
         fatalError("init(coder:) has not been implemented")
     }
 
+    @objc private func experimentalFeaturesToggled() {
+        setupUI()
+        loadSettings()
+    }
+
     private func setupUI() {
-        subviews.forEach { $0.removeFromSuperview() }
-        resetButtons = [:]  // Reset buttons
-        // Configure title
+        // Rebuild only the content, not the background
+        mainStack?.removeFromSuperview()
+        resetButtons = [:]
+
+        // Title and subtitle
         titleLabel.font = NSFont.boldSystemFont(ofSize: 12)
-        titleLabel.textColor = NSColor.secondaryLabelColor
+        titleLabel.textColor = .secondaryLabelColor
         titleLabel.isBezeled = false
         titleLabel.drawsBackground = false
         titleLabel.isEditable = false
         titleLabel.isSelectable = false
 
-        // Configure subtitle
         subtitleLabel.font = NSFont.systemFont(ofSize: 13)
         subtitleLabel.textColor = .secondaryLabelColor
 
-        // Configure labels
+        // Labels styling
         [
             drawLabel, screenshotLabel, breakTimerLabel, screenRecordingLabel,
             screenRecordingCroppedLabel, spotlightLabel, typeTextLabel,
             magnifierLabel, liveCaptionsLabel
-        ].forEach {
-            label in
+        ].forEach { label in
             label.font = NSFont.systemFont(ofSize: 13)
             label.textColor = .labelColor
             label.setContentHuggingPriority(.required, for: .horizontal)
             label.widthAnchor.constraint(equalToConstant: 120).isActive = true
         }
 
-        // Configure hotkey fields
+        // Hotkey fields sizing (include cropped field)
         [
             drawHotkeyField, screenshotHotkeyField, breakTimerHotkeyField,
             typeTextHotkeyField, screenRecordingHotkeyField,
-            spotlightHotKeyField, magnifierHotKeyField, liveCaptionsHotkeyField
+            screenRecordingCroppedHotkeyField, spotlightHotKeyField,
+            magnifierHotKeyField, liveCaptionsHotkeyField
         ].forEach { field in
             field.heightAnchor.constraint(equalToConstant: 28).isActive = true
             field.widthAnchor.constraint(equalToConstant: 180).isActive = true
         }
 
-        // Set up targets with conflict checking
+        // Handlers with conflict checking
         drawHotkeyField.onHotkeyChanged = { combo in
             if self.isHotkeyConflict(combo, excluding: .draw) {
                 self.showConflictAlert()
-                self.drawHotkeyField.keyCombo = Settings.shared.drawHotkey  // Revert
+                self.drawHotkeyField.keyCombo = Settings.shared.drawHotkey
             } else {
                 Settings.shared.drawHotkey = combo
                 self.updateResetButtons()
             }
         }
-
         screenshotHotkeyField.onHotkeyChanged = { combo in
             if self.isHotkeyConflict(combo, excluding: .screenshot) {
                 self.showConflictAlert()
-                self.screenshotHotkeyField.keyCombo =
-                    Settings.shared.screenShotHotkey  // Revert
+                self.screenshotHotkeyField.keyCombo = Settings.shared.screenShotHotkey
             } else {
                 Settings.shared.screenShotHotkey = combo
                 self.updateResetButtons()
             }
         }
-
         breakTimerHotkeyField.onHotkeyChanged = { combo in
             if self.isHotkeyConflict(combo, excluding: .breakTimer) {
                 self.showConflictAlert()
-                self.breakTimerHotkeyField.keyCombo =
-                    Settings.shared.breakTimerHotkey  // Revert
+                self.breakTimerHotkeyField.keyCombo = Settings.shared.breakTimerHotkey
             } else {
                 Settings.shared.breakTimerHotkey = combo
                 self.updateResetButtons()
             }
         }
-
         typeTextHotkeyField.onHotkeyChanged = { combo in
             if self.isHotkeyConflict(combo, excluding: .typeText) {
                 self.showConflictAlert()
-                self.typeTextHotkeyField.keyCombo =
-                    Settings.shared.textTypeHotkey  // Revert
+                self.typeTextHotkeyField.keyCombo = Settings.shared.textTypeHotkey
             } else {
                 Settings.shared.textTypeHotkey = combo
                 self.updateResetButtons()
             }
         }
-
         screenRecordingHotkeyField.onHotkeyChanged = { combo in
             if self.isHotkeyConflict(combo, excluding: .screenRecording) {
                 self.showConflictAlert()
-                self.screenRecordingHotkeyField.keyCombo =
-                    Settings.shared.screenRecordingHotkey  // Revert
+                self.screenRecordingHotkeyField.keyCombo = Settings.shared.screenRecordingHotkey
             } else {
                 Settings.shared.screenRecordingHotkey = combo
                 self.updateResetButtons()
             }
         }
-
         screenRecordingCroppedHotkeyField.onHotkeyChanged = { combo in
-            if self.isHotkeyConflict(
-                combo,
-                excluding: .screenRecordingCropped
-            ) {
+            if self.isHotkeyConflict(combo, excluding: .screenRecordingCropped) {
                 self.showConflictAlert()
-                self.screenRecordingCroppedHotkeyField.keyCombo =
-                    Settings.shared.screenRecordingCroppedHotkey  // Revert
+                self.screenRecordingCroppedHotkeyField.keyCombo = Settings.shared.screenRecordingCroppedHotkey
             } else {
                 Settings.shared.screenRecordingCroppedHotkey = combo
                 self.updateResetButtons()
             }
         }
-
         spotlightHotKeyField.onHotkeyChanged = { combo in
-            if self.isHotkeyConflict(
-                combo,
-                excluding: .spotlight
-            ) {
+            if self.isHotkeyConflict(combo, excluding: .spotlight) {
                 self.showConflictAlert()
-                self.spotlightHotKeyField.keyCombo =
-                    Settings.shared.spotlightHotkey  // Revert
+                self.spotlightHotKeyField.keyCombo = Settings.shared.spotlightHotkey
             } else {
                 Settings.shared.spotlightHotkey = combo
                 self.updateResetButtons()
             }
         }
-        
         magnifierHotKeyField.onHotkeyChanged = { combo in
-            if self.isHotkeyConflict(
-                combo,
-                excluding: .magnifier
-            ) {
+            if self.isHotkeyConflict(combo, excluding: .magnifier) {
                 self.showConflictAlert()
-                self.magnifierHotKeyField.keyCombo =
-                    Settings.shared.magnifierHotkey  // Revert
+                self.magnifierHotKeyField.keyCombo = Settings.shared.magnifierHotkey
             } else {
                 Settings.shared.magnifierHotkey = combo
                 self.updateResetButtons()
             }
         }
-        
         liveCaptionsHotkeyField.onHotkeyChanged = { combo in
-            if self.isHotkeyConflict(
-                combo,
-                excluding: .liveCaptions
-            ) {
+            if self.isHotkeyConflict(combo, excluding: .liveCaptions) {
                 self.showConflictAlert()
-                self.liveCaptionsHotkeyField.keyCombo =
-                    Settings.shared.liveCaptionsHotkey  // Revert
+                self.liveCaptionsHotkeyField.keyCombo = Settings.shared.liveCaptionsHotkey
             } else {
                 Settings.shared.liveCaptionsHotkey = combo
                 self.updateResetButtons()
             }
         }
 
-        let drawReset = ResetButton(
-            action: #selector(resetDrawHotkey),
-            target: self
-        )
-        let screenshotReset = ResetButton(
-            action: #selector(resetScreenshotHotkey),
-            target: self
-        )
-        let breakTimerReset = ResetButton(
-            action: #selector(resetBreakTimerHotkey),
-            target: self
-        )
-        let screenRecordingReset = ResetButton(
-            action: #selector(resetScreenRecordingHotkey),
-            target: self
-        )
-        let screenRecordingRectangleReset = ResetButton(
-            action: #selector(resetScreenRecordingRectangleHotkey),
-            target: self
-        )
-        let spotlightReset = ResetButton(
-            action: #selector(resetSpotlightHotkey),
-            target: self
-        )
-        let typeTextReset = ResetButton(
-            action: #selector(resetTypeTextHotkey),
-            target: self
-        )
-        let magnifierReset = ResetButton(
-            action: #selector(resetMagnifierHotkey),
-            target: self
-        )
-        let liveCaptionsReset = ResetButton(
-            action: #selector(resetLiveCaptionsHotkey),
-            target: self
-        )
+        // Reset buttons
+        let drawReset = ResetButton(action: #selector(resetDrawHotkey), target: self)
+        let screenshotReset = ResetButton(action: #selector(resetScreenshotHotkey), target: self)
+        let breakTimerReset = ResetButton(action: #selector(resetBreakTimerHotkey), target: self)
+        let screenRecordingReset = ResetButton(action: #selector(resetScreenRecordingHotkey), target: self)
+        let screenRecordingRectangleReset = ResetButton(action: #selector(resetScreenRecordingRectangleHotkey), target: self)
+        let spotlightReset = ResetButton(action: #selector(resetSpotlightHotkey), target: self)
+        let typeTextReset = ResetButton(action: #selector(resetTypeTextHotkey), target: self)
+        let magnifierReset = ResetButton(action: #selector(resetMagnifierHotkey), target: self)
+        let liveCaptionsReset = ResetButton(action: #selector(resetLiveCaptionsHotkey), target: self)
 
         resetButtons = [
             .draw: drawReset,
@@ -277,247 +241,113 @@ class ShortcutsSettingsView: NSView {
             .magnifier: magnifierReset,
             .liveCaptions: liveCaptionsReset
         ]
-      
-        // Create stack views for each shortcut row
-        let drawStack = NSStackView(views: [
-            drawLabel, drawHotkeyField, drawReset,
-        ])
-        drawStack.orientation = .horizontal
-        drawStack.spacing = 16
-        drawStack.alignment = .centerY
 
-        let screenshotStack = NSStackView(views: [
-            screenshotLabel, screenshotHotkeyField, screenshotReset,
-        ])
-        screenshotStack.orientation = .horizontal
-        screenshotStack.spacing = 16
-        screenshotStack.alignment = .centerY
+        // Rows
+        let drawStack = row(drawLabel, drawHotkeyField, drawReset)
+        let screenshotStack = row(screenshotLabel, screenshotHotkeyField, screenshotReset)
+        let breakTimerStack = row(breakTimerLabel, breakTimerHotkeyField, breakTimerReset)
+        let screenRecordingStack = row(screenRecordingLabel, screenRecordingHotkeyField, screenRecordingReset)
+        let screenRecordingRectangleStack = row(screenRecordingCroppedLabel, screenRecordingCroppedHotkeyField, screenRecordingRectangleReset)
+        let spotlightStack = row(spotlightLabel, spotlightHotKeyField, spotlightReset)
+        let magnifierStack = row(magnifierLabel, magnifierHotKeyField, magnifierReset)
+        let liveCaptionsStack = row(liveCaptionsLabel, liveCaptionsHotkeyField, liveCaptionsReset)
+        let typeTextStack = row(typeTextLabel, typeTextHotkeyField, typeTextReset)
+        typeTextStack.isHidden = !Settings.shared.showExperimentalFeatures
 
-        let breakTimerStack = NSStackView(views: [
-            breakTimerLabel, breakTimerHotkeyField, breakTimerReset,
-        ])
-        breakTimerStack.orientation = .horizontal
-        breakTimerStack.spacing = 16
-        breakTimerStack.alignment = .centerY
-
-        let screenRecordingStack = NSStackView(views: [
-            screenRecordingLabel, screenRecordingHotkeyField,
-            screenRecordingReset,
-        ])
-        screenRecordingStack.orientation = .horizontal
-        screenRecordingStack.spacing = 16
-        screenRecordingStack.alignment = .centerY
-
-        let screenRecordingRectangleStack = NSStackView(views: [
-            screenRecordingCroppedLabel, screenRecordingCroppedHotkeyField,
-            screenRecordingRectangleReset,
-        ])
-        screenRecordingRectangleStack.orientation = .horizontal
-        screenRecordingRectangleStack.spacing = 16
-        screenRecordingRectangleStack.alignment = .centerY
-
-        let spotlightStack = NSStackView(views: [
-            spotlightLabel, spotlightHotKeyField, spotlightReset,
-        ])
-        spotlightStack.orientation = .horizontal
-        spotlightStack.spacing = 16
-        spotlightStack.alignment = .centerY
-        // Main vertical stack
-        let mainStack = NSStackView(views: [
+        // Main stack
+        let content = NSStackView(views: [
             titleLabel,
             subtitleLabel,
-            NSView(),  // Spacer
+            NSView(), // spacer
             drawStack,
             screenshotStack,
             breakTimerStack,
             screenRecordingStack,
             screenRecordingRectangleStack,
             spotlightStack,
+            magnifierStack,
+            liveCaptionsStack,
+            typeTextStack
         ])
-        
-        let magnifierStack = NSStackView(views: [
-            magnifierLabel, magnifierHotKeyField, magnifierReset
-        ])
-        magnifierStack.orientation = .horizontal
-        magnifierStack.spacing = 16
-        magnifierStack.alignment = .centerY
-        mainStack.addArrangedSubview(magnifierStack)
-        
-        let liveCaptionsStack = NSStackView(views: [
-            liveCaptionsLabel, liveCaptionsHotkeyField, liveCaptionsReset
-        ])
-        
-        liveCaptionsStack.orientation = .horizontal
-        liveCaptionsStack.spacing = 16
-        liveCaptionsStack.alignment = .centerY
-        mainStack.addArrangedSubview(liveCaptionsStack)
-        
-        let typeTextStack = NSStackView(views: [
-            typeTextLabel, typeTextHotkeyField, typeTextReset
-        ])
-        typeTextStack.orientation = .horizontal
-        typeTextStack.spacing = 16
-        typeTextStack.alignment = .centerY
-        mainStack.addArrangedSubview(typeTextStack)
-        typeTextStack.isHidden = !Settings.shared.showExperimentalFeatures
+        content.orientation = .vertical
+        content.alignment = .leading
+        content.spacing = 12
+        content.translatesAutoresizingMaskIntoConstraints = false
 
-       
-
-        mainStack.orientation = .vertical
-        mainStack.alignment = .leading
-        mainStack.spacing = 12
-        mainStack.translatesAutoresizingMaskIntoConstraints = false
-
-        addSubview(mainStack)
-
+        addSubview(content)
         NSLayoutConstraint.activate([
-            mainStack.topAnchor.constraint(
-                equalTo: topAnchor,
-                constant: 32
-            ),
-            mainStack.leadingAnchor.constraint(
-                equalTo: leadingAnchor,
-                constant: 32
-            ),
-            mainStack.trailingAnchor.constraint(
-                lessThanOrEqualTo: trailingAnchor,
-                constant: -32
-            ),
+            content.topAnchor.constraint(equalTo: topAnchor, constant: 32),
+            content.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 32),
+            content.trailingAnchor.constraint(lessThanOrEqualTo: trailingAnchor, constant: -32)
         ])
 
+        mainStack = content
+    }
+
+    private func row(_ label: NSTextField, _ field: NSView, _ reset: NSButton) -> NSStackView {
+        let stack = NSStackView(views: [label, field, reset])
+        stack.orientation = .horizontal
+        stack.spacing = 16
+        stack.alignment = .centerY
+        return stack
     }
 
     @objc private func resetDrawHotkey() {
-        Settings.shared.drawHotkey = SettingsKeyCombo(
-            key: .d,
-            modifiers: [.option, .shift]
-        )
-        drawHotkeyField.keyCombo = SettingsKeyCombo(
-            key: .d,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.drawHotkey = SettingsKeyCombo(key: .d, modifiers: [.option, .shift])
+        drawHotkeyField.keyCombo = Settings.shared.drawHotkey
         updateResetButtons()
     }
     @objc private func resetScreenshotHotkey() {
-        Settings.shared.screenShotHotkey = SettingsKeyCombo(
-            key: .s,
-            modifiers: [.option, .shift]
-        )
-        screenshotHotkeyField.keyCombo = SettingsKeyCombo(
-            key: .s,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.screenShotHotkey = SettingsKeyCombo(key: .s, modifiers: [.option, .shift])
+        screenshotHotkeyField.keyCombo = Settings.shared.screenShotHotkey
         updateResetButtons()
     }
     @objc private func resetBreakTimerHotkey() {
-        Settings.shared.breakTimerHotkey = SettingsKeyCombo(
-            key: .b,
-            modifiers: [.option, .shift]
-        )
-        breakTimerHotkeyField.keyCombo = SettingsKeyCombo(
-            key: .b,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.breakTimerHotkey = SettingsKeyCombo(key: .b, modifiers: [.option, .shift])
+        breakTimerHotkeyField.keyCombo = Settings.shared.breakTimerHotkey
         updateResetButtons()
     }
     @objc private func resetTypeTextHotkey() {
-        Settings.shared.textTypeHotkey = SettingsKeyCombo(
-            key: .t,
-            modifiers: [.option, .shift]
-        )
-        typeTextHotkeyField.keyCombo = SettingsKeyCombo(
-            key: .t,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.textTypeHotkey = SettingsKeyCombo(key: .t, modifiers: [.option, .shift])
+        typeTextHotkeyField.keyCombo = Settings.shared.textTypeHotkey
         updateResetButtons()
     }
     @objc private func resetScreenRecordingHotkey() {
-        Settings.shared.screenRecordingHotkey = SettingsKeyCombo(
-            key: .r,
-            modifiers: [.option, .shift]
-        )
-        screenRecordingHotkeyField.keyCombo = SettingsKeyCombo(
-            key: .r,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.screenRecordingHotkey = SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
+        screenRecordingHotkeyField.keyCombo = Settings.shared.screenRecordingHotkey
         updateResetButtons()
     }
     @objc private func resetScreenRecordingRectangleHotkey() {
-        Settings.shared.screenRecordingCroppedHotkey = SettingsKeyCombo(
-            key: .r,
-            modifiers: [.control, .shift]
-        )
-        screenRecordingCroppedHotkeyField.keyCombo = SettingsKeyCombo(
-            key: .r,
-            modifiers: [.control, .shift]
-        )
+        Settings.shared.screenRecordingCroppedHotkey = SettingsKeyCombo(key: .r, modifiers: [.control, .shift])
+        screenRecordingCroppedHotkeyField.keyCombo = Settings.shared.screenRecordingCroppedHotkey
         updateResetButtons()
     }
-
     @objc private func resetSpotlightHotkey() {
-        Settings.shared.spotlightHotkey = SettingsKeyCombo(
-            key: .f,
-            modifiers: [.option, .shift]
-        )
-        spotlightHotKeyField.keyCombo = SettingsKeyCombo(
-            key: .f,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.spotlightHotkey = SettingsKeyCombo(key: .f, modifiers: [.option, .shift])
+        spotlightHotKeyField.keyCombo = Settings.shared.spotlightHotkey
         updateResetButtons()
     }
-
     @objc private func resetMagnifierHotkey() {
-        Settings.shared.magnifierHotkey = SettingsKeyCombo(
-            key: .m,
-            modifiers: [.option, .shift]
-        )
-        magnifierHotKeyField.keyCombo = SettingsKeyCombo(
-            key: .m,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.magnifierHotkey = SettingsKeyCombo(key: .m, modifiers: [.option, .shift])
+        magnifierHotKeyField.keyCombo = Settings.shared.magnifierHotkey
         updateResetButtons()
     }
-    
     @objc private func resetLiveCaptionsHotkey() {
-        Settings.shared.liveCaptionsHotkey = SettingsKeyCombo(
-            key: .c,
-            modifiers: [.option, .shift]
-        )
-        liveCaptionsHotkeyField.keyCombo = SettingsKeyCombo(
-            key: .c,
-            modifiers: [.option, .shift]
-        )
+        Settings.shared.liveCaptionsHotkey = SettingsKeyCombo(key: .c, modifiers: [.option, .shift])
+        liveCaptionsHotkeyField.keyCombo = Settings.shared.liveCaptionsHotkey
         updateResetButtons()
     }
 
     private func updateResetButtons() {
-        resetButtons[.draw]?.isEnabled =
-            Settings.shared.drawHotkey
-            != SettingsKeyCombo(key: .d, modifiers: [.option, .shift])
-        resetButtons[.screenshot]?.isEnabled =
-            Settings.shared.screenShotHotkey
-            != SettingsKeyCombo(key: .s, modifiers: [.option, .shift])
-        resetButtons[.breakTimer]?.isEnabled =
-            Settings.shared.breakTimerHotkey
-            != SettingsKeyCombo(key: .b, modifiers: [.option, .shift])
-        resetButtons[.typeText]?.isEnabled =
-            Settings.shared.textTypeHotkey
-            != SettingsKeyCombo(key: .t, modifiers: [.option, .shift])
-        resetButtons[.screenRecording]?.isEnabled =
-            Settings.shared.screenRecordingHotkey
-            != SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
-        resetButtons[.screenRecordingCropped]?.isEnabled =
-            Settings.shared.screenRecordingCroppedHotkey
-            != SettingsKeyCombo(key: .r, modifiers: [.control, .shift])
-        resetButtons[.spotlight]?.isEnabled =
-            Settings.shared.spotlightHotkey
-            != SettingsKeyCombo(key: .f, modifiers: [.option, .shift])
-        resetButtons[.magnifier]?.isEnabled =
-            Settings.shared.magnifierHotkey
-            != SettingsKeyCombo(key: .m, modifiers: [.option, .shift])
-        resetButtons[.liveCaptions]?.isEnabled =
-            Settings.shared.liveCaptionsHotkey
-            != SettingsKeyCombo(key: .c, modifiers: [.option, .shift])
+        resetButtons[.draw]?.isEnabled = Settings.shared.drawHotkey != SettingsKeyCombo(key: .d, modifiers: [.option, .shift])
+        resetButtons[.screenshot]?.isEnabled = Settings.shared.screenShotHotkey != SettingsKeyCombo(key: .s, modifiers: [.option, .shift])
+        resetButtons[.breakTimer]?.isEnabled = Settings.shared.breakTimerHotkey != SettingsKeyCombo(key: .b, modifiers: [.option, .shift])
+        resetButtons[.typeText]?.isEnabled = Settings.shared.textTypeHotkey != SettingsKeyCombo(key: .t, modifiers: [.option, .shift])
+        resetButtons[.screenRecording]?.isEnabled = Settings.shared.screenRecordingHotkey != SettingsKeyCombo(key: .r, modifiers: [.option, .shift])
+        resetButtons[.screenRecordingCropped]?.isEnabled = Settings.shared.screenRecordingCroppedHotkey != SettingsKeyCombo(key: .r, modifiers: [.control, .shift])
+        resetButtons[.spotlight]?.isEnabled = Settings.shared.spotlightHotkey != SettingsKeyCombo(key: .f, modifiers: [.option, .shift])
+        resetButtons[.magnifier]?.isEnabled = Settings.shared.magnifierHotkey != SettingsKeyCombo(key: .m, modifiers: [.option, .shift])
+        resetButtons[.liveCaptions]?.isEnabled = Settings.shared.liveCaptionsHotkey != SettingsKeyCombo(key: .c, modifiers: [.option, .shift])
     }
 
     private func loadSettings() {
@@ -525,138 +355,46 @@ class ShortcutsSettingsView: NSView {
         screenshotHotkeyField.keyCombo = Settings.shared.screenShotHotkey
         breakTimerHotkeyField.keyCombo = Settings.shared.breakTimerHotkey
         typeTextHotkeyField.keyCombo = Settings.shared.textTypeHotkey
-        screenRecordingHotkeyField.keyCombo =
-            Settings.shared.screenRecordingHotkey
-        screenRecordingCroppedHotkeyField.keyCombo =
-            Settings.shared.screenRecordingCroppedHotkey
+        screenRecordingHotkeyField.keyCombo = Settings.shared.screenRecordingHotkey
+        screenRecordingCroppedHotkeyField.keyCombo = Settings.shared.screenRecordingCroppedHotkey
         spotlightHotKeyField.keyCombo = Settings.shared.spotlightHotkey
         magnifierHotKeyField.keyCombo = Settings.shared.magnifierHotkey
         liveCaptionsHotkeyField.keyCombo = Settings.shared.liveCaptionsHotkey
         updateResetButtons()
     }
 
-    private func isHotkeyConflict(
-        _ combo: SettingsKeyCombo,
-        excluding: HotkeyType
-    ) -> Bool {
+    private func isHotkeyConflict(_ combo: SettingsKeyCombo, excluding: HotkeyType) -> Bool {
         let existingHotkeys: [SettingsKeyCombo] = {
             switch excluding {
             case .draw:
-                return [
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.magnifierHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.screenShotHotkey, Settings.shared.breakTimerHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.spotlightHotkey, Settings.shared.magnifierHotkey, Settings.shared.liveCaptionsHotkey]
             case .screenshot:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.magnifierHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.breakTimerHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.spotlightHotkey, Settings.shared.magnifierHotkey, Settings.shared.liveCaptionsHotkey]
             case .breakTimer:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.magnifierHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.screenShotHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.spotlightHotkey, Settings.shared.magnifierHotkey, Settings.shared.liveCaptionsHotkey]
             case .typeText:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.magnifierHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.screenShotHotkey, Settings.shared.breakTimerHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.spotlightHotkey, Settings.shared.magnifierHotkey, Settings.shared.liveCaptionsHotkey]
             case .screenRecording:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.magnifierHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.screenShotHotkey, Settings.shared.breakTimerHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.spotlightHotkey, Settings.shared.magnifierHotkey, Settings.shared.liveCaptionsHotkey]
             case .screenRecordingCropped:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.magnifierHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.screenShotHotkey, Settings.shared.breakTimerHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.spotlightHotkey, Settings.shared.magnifierHotkey, Settings.shared.liveCaptionsHotkey]
             case .spotlight:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.magnifierHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.screenShotHotkey, Settings.shared.breakTimerHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.magnifierHotkey, Settings.shared.liveCaptionsHotkey]
             case .magnifier:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.liveCaptionsHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.screenShotHotkey, Settings.shared.breakTimerHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.spotlightHotkey, Settings.shared.liveCaptionsHotkey]
             case .liveCaptions:
-                return [
-                    Settings.shared.drawHotkey,
-                    Settings.shared.screenShotHotkey,
-                    Settings.shared.breakTimerHotkey,
-                    Settings.shared.textTypeHotkey,
-                    Settings.shared.screenRecordingHotkey,
-                    Settings.shared.screenRecordingCroppedHotkey,
-                    Settings.shared.spotlightHotkey,
-                    Settings.shared.magnifierHotkey,
-                ]
+                return [Settings.shared.drawHotkey, Settings.shared.screenShotHotkey, Settings.shared.breakTimerHotkey, Settings.shared.textTypeHotkey, Settings.shared.screenRecordingHotkey, Settings.shared.screenRecordingCroppedHotkey, Settings.shared.spotlightHotkey, Settings.shared.magnifierHotkey]
             }
         }()
-
         return existingHotkeys.contains { existing in
-            existing.keyRawValue == combo.keyRawValue
-                && existing.modifiersRawValue == combo.modifiersRawValue
+            existing.keyRawValue == combo.keyRawValue && existing.modifiersRawValue == combo.modifiersRawValue
         }
     }
 
     private func showConflictAlert() {
         let alert = NSAlert()
-        alert.messageText = NSLocalizedString(
-            "Shortcut Conflict",
-            comment: "Alert title when a shortcut conflict occurs"
-        )
-        alert.informativeText =
-        NSLocalizedString("This keyboard shortcut is already assigned to another action. Please choose a different combination", comment:"")
+        alert.messageText = NSLocalizedString("Shortcut Conflict", comment: "Alert title when a shortcut conflict occurs")
+        alert.informativeText = NSLocalizedString("This keyboard shortcut is already assigned to another action. Please choose a different combination", comment:"")
         alert.alertStyle = .warning
         alert.addButton(withTitle: "OK")
         alert.runModal()
@@ -664,6 +402,17 @@ class ShortcutsSettingsView: NSView {
 }
 
 class HotkeyRecorderField: NSView {
+    
+    private let backgroundView: NSVisualEffectView = {
+        let v = NSVisualEffectView()
+        v.material = .sidebar
+        v.blendingMode = .withinWindow
+        v.state = .active
+        v.appearance = NSAppearance(named: .vibrantDark)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+    
     var keyCombo: SettingsKeyCombo? {
         didSet {
             updateDisplay()
@@ -678,6 +427,18 @@ class HotkeyRecorderField: NSView {
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
+
+        // Background (added once, stays in the view)
+        addSubview(backgroundView)
+        NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+        
         setupUI()
     }
 

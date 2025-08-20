@@ -11,6 +11,16 @@ import Speech
 
 class LiveCaptionsSettingsView: NSView {
     
+    private let backgroundView: NSVisualEffectView = {
+           let v = NSVisualEffectView()
+           v.material = .sidebar
+           v.blendingMode = .withinWindow
+           v.state = .active
+           v.appearance = NSAppearance(named: .vibrantDark)
+           v.translatesAutoresizingMaskIntoConstraints = false
+           return v
+       }()
+    
     let sectionLabel: NSTextField = {
         let label = NSTextField(labelWithString: NSLocalizedString("Live captions", comment: "").uppercased())
         label.font = NSFont.boldSystemFont(ofSize: 12)
@@ -50,6 +60,19 @@ class LiveCaptionsSettingsView: NSView {
     
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
+
+        // Background
+        addSubview(backgroundView)
+        NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+
+        
         setupUI()
         setupLanguageOptions()
         loadSettings()

@@ -1,6 +1,17 @@
+// swift
 import Cocoa
 
 class AboutSettingsView: NSView {
+    private let backgroundView: NSVisualEffectView = {
+        let v = NSVisualEffectView()
+        v.material = .sidebar
+        v.blendingMode = .withinWindow
+        v.state = .active
+        v.appearance = NSAppearance(named: .vibrantDark)
+        v.translatesAutoresizingMaskIntoConstraints = false
+        return v
+    }()
+
     let appIcon = NSImageView()
     let spacer = NSView()
     let appName = NSTextField(labelWithString: "PresentInk")
@@ -10,12 +21,23 @@ class AboutSettingsView: NSView {
         return NSTextField(labelWithString: "Version \(version) (\(build))")
     }()
     let copyrightLabel = NSTextField(labelWithString: "Copyright © 2025 Erwin van Hunen")
-  
     let thanksLabel = NSTextField(labelWithString: "Thank you for supporting PresentInk!")
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+
+        // Force dark appearance for this pane only
         wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
+
+        // Background (always dark, matching settings menu)
+        addSubview(backgroundView)
+        NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
 
         // App icon
         appIcon.image = NSImage(named: "AppIcon")
@@ -23,9 +45,9 @@ class AboutSettingsView: NSView {
         appIcon.wantsLayer = true
 
         spacer.translatesAutoresizingMaskIntoConstraints = false
-                spacer.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        
-        // App name label
+        spacer.heightAnchor.constraint(equalToConstant: 20).isActive = true
+
+        // Labels
         appName.font = NSFont.boldSystemFont(ofSize: 22)
         appName.alignment = .center
         appName.textColor = .white
@@ -42,14 +64,21 @@ class AboutSettingsView: NSView {
         thanksLabel.alignment = .center
         thanksLabel.textColor = NSColor(white: 1, alpha: 0.7)
 
-        let buyMeACoffeeButton = ClickImageButton(image: NSImage(named: "BuyMeACoffee")!, width: 200, height: 56, action: #selector(buyMeACoffeeClicked), target: self)
-        
+        // Buttons
+        let buyMeACoffeeButton = ClickImageButton(
+            image: NSImage(named: "BuyMeACoffee")!,
+            width: 200,
+            height: 56,
+            action: #selector(buyMeACoffeeClicked),
+            target: self
+        )
+
         let githubButton = NSButton(title: "View on GitHub", target: self, action: #selector(githubClicked))
-              githubButton.bezelStyle = .rounded
-              githubButton.font = NSFont.systemFont(ofSize: 14)
-              githubButton.contentTintColor = .white
-        
-        // Main vertical stack
+        githubButton.bezelStyle = .rounded
+        githubButton.font = NSFont.systemFont(ofSize: 14)
+        githubButton.contentTintColor = .white
+
+        // Stack
         let stack = NSStackView(views: [
             appIcon,
             spacer,
@@ -83,14 +112,13 @@ class AboutSettingsView: NSView {
         }
         self.window?.close()
     }
-    
-    @objc private func githubClicked() {
-           if let url = URL(string: "https://github.com/erwinvanhunen/presentink") {
-               NSWorkspace.shared.open(url)
-           }
-           self.window?.close()
-       }
 
+    @objc private func githubClicked() {
+        if let url = URL(string: "https://github.com/erwinvanhunen/presentink") {
+            NSWorkspace.shared.open(url)
+        }
+        self.window?.close()
+    }
 
     required init?(coder: NSCoder) { fatalError() }
 }

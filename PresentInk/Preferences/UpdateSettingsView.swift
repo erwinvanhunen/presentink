@@ -8,6 +8,17 @@
 import Cocoa
 
 class UpdateSettingsView: NSView {
+    
+    private let backgroundView: NSVisualEffectView = {
+           let v = NSVisualEffectView()
+           v.material = .sidebar
+           v.blendingMode = .withinWindow
+           v.state = .active
+           v.appearance = NSAppearance(named: .vibrantDark)
+           v.translatesAutoresizingMaskIntoConstraints = false
+           return v
+       }()
+    
     private let titleLabel = NSTextField(
         labelWithString: NSLocalizedString("Updates", comment: "").uppercased()
     )
@@ -29,12 +40,37 @@ class UpdateSettingsView: NSView {
 
     override init(frame frameRect: NSRect) {
         super.init(frame: frameRect)
+        wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
+
+        // Background
+        addSubview(backgroundView)
+        NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+
+        
         setupUI()
         loadSettings()
     }
 
     required init?(coder: NSCoder) {
         super.init(coder: coder)
+        wantsLayer = true
+        appearance = NSAppearance(named: .darkAqua)
+
+        // Background
+        addSubview(backgroundView)
+        NSLayoutConstraint.activate([
+            backgroundView.leadingAnchor.constraint(equalTo: leadingAnchor),
+            backgroundView.trailingAnchor.constraint(equalTo: trailingAnchor),
+            backgroundView.topAnchor.constraint(equalTo: topAnchor),
+            backgroundView.bottomAnchor.constraint(equalTo: bottomAnchor)
+        ])
+
         setupUI()
         loadSettings()
     }
