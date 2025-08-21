@@ -25,6 +25,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     var helpWindowController: HelpWindowController?
     var spotlightOverlayWindow: SpotlightOverlayWindow?
     var welcomeController: WelcomeWindowController?
+    var presentationTimerControllers: [PresentationTimerWindowController] = []
     var hotkeyDraw: HotKey?
     var hotkeyScreenshot: HotKey?
     var hotkeyBreak: HotKey?
@@ -651,7 +652,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
 
     fileprivate func setupMenu() {
         statusMenu = NSMenu()
-
+        
         // Get hotkey settings
         let drawHotkey = Settings.shared.drawHotkey
         let screenshotHotkey = Settings.shared.screenShotHotkey
@@ -659,9 +660,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         let typeTextHotkey = Settings.shared.textTypeHotkey
         let screenRecordingHotkey = Settings.shared.screenRecordingHotkey
         let screenRecordingCroppedHotkey =
-            Settings.shared.screenRecordingCroppedHotkey
+        Settings.shared.screenRecordingCroppedHotkey
         let spotlightHotkey = Settings.shared.spotlightHotkey
-
+        
         let drawItem = NSMenuItem(
             title: NSLocalizedString("Draw", comment: "Draw menu item"),
             action: #selector(drawAction),
@@ -669,7 +670,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         drawItem.keyEquivalentModifierMask = drawHotkey.modifiers
         statusMenu.addItem(drawItem)
-
+        
         let breakItem = NSMenuItem(
             title: NSLocalizedString(
                 "Break Time",
@@ -680,7 +681,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         breakItem.keyEquivalentModifierMask = breakTimerHotkey.modifiers
         statusMenu.addItem(breakItem)
-
+        
         let screenshotItem = NSMenuItem(
             title: NSLocalizedString(
                 "Screenshot",
@@ -691,7 +692,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         screenshotItem.keyEquivalentModifierMask = screenshotHotkey.modifiers
         statusMenu.addItem(screenshotItem)
-
+        
         let spotlightItem = NSMenuItem(
             title: NSLocalizedString(
                 "Spotlight",
@@ -702,7 +703,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         spotlightItem.keyEquivalentModifierMask = spotlightHotkey.modifiers
         statusMenu.addItem(spotlightItem)
-
+        
         let magnifierItem = NSMenuItem(
             title: NSLocalizedString(
                 "Magnifier",
@@ -711,12 +712,12 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(toggleMagnifierMode),
             keyEquivalent: Settings.shared.magnifierHotkey.key?.description
                 .lowercased() ?? "m"
-
+            
         )
         magnifierItem.keyEquivalentModifierMask =
-            Settings.shared.magnifierHotkey.modifiers
+        Settings.shared.magnifierHotkey.modifiers
         statusMenu.addItem(magnifierItem)
-
+        
         let liveCaptionsItem = NSMenuItem(
             title: NSLocalizedString(
                 "Live Captions",
@@ -727,11 +728,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 .lowercased() ?? "c"
         )
         liveCaptionsItem.keyEquivalentModifierMask =
-            Settings.shared.liveCaptionsHotkey.modifiers
+        Settings.shared.liveCaptionsHotkey.modifiers
         statusMenu.addItem(liveCaptionsItem)
-
+        
         let recordingMenu = NSMenu(title: "Record Screen")
-
+        
         let screenRecordingItem = NSMenuItem(
             title: NSLocalizedString(
                 "Record Full Screen",
@@ -739,13 +740,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             ),
             action: #selector(recordScreenMenuAction),
             keyEquivalent: screenRecordingHotkey.key?.description.lowercased()
-                ?? "r"
+            ?? "r"
         )
         screenRecordingItem.keyEquivalentModifierMask =
-            screenRecordingHotkey.modifiers
-
+        screenRecordingHotkey.modifiers
+        
         recordingMenu.addItem(screenRecordingItem)
-
+        
         let screenRecordingCroppedMenuItem = NSMenuItem(
             title: NSLocalizedString(
                 "Record cropped",
@@ -754,13 +755,13 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             action: #selector(recordScreenCroppedMenuAction),
             keyEquivalent: screenRecordingCroppedHotkey.key?.description
                 .lowercased()
-                ?? "r"
+            ?? "r"
         )
         screenRecordingCroppedMenuItem.keyEquivalentModifierMask =
-            screenRecordingCroppedHotkey.modifiers
-
+        screenRecordingCroppedHotkey.modifiers
+        
         recordingMenu.addItem(screenRecordingCroppedMenuItem)
-
+        
         let recordingMenuItem = NSMenuItem(
             title: NSLocalizedString(
                 "Record Screen",
@@ -771,7 +772,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         recordingMenuItem.submenu = recordingMenu
         statusMenu.addItem(recordingMenuItem)
-
+        
         let typeTextMenuItem = NSMenuItem(
             title: "Type Text",
             action: #selector(typeTextAction),
@@ -779,11 +780,22 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
         typeTextMenuItem.keyEquivalentModifierMask = typeTextHotkey.modifiers
         typeTextMenuItem.isEnabled = false
-
+        
         if Settings.shared.showExperimentalFeatures {
             statusMenu.addItem(typeTextMenuItem)
         }
-
+        
+        let presentationTimerItem = NSMenuItem(
+            title: NSLocalizedString(
+                "Presentation Timer",
+                comment: "Presentation Timer menu item"
+            ),
+            action: #selector(togglePresentationTimer),
+            keyEquivalent: ""
+        )
+        presentationTimerItem.state = presentationTimerControllers.isEmpty ? .off : .on
+        statusMenu.addItem(presentationTimerItem)
+            
         statusMenu.addItem(NSMenuItem.separator())
         statusMenu.addItem(
             NSMenuItem(
@@ -816,6 +828,34 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         )
     }
 
+    @objc func togglePresentationTimer() {
+        if presentationTimerControllers.isEmpty {
+            startPresentationTimer()
+        } else {
+            stopPresentationTimer()
+        }
+        // Reflect state in menu
+        if let item = statusMenu.item(withTitle: NSLocalizedString("Presentation Timer", comment: "Presentation timer menu item")) {
+            item.state = presentationTimerControllers.isEmpty ? .off : .on
+        }
+    }
+    
+    
+    private func startPresentationTimer() {
+        // One overlay per screen
+        for screen in NSScreen.screens {
+            let controller = PresentationTimerWindowController(screen: screen)
+            controller.showWindow(nil)
+            controller.showAndStart()
+            presentationTimerControllers.append(controller)
+        }
+    }
+
+    private func stopPresentationTimer() {
+        presentationTimerControllers.forEach { $0.stopAndClose() }
+        presentationTimerControllers.removeAll()
+    }
+    
     @objc private func typeTextAction() {
         if Settings.shared.showExperimentalFeatures {
 
