@@ -559,5 +559,14 @@ class Settings {
             UserDefaults.standard.set(newValue, forKey: "hasShownWelcome")
         }
     }
+    
+    var recordAudio: Bool {
+        get {
+            return UserDefaults.standard.bool(forKey: "recordAudio")
+        }
+        set {
+            UserDefaults.standard.set(newValue, forKey: "recordAudio")  
+        }
+    }
 
 }

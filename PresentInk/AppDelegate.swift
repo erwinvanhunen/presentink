@@ -576,7 +576,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 url: screenRecorderUrl!,
                 displayID: displayID,
                 cropRect: cropRect,
-                mode: .h264_sRGB
+                mode: .h264_sRGB,
+                recordAudio: Settings.shared.recordAudio
             )
             isRecording = true
             setRecordingTrayIcon(true)

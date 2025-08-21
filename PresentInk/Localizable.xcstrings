@@ -804,6 +804,9 @@
         }
       }
     },
+    "Record Audio" : {
+
+    },
     "Record cropped" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -872,6 +875,9 @@
           }
         }
       }
+    },
+    "Recording" : {
+
     },
     "Reset" : {
       "localizations" : {

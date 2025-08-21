@@ -37,12 +37,14 @@ class SettingsContentViewController: NSViewController {
         case general = "General"
         case draw = "Drawing"
         case breakTimer = "Break Timer"
+        case recording = "Recording"
         case liveCaptions = "Live Captions"
         case textTyper = "Text Typer"
         case shortcuts = "Shortcuts"
         case updates = "Updates"
         case about = "About"
-
+        
+        
         var iconName: String {
             switch self {
             case .general: return "circle"
@@ -53,6 +55,7 @@ class SettingsContentViewController: NSViewController {
             case .about: return "info.circle"
             case .liveCaptions: return "captions.bubble"
             case .textTyper: return "keyboard.onehanded.right"
+            case .recording: return "video"
             }
         }
 
@@ -76,7 +79,8 @@ class SettingsContentViewController: NSViewController {
     let updateSettingsView = UpdateSettingsView()
     let captionsSettingsView = LiveCaptionsSettingsView()
     let textTyperView = TextTyperSettingsView()
-
+    let recordingView = RecordingSettingsView()
+    
     override func loadView() {
         self.view = NSView()
         self.view.widthAnchor.constraint(equalToConstant: 720).isActive = true
@@ -237,6 +241,7 @@ class SettingsContentViewController: NSViewController {
         case .updates:
             view = updateSettingsView
         case .textTyper: view = textTyperView
+        case .recording: view = recordingView
         }
         view.translatesAutoresizingMaskIntoConstraints = false
         contentContainer.addSubview(view)
