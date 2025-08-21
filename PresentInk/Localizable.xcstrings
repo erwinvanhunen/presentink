@@ -810,7 +810,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Record Cropped"
+            "value" : "Record Selection"
           }
         },
         "nl" : {
@@ -821,8 +821,8 @@
         },
         "sv" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "Spela in beskuren"
+            "state" : "translated",
+            "value" : "Spela in skärmval"
           }
         }
       }
@@ -830,6 +830,12 @@
     "Record Full Screen" : {
       "comment" : "Screen Recording menu item",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Full Screen"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",
@@ -847,6 +853,12 @@
     "Record Screen" : {
       "comment" : "Record Full Screen menu item",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Record Screen"
+          }
+        },
         "nl" : {
           "stringUnit" : {
             "state" : "translated",

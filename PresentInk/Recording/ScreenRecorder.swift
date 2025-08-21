@@ -16,14 +16,20 @@ enum RecordMode {
 }
 
 class ScreenRecorder {
-    private let videoSampleBufferQueue = DispatchQueue(
-        label: "ScreenRecorder.VideoSampleBufferQueue"
-    )
+    private let videoSampleBufferQueue = DispatchQueue(label: "ScreenRecorder.VideoSampleBufferQueue")
+    private let audioSampleBufferQueue = DispatchQueue(label: "ScreenRecorder.AudioSampleBufferQueue")
 
     private let assetWriter: AVAssetWriter
     private let videoInput: AVAssetWriterInput
+    private let audioInput: AVAssetWriterInput
+
     private let streamOutput: StreamOutput
     private var stream: SCStream
+
+    // Microphone capture
+    private let audioSession: AVCaptureSession
+    private let audioDataOutput: AVCaptureAudioDataOutput
+    private let microphoneOutput: MicrophoneOutput
 
     init(
         url: URL,
@@ -35,13 +41,12 @@ class ScreenRecorder {
         // Create AVAssetWriter for a QuickTime movie file
         self.assetWriter = try AVAssetWriter(url: url, fileType: .mp4)
 
-        // MARK: AVAssetWriter setup
+        // MARK: AVAssetWriter setup (video)
 
         // Get size and pixel scale factor for display
-        // Used to compute the highest possible qualitiy
         let displaySize = CGDisplayBounds(displayID).size
 
-        // The number of physical pixels that represent a logic point on screen, currently 2 for MacBook Pro retina displays
+        // Scale factor (e.g. Retina 2x)
         let displayScaleFactor: Int
         if let mode = CGDisplayCopyDisplayMode(displayID) {
             displayScaleFactor = mode.pixelWidth / mode.width
@@ -49,17 +54,14 @@ class ScreenRecorder {
             displayScaleFactor = 1
         }
 
-        // AVAssetWriterInput supports maximum resolution of 4096x2304 for H.264
-        // Downsize to fit a larger display back into in 4K
+        // Downsize to codec limits if needed
         let videoSize = downsizedVideoSize(
             source: cropRect?.size ?? displaySize,
             scaleFactor: displayScaleFactor,
             mode: mode
         )
 
-        // Use the preset as large as possible, size will be reduced to screen size by computed videoSize
-        guard let assistant = AVOutputSettingsAssistant(preset: mode.preset)
-        else {
+        guard let assistant = AVOutputSettingsAssistant(preset: mode.preset) else {
             throw RecordingError("Can't create AVOutputSettingsAssistant")
         }
         assistant.sourceVideoFormat = try CMVideoFormatDescription(
@@ -69,71 +71,79 @@ class ScreenRecorder {
         )
 
         guard var outputSettings = assistant.videoSettings else {
-            throw RecordingError(
-                "AVOutputSettingsAssistant has no videoSettings"
-            )
+            throw RecordingError("AVOutputSettingsAssistant has no videoSettings")
         }
         outputSettings[AVVideoWidthKey] = videoSize.width
         outputSettings[AVVideoHeightKey] = videoSize.height
-
-        // Configure video color properties and compression properties based on RecordMode
-        // See AVVideoSettings.h and VTCompressionProperties.h
         outputSettings[AVVideoColorPropertiesKey] = mode.videoColorProperties
         if let videoProfileLevel = mode.videoProfileLevel {
             var compressionProperties: [String: Any] =
-                outputSettings[AVVideoCompressionPropertiesKey]
-                as? [String: Any] ?? [:]
+                outputSettings[AVVideoCompressionPropertiesKey] as? [String: Any] ?? [:]
             compressionProperties[AVVideoProfileLevelKey] = videoProfileLevel
-            outputSettings[AVVideoCompressionPropertiesKey] =
-                compressionProperties as NSDictionary
+            outputSettings[AVVideoCompressionPropertiesKey] = compressionProperties as NSDictionary
         }
 
-        // Create AVAssetWriter input for video, based on the output settings from the Assistant
-        videoInput = AVAssetWriterInput(
-            mediaType: .video,
-            outputSettings: outputSettings
-        )
+        // Video input
+        videoInput = AVAssetWriterInput(mediaType: .video, outputSettings: outputSettings)
         videoInput.expectsMediaDataInRealTime = true
         streamOutput = StreamOutput(videoInput: videoInput)
 
-        // Adding videoInput to assetWriter
         guard assetWriter.canAdd(videoInput) else {
-            throw RecordingError("Can't add input to asset writer")
+            throw RecordingError("Can't add video input to asset writer")
         }
         assetWriter.add(videoInput)
 
+        // MARK: AVAssetWriter setup (audio - microphone AAC)
+
+        let audioSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatMPEG4AAC,
+            AVNumberOfChannelsKey: 2,
+            AVSampleRateKey: 48_000,
+            AVEncoderBitRateKey: 192_000
+        ]
+        audioInput = AVAssetWriterInput(mediaType: .audio, outputSettings: audioSettings)
+        audioInput.expectsMediaDataInRealTime = true
+
+        guard assetWriter.canAdd(audioInput) else {
+            throw RecordingError("Can't add audio input to asset writer")
+        }
+        assetWriter.add(audioInput)
+
         guard assetWriter.startWriting() else {
-            if let error = assetWriter.error {
-                throw error
-            }
+            if let error = assetWriter.error { throw error }
             throw RecordingError("Couldn't start writing to AVAssetWriter")
         }
 
-        // MARK: SCStream setup
+        // MARK: Microphone capture session
 
-        // Create a filter for the specified display
+        audioSession = AVCaptureSession()
+        audioDataOutput = AVCaptureAudioDataOutput()
+        microphoneOutput = MicrophoneOutput(audioInput: audioInput)
+
+        audioSession.beginConfiguration()
+        guard let mic = AVCaptureDevice.default(for: .audio) else {
+            throw RecordingError("No microphone device available")
+        }
+        let micInput = try AVCaptureDeviceInput(device: mic)
+        if audioSession.canAddInput(micInput) { audioSession.addInput(micInput) }
+        if audioSession.canAddOutput(audioDataOutput) { audioSession.addOutput(audioDataOutput) }
+        audioDataOutput.setSampleBufferDelegate(microphoneOutput, queue: audioSampleBufferQueue)
+        audioSession.commitConfiguration()
+
+        // MARK: SCStream setup (screen)
+
         let sharableContent = try await SCShareableContent.current
         guard
-            let display = sharableContent.displays.first(where: {
-                $0.displayID == displayID
-            })
+            let display = sharableContent.displays.first(where: { $0.displayID == displayID })
         else {
-            throw RecordingError(
-                "Can't find display with ID \(displayID) in sharable content"
-            )
+            throw RecordingError("Can't find display with ID \(displayID) in sharable content")
         }
         let filter = SCContentFilter(display: display, excludingWindows: [])
 
         let configuration = SCStreamConfiguration()
+        configuration.queueDepth = 6
 
-        // Increase the depth of the frame queue to ensure high fps at the expense of increasing
-        // the memory footprint of WindowServer.
-        configuration.queueDepth = 6  // 4 minimum, or it becomes very stuttery
-
-        // Make sure to take displayScaleFactor into account
-        // otherwise, image is scaled up and gets blurry
         if let cropRect = cropRect {
-            // ScreenCaptureKit uses top-left of screen as origin
             configuration.sourceRect = cropRect
             configuration.width = Int(cropRect.width) * displayScaleFactor
             configuration.height = Int(cropRect.height) * displayScaleFactor
@@ -142,25 +152,16 @@ class ScreenRecorder {
             configuration.height = Int(displaySize.height) * displayScaleFactor
         }
 
-        // Set pixel format an color space, see CVPixelBuffer.h
         switch mode {
         case .h264_sRGB:
-            configuration.pixelFormat = kCVPixelFormatType_32BGRA  // 'BGRA'
+            configuration.pixelFormat = kCVPixelFormatType_32BGRA // 'BGRA'
             configuration.colorSpaceName = CGColorSpace.sRGB
         case .hevc_displayP3:
-            configuration.pixelFormat = kCVPixelFormatType_ARGB2101010LEPacked  // 'l10r'
+            configuration.pixelFormat = kCVPixelFormatType_ARGB2101010LEPacked // 'l10r'
             configuration.colorSpaceName = CGColorSpace.displayP3
-        //        case .hevc_displayP3_HDR:
-        //            configuration.pixelFormat = kCVPixelFormatType_ARGB2101010LEPacked // 'l10r'
-        //            configuration.colorSpaceName = CGColorSpace.displayP3
         }
 
-        // Create SCStream and add local StreamOutput object to receive samples
-        stream = SCStream(
-            filter: filter,
-            configuration: configuration,
-            delegate: nil
-        )
+        stream = SCStream(filter: filter, configuration: configuration, delegate: nil)
         try stream.addStreamOutput(
             streamOutput,
             type: .screen,
@@ -169,50 +170,47 @@ class ScreenRecorder {
     }
 
     func start() async throws {
-
-        // Start capturing, wait for stream to start
+        // Start screen capture
         try await stream.startCapture()
 
-        // Start the AVAssetWriter session at source time .zero, sample buffers will need to be re-timed
+        // Start writer timeline at t=0 and enable outputs
         assetWriter.startSession(atSourceTime: .zero)
         streamOutput.sessionStarted = true
+        microphoneOutput.sessionStarted = true
+
+        // Start microphone capture
+        audioSession.startRunning()
     }
 
     func stop() async throws {
-
-        // Stop capturing, wait for stream to stop
+        // Stop capture
         try await stream.stopCapture()
+        audioSession.stopRunning()
 
-        // Repeat the last frame and add it at the current time
-        // In case no changes happend on screen, and the last frame is from long ago
-        // This ensures the recording is of the expected length
+        // Repeat the last video frame at "now" to ensure expected length
         if let originalBuffer = streamOutput.lastSampleBuffer {
             let additionalTime =
-                CMTime(
-                    seconds: ProcessInfo.processInfo.systemUptime,
-                    preferredTimescale: 100
-                ) - streamOutput.firstSampleTime
+                CMTime(seconds: ProcessInfo.processInfo.systemUptime, preferredTimescale: 100)
+                - streamOutput.firstSampleTime
             let timing = CMSampleTimingInfo(
                 duration: originalBuffer.duration,
                 presentationTimeStamp: additionalTime,
                 decodeTimeStamp: originalBuffer.decodeTimeStamp
             )
-            let additionalSampleBuffer = try CMSampleBuffer(
-                copying: originalBuffer,
-                withNewTiming: [timing]
-            )
+            let additionalSampleBuffer = try CMSampleBuffer(copying: originalBuffer, withNewTiming: [timing])
             videoInput.append(additionalSampleBuffer)
             streamOutput.lastSampleBuffer = additionalSampleBuffer
         }
 
-        // Stop the AVAssetWriter session at time of the repeated frame
-        assetWriter.endSession(
-            atSourceTime: streamOutput.lastSampleBuffer?.presentationTimeStamp
-                ?? .zero
-        )
+        // End session at the max of last video/audio timestamps
+        let lastVideoPTS = streamOutput.lastSampleBuffer?.presentationTimeStamp ?? .zero
+        let lastAudioPTS = microphoneOutput.lastSampleBuffer?.presentationTimeStamp ?? .zero
+        let endPTS = lastVideoPTS > lastAudioPTS ? lastVideoPTS : lastAudioPTS
+        assetWriter.endSession(atSourceTime: endPTS)
 
         // Finish writing
         videoInput.markAsFinished()
+        audioInput.markAsFinished()
         await assetWriter.finishWriting()
     }
 
@@ -231,74 +229,82 @@ class ScreenRecorder {
             didOutputSampleBuffer sampleBuffer: CMSampleBuffer,
             of type: SCStreamOutputType
         ) {
+            guard sessionStarted, sampleBuffer.isValid else { return }
 
-            // Return early if session hasn't started yet
-            guard sessionStarted else { return }
-
-            // Return early if the sample buffer is invalid
-            guard sampleBuffer.isValid else { return }
-
-            // Retrieve the array of metadata attachments from the sample buffer
-            guard
-                let attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(
-                    sampleBuffer,
-                    createIfNecessary: false
-                ) as? [[SCStreamFrameInfo: Any]],
-                let attachments = attachmentsArray.first
-            else { return }
-
-            // Validate the status of the frame. If it isn't `.complete`, return
-            guard
-                let statusRawValue = attachments[SCStreamFrameInfo.status]
-                    as? Int,
-                let status = SCFrameStatus(rawValue: statusRawValue),
-                status == .complete
-            else { return }
+            // Validate frame completeness
+            if type == .screen {
+                guard
+                    let attachmentsArray = CMSampleBufferGetSampleAttachmentsArray(sampleBuffer, createIfNecessary: false) as? [[SCStreamFrameInfo: Any]],
+                    let attachments = attachmentsArray.first,
+                    let statusRaw = attachments[SCStreamFrameInfo.status] as? Int,
+                    let status = SCFrameStatus(rawValue: statusRaw),
+                    status == .complete
+                else { return }
+            }
 
             switch type {
             case .screen:
                 if videoInput.isReadyForMoreMediaData {
-                    // Save the timestamp of the current sample, all future samples will be offset by this
                     if firstSampleTime == .zero {
                         firstSampleTime = sampleBuffer.presentationTimeStamp
                     }
-
-                    // Offset the time of the sample buffer, relative to the first sample
-                    let lastSampleTime =
-                        sampleBuffer.presentationTimeStamp - firstSampleTime
-
-                    // Always save the last sample buffer.
-                    // This is used to "fill up" empty space at the end of the recording.
-                    //
-                    // Note that this permanently captures one of the sample buffers
-                    // from the ScreenCaptureKit queue.
-                    // Make sure reserve enough in SCStreamConfiguration.queueDepth
+                    let lastSampleTime = sampleBuffer.presentationTimeStamp - firstSampleTime
                     lastSampleBuffer = sampleBuffer
 
-                    // Create a new CMSampleBuffer by copying the original, and applying the new presentationTimeStamp
                     let timing = CMSampleTimingInfo(
                         duration: sampleBuffer.duration,
                         presentationTimeStamp: lastSampleTime,
                         decodeTimeStamp: sampleBuffer.decodeTimeStamp
                     )
-                    if let retimedSampleBuffer = try? CMSampleBuffer(
-                        copying: sampleBuffer,
-                        withNewTiming: [timing]
-                    ) {
-                        videoInput.append(retimedSampleBuffer)
+                    if let retimed = try? CMSampleBuffer(copying: sampleBuffer, withNewTiming: [timing]) {
+                        videoInput.append(retimed)
                     } else {
                         print("Couldn't copy CMSampleBuffer, dropping frame")
                     }
                 } else {
                     print("AVAssetWriterInput isn't ready, dropping frame")
                 }
-
-            case .audio:
-                break
-            case .microphone:
+            case .audio, .microphone:
                 break
             @unknown default:
                 break
+            }
+        }
+    }
+
+    private class MicrophoneOutput: NSObject, AVCaptureAudioDataOutputSampleBufferDelegate {
+        let audioInput: AVAssetWriterInput
+        var sessionStarted = false
+        var firstSampleTime: CMTime = .zero
+        var lastSampleBuffer: CMSampleBuffer?
+
+        init(audioInput: AVAssetWriterInput) {
+            self.audioInput = audioInput
+        }
+
+        func captureOutput(
+            _ output: AVCaptureOutput,
+            didOutput sampleBuffer: CMSampleBuffer,
+            from connection: AVCaptureConnection
+        ) {
+            guard sessionStarted, sampleBuffer.isValid else { return }
+            guard audioInput.isReadyForMoreMediaData else { return }
+
+            if firstSampleTime == .zero {
+                firstSampleTime = sampleBuffer.presentationTimeStamp
+            }
+            let relativePTS = sampleBuffer.presentationTimeStamp - firstSampleTime
+
+            let timing = CMSampleTimingInfo(
+                duration: sampleBuffer.duration,
+                presentationTimeStamp: relativePTS,
+                decodeTimeStamp: sampleBuffer.decodeTimeStamp
+            )
+            if let retimed = try? CMSampleBuffer(copying: sampleBuffer, withNewTiming: [timing]) {
+                lastSampleBuffer = retimed
+                audioInput.append(retimed)
+            } else {
+                print("Couldn't copy audio CMSampleBuffer, dropping sample")
             }
         }
     }
@@ -333,7 +339,6 @@ extension RecordMode {
         switch self {
         case .h264_sRGB: return .preset3840x2160
         case .hevc_displayP3: return .hevc7680x4320
-        //        case .hevc_displayP3_HDR: return .hevc7680x4320
         }
     }
 
@@ -341,7 +346,6 @@ extension RecordMode {
         switch self {
         case .h264_sRGB: return CGSize(width: 4096, height: 2304)
         case .hevc_displayP3: return CGSize(width: 7680, height: 4320)
-        //        case .hevc_displayP3_HDR: return CGSize(width: 7680, height: 4320)
         }
     }
 
@@ -349,7 +353,6 @@ extension RecordMode {
         switch self {
         case .h264_sRGB: return .h264
         case .hevc_displayP3: return .hevc
-        //        case .hevc_displayP3_HDR: return .hevc
         }
     }
 
@@ -376,9 +379,6 @@ extension RecordMode {
             return nil
         case .hevc_displayP3:
             return nil
-        //        case .hevc_displayP3_HDR:
-        //            return kVTProfileLevel_HEVC_Main10_AutoLevel
         }
     }
-
 }
