@@ -1,6 +1,12 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "(Ask on save)" : {
+
+    },
+    "(Use default)" : {
+
+    },
     "A new version" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -188,6 +194,9 @@
         }
       }
     },
+    "Choose" : {
+
+    },
     "Choose which screen you want to record" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -204,6 +213,12 @@
           }
         }
       }
+    },
+    "Choose…" : {
+
+    },
+    "Clear" : {
+
     },
     "Click to record" : {
       "extractionState" : "manual",
@@ -265,6 +280,9 @@
           }
         }
       }
+    },
+    "Default screenshot location" : {
+
     },
     "Download" : {
       "extractionState" : "manual",
@@ -1068,6 +1086,9 @@
         }
       }
     },
+    "Select the default folder where screenshots will be saved." : {
+
+    },
     "Select the screen where you want to display live captions" : {
       "extractionState" : "manual",
       "localizations" : {
@@ -1316,6 +1337,9 @@
           }
         }
       }
+    },
+    "When set, pressing Enter or clicking Save will write the screenshot to this folder without asking." : {
+
     },
     "You are running the latest version of PresentInk." : {
       "extractionState" : "manual",

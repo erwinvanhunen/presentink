@@ -59,6 +59,7 @@ class Settings {
     private let breakBackgroundColorKey = "breakBackgroundColor"
     private let breakTimerColorKey = "breakTimerColor"
     private let breakMessageColorKey = "breakMessageColor"
+    private let screenshotSaveUrlKey = "screenshotSaveUrl"
     private let supportedColors: [String: NSColor] = [
         "red": .red,
         "green": .green,
@@ -565,7 +566,23 @@ class Settings {
             return UserDefaults.standard.bool(forKey: "recordAudio")
         }
         set {
-            UserDefaults.standard.set(newValue, forKey: "recordAudio")  
+            UserDefaults.standard.set(newValue, forKey: "recordAudio")
+        }
+    }
+
+    var screenshotSaveUrl: URL? {
+        get {
+            guard let path = UserDefaults.standard.string(forKey: screenshotSaveUrlKey) else {
+                return nil
+            }
+            return URL(fileURLWithPath: path)
+        }
+        set {
+            if let url = newValue {
+                UserDefaults.standard.set(url.path, forKey: screenshotSaveUrlKey)
+            } else {
+                UserDefaults.standard.removeObject(forKey: screenshotSaveUrlKey)
+            }
         }
     }
 

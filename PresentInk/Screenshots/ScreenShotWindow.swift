@@ -410,7 +410,7 @@ class SelectionView: NSView {
         switch event.keyCode {
         case 36:  // Enter
             if case .selected = state {
-                captureScreenshot()
+                saveScreenshot()
             }
         case 53:  // Escape
             NotificationCenter.default.post(
@@ -715,16 +715,37 @@ class SelectionView: NSView {
         Task {
             try? await Task.sleep(nanoseconds: 1_000_000)  // 1 second pause
             await MainActor.run {
+                if let folderURL = Settings.shared.screenshotSaveUrl {
+                    let filename = "Screenshot \(DateFormatter.screenshotFormatter.string(from: Date())).png"
+                    let destination = folderURL.appendingPathComponent(filename)
+                    Task {
+                        await self.performScreenCapture(saveToURL: destination, selectionRect: self.lastSelectionRect ?? self.selectionRect)
+                    }
+                    return
+                }
                 let savePanel = NSSavePanel()
                 savePanel.allowedContentTypes = [.png]
                 savePanel.nameFieldStringValue =
                     "Screenshot \(DateFormatter.screenshotFormatter.string(from: Date())).png"
 
                 let parentWindow = NSApp.mainWindow ?? NSApp.keyWindow
-                savePanel.beginSheetModal(for: parentWindow ?? savePanel) { response in
-                    if response == .OK, let url = savePanel.url {
+                if let parentWindow {
+                    savePanel.beginSheetModal(for: parentWindow) { response in
+                        if response == .OK, let url = savePanel.url {
+                            Task {
+                                // Use the stored selectionRect
+                                await self.performScreenCapture(saveToURL: url, selectionRect: self.lastSelectionRect ?? self.selectionRect)
+                            }
+                        } else {
+                            NotificationCenter.default.post(
+                                name: NSNotification.Name("CloseScreenshotWindows"),
+                                object: nil
+                            )
+                        }
+                    }
+                } else {
+                    if savePanel.runModal() == .OK, let url = savePanel.url {
                         Task {
-                            // Use the stored selectionRect
                             await self.performScreenCapture(saveToURL: url, selectionRect: self.lastSelectionRect ?? self.selectionRect)
                         }
                     } else {
@@ -834,7 +855,17 @@ class SelectionView: NSView {
             if copyToClipboard {
                 copyImageToClipboard(finalImage)
             } else if let url = saveToURL {
+                // If saving to a user-configured folder, start security-scoped access
+                var shouldStopAccessing = false
+                if let folderURL = Settings.shared.screenshotSaveUrl,
+                   url.path.hasPrefix(folderURL.path),
+                   folderURL.startAccessingSecurityScopedResource() {
+                    shouldStopAccessing = true
+                }
                 saveImageToDisk(finalImage, url: url)
+                if shouldStopAccessing {
+                    Settings.shared.screenshotSaveUrl?.stopAccessingSecurityScopedResource()
+                }
             }
             window?.orderOut(nil)
         } catch {
