@@ -1,21 +1,20 @@
 import Cocoa
 
 class KbdView: NSView {
+    private let label: NSTextField
+
     convenience init(text: String) {
         self.init(text: text, fontSize: 20)
     }
 
     init(text: String, fontSize: CGFloat) {
+        self.label = NSTextField(labelWithString: text)
         super.init(frame: .zero)
         wantsLayer = true
-        layer?.backgroundColor = NSColor(white: 1, alpha: 0.15).cgColor
         layer?.cornerRadius = 6
         layer?.borderWidth = 1
-        layer?.borderColor = NSColor(white: 1, alpha: 0.8).cgColor
 
-        let label = NSTextField(labelWithString: text)
         label.font = NSFont.monospacedSystemFont(ofSize: fontSize, weight: .regular)
-        label.textColor = NSColor(white: 1, alpha: 0.9)
         label.backgroundColor = .clear
         label.isBezeled = false
         label.isEditable = false
@@ -30,6 +29,20 @@ class KbdView: NSView {
             label.bottomAnchor.constraint(equalTo: bottomAnchor, constant: -4)
         ])
         translatesAutoresizingMaskIntoConstraints = false
+        applyColors()
+    }
+
+    override func viewDidChangeEffectiveAppearance() {
+        super.viewDidChangeEffectiveAppearance()
+        applyColors()
+    }
+
+    private func applyColors() {
+        layer?.backgroundColor = NSColor.controlBackgroundColor
+            .withAlphaComponent(0.9)
+            .cgColor
+        layer?.borderColor = NSColor.separatorColor.cgColor
+        label.textColor = NSColor.labelColor
     }
 
     required init?(coder: NSCoder) {
